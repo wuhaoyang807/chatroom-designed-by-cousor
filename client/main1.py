@@ -1,6 +1,7 @@
 import sys
 import socket
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget)
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit,
+                             QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
 import os
@@ -10,6 +11,7 @@ SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 12345
 
 EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
+
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)
@@ -43,10 +45,14 @@ class ClientThread(QThread):
         self.quit()
         self.wait()
 
+
 def excepthook(type, value, traceback):
     QMessageBox.critical(None, '未捕获异常', str(value))
     sys.__excepthook__(type, value, traceback)
+
+
 sys.excepthook = excepthook
+
 
 class LoginWindow(QWidget):
     def __init__(self):
@@ -123,8 +129,10 @@ class LoginWindow(QWidget):
             QMessageBox.critical(self, '错误', f'登录后主窗口异常: {e}')
             self.show()
 
+
 class EmojiDialog(QWidget):
     emoji_selected = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle('选择表情')
@@ -132,6 +140,7 @@ class EmojiDialog(QWidget):
         self.setLayout(layout)
         self.setWindowFlags(self.windowFlags() | Qt.Tool)
         self.load_emojis(layout)
+
     def load_emojis(self, layout):
         if not os.path.exists(EMOJI_DIR):
             return
@@ -143,6 +152,7 @@ class EmojiDialog(QWidget):
                 btn.setFixedSize(40, 40)
                 btn.clicked.connect(lambda _, f=fname: self.emoji_selected.emit(f))
                 layout.addWidget(btn)
+
 
 class MainWindow(QWidget):
     def __init__(self, sock, username):
@@ -159,17 +169,17 @@ class MainWindow(QWidget):
             self.group_status = {}
             self.selecting_group = False  # 防重入
             self.unread_groups = set()  # 新增：未读群聊消息集合
-            
+
             # 添加表情缓存
             self.emoji_cache = {}
             self.preload_emojis()  # 预加载表情
-            
+
             self.init_ui()
             self.client_thread = ClientThread(self.sock)
             self.client_thread.message_received.connect(self.on_message)
             self.client_thread.connection_lost.connect(self.on_connection_lost)
             self.client_thread.start()
-            
+
             # 启动定时器，确保登录后刷新群聊列表
             self.refresh_timer = QTimer(self)
             self.refresh_timer.timeout.connect(self.initial_refresh)
@@ -184,7 +194,7 @@ class MainWindow(QWidget):
             if not os.path.exists(EMOJI_DIR):
                 print("表情目录不存在")
                 return
-                
+
             print("开始预加载表情...")
             for fname in os.listdir(EMOJI_DIR):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
@@ -362,11 +372,11 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{sender}:</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             path = os.path.join(EMOJI_DIR, emoji_id)
-            
+
             # 添加路径检查
             if not os.path.exists(path):
                 print(f"表情文件不存在: {path}")
@@ -389,7 +399,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-                
+
         layout.addWidget(name_label)
         layout.addWidget(img_label)
         widget.setLayout(layout)
@@ -414,7 +424,7 @@ class MainWindow(QWidget):
             self.emoji_dialog = EmojiDialog()
             self.emoji_dialog.emoji_selected.connect(self.handle_emoji_selected)
         self.emoji_dialog.show()
-        
+
     def handle_emoji_selected(self, emoji_id):
         if self.tab_widget.currentWidget() == self.private_tab:
             self.send_emoji(emoji_id)
@@ -438,7 +448,7 @@ class MainWindow(QWidget):
             if self.current_group and str(self.current_group) == group_info:
                 self.selecting_group = False
                 return
-                
+
             self.current_group = group_info
             # 清除未读标记
             if group_info in self.unread_groups:
@@ -540,7 +550,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{sender}:</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             # 路径检查和处理
@@ -567,7 +577,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-            
+
         if is_self:
             name_label.setStyleSheet('color:blue;')
         layout.addWidget(name_label)
@@ -587,7 +597,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{anon_nick}(匿名):</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             # 路径检查和处理
@@ -614,7 +624,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-            
+
         if is_self:
             name_label.setStyleSheet('color:blue;')
         layout.addWidget(name_label)
@@ -633,27 +643,27 @@ class MainWindow(QWidget):
             print(f"收到消息: {data}")  # 添加调试输出
             parts = data.split('|')
             cmd = parts[0]
-            
+
             # 处理私聊历史记录
             if cmd == 'PRIVATE_HISTORY':
                 try:
                     if parts[1] == 'error':
                         self.append_text_message('[系统]', f'获取历史记录失败: {parts[2]}')
                         return
-                        
+
                     history = parts[1:]
-                    print(f"接收到私聊历史记录: {len(history)//2}条消息")
-                    
+                    print(f"接收到私聊历史记录: {len(history) // 2}条消息")
+
                     i = 0
                     while i < len(history):
-                        if i+1 >= len(history):
+                        if i + 1 >= len(history):
                             print(f"历史记录数据不完整: {history[i:]}")
                             break
-                            
+
                         sender = history[i]
-                        msg = history[i+1]
+                        msg = history[i + 1]
                         print(f"私聊历史: sender={sender}, msg={msg}")
-                        
+
                         # 显示历史消息
                         if msg.startswith('[EMOJI]'):
                             emoji_id = msg[7:]
@@ -687,7 +697,7 @@ class MainWindow(QWidget):
                         name, status = f.split(':')
                         self.friends.append(name)
                         self.friend_status[name] = status
-                        item = QListWidgetItem(f'{name} ({"在线" if status=="online" else "离线"})')
+                        item = QListWidgetItem(f'{name} ({"在线" if status == "online" else "离线"})')
                         if status == 'online':
                             item.setForeground(QColor('green'))
                         else:
@@ -716,22 +726,22 @@ class MainWindow(QWidget):
                     if len(parts) < 4:
                         print(f"群聊消息格式错误: {data}")
                         return
-                    
+
                     group_id, from_user, msg = parts[1], parts[2], '|'.join(parts[3:])
                     print(f"接收到群聊消息: group_id={group_id}, from_user={from_user}, msg={msg}")
-                    
+
                     # 统一群组ID格式
                     group_id_str = str(group_id)
                     current_group_str = str(self.current_group) if self.current_group else ""
-                    
+
                     # 收到消息意味着用户在线，更新好友状态
                     if from_user in self.friends:
                         self.update_friend_status(from_user, True)
-                    
+
                     # 不处理自己发送的消息，因为发送时已经显示过了
                     if from_user == self.username:
                         return
-                    
+
                     # 无论当前是否在该群聊界面，都保存并处理消息
                     if current_group_str == group_id_str and self.tab_widget.currentWidget() == self.group_tab:
                         # 用户当前正在查看该群聊，显示消息
@@ -752,18 +762,18 @@ class MainWindow(QWidget):
                     if len(parts) < 4:
                         print(f"匿名群聊消息格式错误: {data}")
                         return
-                    
+
                     group_id, anon_nick, msg = parts[1], parts[2], '|'.join(parts[3:])
                     print(f"接收到匿名群聊消息: group_id={group_id}, anon_nick={anon_nick}, msg={msg}")
-                    
+
                     # 统一群组ID格式
                     group_id_str = str(group_id)
                     current_group_str = str(self.current_group) if self.current_group else ""
-                    
+
                     # 不处理自己发送的匿名消息，因为发送时已经显示过了
                     if self.anon_nick and anon_nick == self.anon_nick:
                         return
-                    
+
                     # 无论当前是否在该群聊界面，都保存并处理消息
                     if current_group_str == group_id_str and self.tab_widget.currentWidget() == self.group_tab:
                         # 用户当前正在查看该群聊，显示消息
@@ -782,17 +792,17 @@ class MainWindow(QWidget):
                 try:
                     self.group_chat_display.clear()
                     history = parts[1:]
-                    print(f"接收到群聊历史记录: {len(history)//3}条消息")
-                    
+                    print(f"接收到群聊历史记录: {len(history) // 3}条消息")
+
                     i = 0
                     while i < len(history):
-                        if i+2 >= len(history):
+                        if i + 2 >= len(history):
                             print(f"历史记录数据不完整: {history[i:]}")
                             break
-                            
+
                         if history[i] == 'user':
-                            sender = history[i+1]
-                            msg = history[i+2]
+                            sender = history[i + 1]
+                            msg = history[i + 2]
                             print(f"历史记录: user={sender}, msg={msg}")
                             if msg.startswith('[EMOJI]'):
                                 emoji_id = msg[7:]
@@ -801,8 +811,8 @@ class MainWindow(QWidget):
                                 self.append_group_message(sender, msg)
                             i += 3
                         elif history[i] == 'anon':
-                            anon_nick = history[i+1]
-                            msg = history[i+2]
+                            anon_nick = history[i + 1]
+                            msg = history[i + 2]
                             print(f"历史记录: anon={anon_nick}, msg={msg}")
                             if msg.startswith('[EMOJI]'):
                                 emoji_id = msg[7:]
@@ -871,7 +881,7 @@ class MainWindow(QWidget):
         current_items = []
         for i in range(self.group_list.count()):
             current_items.append(self.group_list.item(i).text())
-        
+
         self.group_list.clear()
         for item in current_items:
             group_id = item.split(' ', 1)[0]
@@ -907,8 +917,9 @@ class MainWindow(QWidget):
         except Exception as e:
             print(f"初始化刷新出错: {e}")
 
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = LoginWindow()
     win.show()
-    sys.exit(app.exec_()) 
+    sys.exit(app.exec_())

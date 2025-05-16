@@ -174,6 +174,9 @@ def handle_client(conn, addr):
                     if to_user not in get_friends(username):
                         conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
                     else:
+                        # 保存消息历史
+                        save_private_message(username, to_user, msg)
+                        
                         with lock:
                             if to_user in clients:
                                 clients[to_user].send(f'MSG|{username}|{msg}'.encode('utf-8'))
@@ -185,6 +188,9 @@ def handle_client(conn, addr):
                     if to_user not in get_friends(username):
                         conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
                     else:
+                        # 保存表情消息历史
+                        save_private_message(username, to_user, f"[EMOJI]{emoji_id}")
+                        
                         with lock:
                             if to_user in clients:
                                 clients[to_user].send(f'EMOJI|{username}|{emoji_id}'.encode('utf-8'))
@@ -280,6 +286,23 @@ def handle_client(conn, addr):
                     except Exception as e:
                         print(f"处理群聊历史请求出错: {e}")
                         conn.send('GROUP_HISTORY|error|获取群聊历史失败'.encode('utf-8'))
+                elif cmd == 'GET_PRIVATE_HISTORY':
+                    # GET_PRIVATE_HISTORY|from_user|to_user
+                    _, from_user, to_user = parts
+                    if to_user not in get_friends(from_user):
+                        conn.send('PRIVATE_HISTORY|error|不是好友关系'.encode('utf-8'))
+                    else:
+                        try:
+                            history = get_private_history(from_user, to_user)
+                            # 格式 PRIVATE_HISTORY|sender1|msg1|sender2|msg2|...
+                            resp = ['PRIVATE_HISTORY']
+                            for row in history:
+                                resp.extend(row)
+                            response_str = '|'.join(resp)
+                            conn.send(response_str.encode('utf-8'))
+                        except Exception as e:
+                            print(f"获取私聊历史出错: {e}")
+                            conn.send('PRIVATE_HISTORY|error|获取历史记录失败'.encode('utf-8'))
                 else:
                     conn.send('ERROR|Unknown command.'.encode('utf-8'))
             except ConnectionResetError:
@@ -391,6 +414,28 @@ def save_group_message(group_id, sender, msg, anon_nick=None):
 
 def get_group_history(group_id):
     fname = f'group_{group_id}_history.csv'
+    if not os.path.exists(fname):
+        return []
+    history = []
+    with open(fname, 'r', newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            history.append(row)
+    return history
+
+def save_private_message(sender, receiver, msg):
+    """保存私聊消息历史"""
+    # 使用字典序排序确保两个用户之间的消息保存在同一个文件中
+    users = sorted([sender, receiver])
+    fname = f'private_{users[0]}_{users[1]}_history.csv'
+    with open(fname, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([sender, msg])
+
+def get_private_history(user1, user2):
+    """获取两个用户之间的私聊历史记录"""
+    users = sorted([user1, user2])
+    fname = f'private_{users[0]}_{users[1]}_history.csv'
     if not os.path.exists(fname):
         return []
     history = []
