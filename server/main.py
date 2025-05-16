@@ -214,42 +214,72 @@ def handle_client(conn, addr):
                     conn.send(f'GROUP_MEMBERS|{"|".join(members)}'.encode('utf-8'))
                 elif cmd == 'GROUP_MSG':
                     # GROUP_MSG|group_id|from_user|msg
-                    _, group_id, from_user, msg = parts
-                    members = get_group_members(group_id)
-                    print(f'群聊广播: group_id={group_id}, members={members}')
-                    save_group_message(group_id, from_user, msg)
-                    with lock:
-                        for m in members:
-                            if m in clients:
-                                try:
-                                    # 发送消息时，带上发送者的在线状态信息
-                                    clients[m].send(f'GROUP_MSG|{str(int(group_id))}|{from_user}|{msg}'.encode('utf-8'))
-                                    # 如果消息接收者与发送者是好友关系，通知发送者在线
-                                    if m != from_user and from_user in get_friends(m):
-                                        clients[m].send(f'FRIEND_ONLINE|{from_user}'.encode('utf-8'))
-                                except Exception as e:
-                                    print(f'发送给{m}失败: {e}')
+                    try:
+                        if len(parts) < 3:
+                            print(f"群聊消息格式错误: {data}")
+                            continue
+                            
+                        _, group_id, from_user = parts[:3]
+                        msg = '|'.join(parts[3:])  # 正确获取消息内容
+                            
+                        print(f"处理群聊消息: group_id={group_id}, from_user={from_user}, msg={msg}")
+                        
+                        members = get_group_members(group_id)
+                        print(f'群聊广播: group_id={group_id}, members={members}')
+                        save_group_message(group_id, from_user, msg)
+                        with lock:
+                            for m in members:
+                                if m in clients:
+                                    try:
+                                        # 发送消息时，带上发送者的在线状态信息
+                                        clients[m].send(f'GROUP_MSG|{str(int(group_id))}|{from_user}|{msg}'.encode('utf-8'))
+                                        # 如果消息接收者与发送者是好友关系，通知发送者在线
+                                        if m != from_user and from_user in get_friends(m):
+                                            clients[m].send(f'FRIEND_ONLINE|{from_user}'.encode('utf-8'))
+                                    except Exception as e:
+                                        print(f'发送给{m}失败: {e}')
+                    except Exception as e:
+                        print(f"处理群聊消息出错: {e}, 原始数据: {data}")
+                        
                 elif cmd == 'GROUP_MSG_ANON':
                     # GROUP_MSG_ANON|group_id|anon_nick|msg
-                    _, group_id, anon_nick, msg = parts
-                    members = get_group_members(group_id)
-                    print(f'匿名群聊广播: group_id={group_id}, members={members}')
-                    save_group_message(group_id, None, msg, anon_nick=anon_nick)
-                    with lock:
-                        for m in members:
-                            if m in clients:
-                                try:
-                                    clients[m].send(f'GROUP_MSG_ANON|{str(int(group_id))}|{anon_nick}|{msg}'.encode('utf-8'))
-                                except Exception as e:
-                                    print(f'发送给{m}失败: {e}')
+                    try:
+                        if len(parts) < 3:
+                            print(f"匿名群聊消息格式错误: {data}")
+                            continue
+                            
+                        _, group_id, anon_nick = parts[:3]
+                        msg = '|'.join(parts[3:])  # 正确获取消息内容
+                            
+                        print(f"处理匿名群聊消息: group_id={group_id}, anon_nick={anon_nick}, msg={msg}")
+                        
+                        members = get_group_members(group_id)
+                        print(f'匿名群聊广播: group_id={group_id}, members={members}')
+                        save_group_message(group_id, None, msg, anon_nick=anon_nick)
+                        with lock:
+                            for m in members:
+                                if m in clients:
+                                    try:
+                                        clients[m].send(f'GROUP_MSG_ANON|{str(int(group_id))}|{anon_nick}|{msg}'.encode('utf-8'))
+                                    except Exception as e:
+                                        print(f'发送给{m}失败: {e}')
+                    except Exception as e:
+                        print(f"处理匿名群聊消息出错: {e}, 原始数据: {data}")
                 elif cmd == 'GET_GROUP_HISTORY':
-                    _, group_id = parts[:2]
-                    history = get_group_history(group_id)
-                    # 格式 GROUP_HISTORY|type|sender|msg|...
-                    resp = ['GROUP_HISTORY']
-                    for row in history:
-                        resp.extend(row)
-                    conn.send('|'.join(resp).encode('utf-8'))
+                    try:
+                        _, group_id = parts[:2]
+                        print(f"获取群聊历史: group_id={group_id}")
+                        history = get_group_history(group_id)
+                        # 格式 GROUP_HISTORY|type|sender|msg|...
+                        resp = ['GROUP_HISTORY']
+                        for row in history:
+                            resp.extend(row)
+                        response_str = '|'.join(resp)
+                        print(f"发送群聊历史: {len(history)}条消息")
+                        conn.send(response_str.encode('utf-8'))
+                    except Exception as e:
+                        print(f"处理群聊历史请求出错: {e}")
+                        conn.send('GROUP_HISTORY|error|获取群聊历史失败'.encode('utf-8'))
                 else:
                     conn.send('ERROR|Unknown command.'.encode('utf-8'))
             except ConnectionResetError:

@@ -331,9 +331,14 @@ class MainWindow(QWidget):
     def open_emoji_dialog(self):
         if self.emoji_dialog is None:
             self.emoji_dialog = EmojiDialog()
-            self.emoji_dialog.emoji_selected.connect(self.send_emoji)
-            self.emoji_dialog.emoji_selected.connect(self.send_group_emoji)
+            self.emoji_dialog.emoji_selected.connect(self.handle_emoji_selected)
         self.emoji_dialog.show()
+        
+    def handle_emoji_selected(self, emoji_id):
+        if self.tab_widget.currentWidget() == self.private_tab:
+            self.send_emoji(emoji_id)
+        else:
+            self.send_group_emoji(emoji_id)
 
     def send_emoji(self, emoji_id):
         if not self.current_friend:
@@ -496,145 +501,186 @@ class MainWindow(QWidget):
         self.group_chat_display.scrollToBottom()
 
     def on_message(self, data):
-        parts = data.split('|', 2)
-        if parts[0] == 'MSG':
-            from_user, msg = parts[1], parts[2]
-            if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
-                self.append_text_message(from_user, msg)
-        elif parts[0] == 'EMOJI':
-            from_user, emoji_id = parts[1], parts[2]
-            if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
-                self.append_emoji_message(from_user, emoji_id)
-        elif parts[0] == 'FRIEND_LIST':
-            self.friends = []
-            self.friend_list.clear()
-            self.friend_status = {}
-            for f in parts[1:]:
-                if f and ':' in f:
-                    name, status = f.split(':')
-                    self.friends.append(name)
-                    self.friend_status[name] = status
-                    item = QListWidgetItem(f'{name} ({"在线" if status=="online" else "离线"})')
-                    if status == 'online':
-                        item.setForeground(QColor('green'))
+        try:
+            print(f"收到消息: {data}")  # 添加调试输出
+            parts = data.split('|')
+            cmd = parts[0]
+            
+            if cmd == 'MSG':
+                from_user, msg = parts[1], '|'.join(parts[2:])
+                if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
+                    self.append_text_message(from_user, msg)
+            elif cmd == 'EMOJI':
+                from_user, emoji_id = parts[1], parts[2]
+                if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
+                    self.append_emoji_message(from_user, emoji_id)
+            elif cmd == 'FRIEND_LIST':
+                self.friends = []
+                self.friend_list.clear()
+                self.friend_status = {}
+                for f in parts[1:]:
+                    if f and ':' in f:
+                        name, status = f.split(':')
+                        self.friends.append(name)
+                        self.friend_status[name] = status
+                        item = QListWidgetItem(f'{name} ({"在线" if status=="online" else "离线"})')
+                        if status == 'online':
+                            item.setForeground(QColor('green'))
+                        else:
+                            item.setForeground(QColor('red'))
+                        self.friend_list.addItem(item)
+            elif cmd == 'GROUP_LIST':
+                self.group_list.clear()
+                for g in parts[1:]:
+                    if g and ':' in g:
+                        gid, gname = g.split(':', 1)
+                        display_text = f'{gid} {gname}'
+                        if gid in self.unread_groups:
+                            display_text += ' [有新消息]'
+                        item = QListWidgetItem(display_text)
+                        if gid in self.unread_groups:
+                            item.setForeground(QColor('blue'))
+                        self.group_list.addItem(item)
+            elif cmd == 'GROUP_MEMBERS':
+                self.group_members_list.clear()
+                for m in parts[1:]:
+                    if m:
+                        self.group_members_list.addItem(m)
+            elif cmd == 'GROUP_MSG':
+                try:
+                    # 确保正确解析群聊消息
+                    if len(parts) < 4:
+                        print(f"群聊消息格式错误: {data}")
+                        return
+                    
+                    group_id, from_user, msg = parts[1], parts[2], '|'.join(parts[3:])
+                    print(f"接收到群聊消息: group_id={group_id}, from_user={from_user}, msg={msg}")
+                    
+                    # 收到消息意味着用户在线，更新好友状态
+                    if from_user in self.friends:
+                        self.update_friend_status(from_user, True)
+                    
+                    # 不处理自己发送的消息，因为发送时已经显示过了
+                    if from_user == self.username:
+                        return
+                    
+                    # 无论当前是否在该群聊界面，都保存并处理消息
+                    if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
+                        # 用户当前正在查看该群聊，显示消息
+                        if msg.startswith('[EMOJI]'):
+                            emoji_id = msg[8:]
+                            self.append_group_emoji(from_user, emoji_id)
+                        else:
+                            self.append_group_message(from_user, msg)
                     else:
-                        item.setForeground(QColor('red'))
-                    self.friend_list.addItem(item)
-        elif parts[0] == 'GROUP_LIST':
-            self.group_list.clear()
-            for g in parts[1:]:
-                if g and ':' in g:
-                    gid, gname = g.split(':', 1)
-                    display_text = f'{gid} {gname}'
-                    if gid in self.unread_groups:
-                        display_text += ' [有新消息]'
-                    item = QListWidgetItem(display_text)
-                    if gid in self.unread_groups:
-                        item.setForeground(QColor('blue'))
-                    self.group_list.addItem(item)
-        elif parts[0] == 'GROUP_MEMBERS':
-            self.group_members_list.clear()
-            for m in parts[1:]:
-                if m:
-                    self.group_members_list.addItem(m)
-        elif parts[0] == 'GROUP_MSG':
-            try:
-                group_id, from_user, msg = parts[1], parts[2], parts[3]
-                # 收到消息意味着用户在线，更新好友状态
-                if from_user in self.friends:
-                    self.update_friend_status(from_user, True)
-                # 无论当前是否在该群聊界面，都保存接收到的消息
-                if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
-                    # 如果用户当前正在查看该群聊，则显示消息
-                    if msg.startswith('[EMOJI]'):
-                        emoji_id = msg[8:]
-                        self.append_group_emoji(from_user, emoji_id)
+                        # 用户未查看该群聊，添加未读标记
+                        self.unread_groups.add(group_id)
+                        self.update_group_list()
+                except Exception as e:
+                    print(f"处理群聊消息出错: {e}, 消息内容: {data}")
+            elif cmd == 'GROUP_MSG_ANON':
+                try:
+                    # 确保正确解析匿名群聊消息
+                    if len(parts) < 4:
+                        print(f"匿名群聊消息格式错误: {data}")
+                        return
+                    
+                    group_id, anon_nick, msg = parts[1], parts[2], '|'.join(parts[3:])
+                    print(f"接收到匿名群聊消息: group_id={group_id}, anon_nick={anon_nick}, msg={msg}")
+                    
+                    # 不处理自己发送的匿名消息，因为发送时已经显示过了
+                    if self.anon_nick and anon_nick == self.anon_nick:
+                        return
+                    
+                    # 无论当前是否在该群聊界面，都保存并处理消息
+                    if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
+                        # 用户当前正在查看该群聊，显示消息
+                        if msg.startswith('[EMOJI]'):
+                            emoji_id = msg[8:]
+                            self.append_group_anon_emoji(anon_nick, emoji_id)
+                        else:
+                            self.append_group_anon_message(anon_nick, msg)
                     else:
-                        self.append_group_message(from_user, msg)
+                        # 用户未查看该群聊，添加未读标记
+                        self.unread_groups.add(group_id)
+                        self.update_group_list()
+                except Exception as e:
+                    print(f"处理匿名群聊消息出错: {e}, 消息内容: {data}")
+            elif cmd == 'GROUP_HISTORY':
+                try:
+                    self.group_chat_display.clear()
+                    history = parts[1:]
+                    print(f"接收到群聊历史记录: {len(history)//3}条消息")
+                    
+                    i = 0
+                    while i < len(history):
+                        if i+2 >= len(history):
+                            print(f"历史记录数据不完整: {history[i:]}")
+                            break
+                            
+                        if history[i] == 'user':
+                            sender = history[i+1]
+                            msg = history[i+2]
+                            print(f"历史记录: user={sender}, msg={msg}")
+                            if msg.startswith('[EMOJI]'):
+                                emoji_id = msg[8:]
+                                self.append_group_emoji(sender, emoji_id)
+                            else:
+                                self.append_group_message(sender, msg)
+                            i += 3
+                        elif history[i] == 'anon':
+                            anon_nick = history[i+1]
+                            msg = history[i+2]
+                            print(f"历史记录: anon={anon_nick}, msg={msg}")
+                            if msg.startswith('[EMOJI]'):
+                                emoji_id = msg[8:]
+                                self.append_group_anon_emoji(anon_nick, emoji_id)
+                            else:
+                                self.append_group_anon_message(anon_nick, msg)
+                            i += 3
+                        else:
+                            print(f"未知的历史记录类型: {history[i]}")
+                            i += 1
+                except Exception as e:
+                    print(f"处理群聊历史记录出错: {e}, 历史记录数据: {history}")
+            elif cmd == 'ADD_FRIEND_RESULT':
+                if parts[1] == 'OK':
+                    QMessageBox.information(self, '添加好友', parts[2])
+                    self.get_friends()
                 else:
-                    # 用户未查看该群聊，添加未读标记
-                    self.unread_groups.add(group_id)
-                    self.update_group_list()
-            except Exception as e:
-                print(f"处理群聊消息出错: {e}")
-        elif parts[0] == 'GROUP_MSG_ANON':
-            try:
-                group_id, anon_nick, msg = parts[1], parts[2], parts[3]
-                # 无论当前是否在该群聊界面，都保存接收到的消息
-                if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
-                    # 如果用户当前正在查看该群聊，则显示消息
-                    if msg.startswith('[EMOJI]'):
-                        emoji_id = msg[8:]
-                        self.append_group_anon_emoji(anon_nick, emoji_id)
-                    else:
-                        self.append_group_anon_message(anon_nick, msg)
+                    QMessageBox.warning(self, '添加好友失败', parts[2])
+            elif cmd == 'DEL_FRIEND_RESULT':
+                if parts[1] == 'OK':
+                    QMessageBox.information(self, '删除好友', parts[2])
+                    self.get_friends()
+                    self.current_friend = None
+                    self.chat_display.clear()
                 else:
-                    # 用户未查看该群聊，添加未读标记
-                    self.unread_groups.add(group_id)
-                    self.update_group_list()
-            except Exception as e:
-                print(f"处理匿名群聊消息出错: {e}")
-        elif parts[0] == 'GROUP_HISTORY':
-            self.group_chat_display.clear()
-            history = parts[1:]
-            i = 0
-            while i < len(history):
-                if history[i] == 'user':
-                    sender = history[i+1]
-                    msg = history[i+2]
-                    if msg.startswith('[EMOJI]'):
-                        emoji_id = msg[8:]
-                        self.append_group_emoji(sender, emoji_id)
-                    else:
-                        self.append_group_message(sender, msg)
-                    i += 3
-                elif history[i] == 'anon':
-                    anon_nick = history[i+1]
-                    msg = history[i+2]
-                    if msg.startswith('[EMOJI]'):
-                        emoji_id = msg[8:]
-                        self.append_group_anon_emoji(anon_nick, emoji_id)
-                    else:
-                        self.append_group_anon_message(anon_nick, msg)
-                    i += 3
+                    QMessageBox.warning(self, '删除好友失败', parts[2])
+            elif cmd == 'ERROR':
+                self.append_text_message('[错误]', parts[1])
+            elif cmd == 'FRIEND_ONLINE':
+                username = parts[1]
+                self.update_friend_status(username, True)
+            elif cmd == 'FRIEND_OFFLINE':
+                username = parts[1]
+                self.update_friend_status(username, False)
+            elif cmd == 'CREATE_GROUP_RESULT':
+                if parts[1] == 'OK':
+                    group_id = parts[3] if len(parts) > 3 else ''
+                    QMessageBox.information(self, '创建群聊', f'{parts[2]}\n群ID: {group_id}')
+                    self.get_groups()
                 else:
-                    i += 1
-        elif parts[0] == 'ADD_FRIEND_RESULT':
-            if parts[1] == 'OK':
-                QMessageBox.information(self, '添加好友', parts[2])
-                self.get_friends()
-            else:
-                QMessageBox.warning(self, '添加好友失败', parts[2])
-        elif parts[0] == 'DEL_FRIEND_RESULT':
-            if parts[1] == 'OK':
-                QMessageBox.information(self, '删除好友', parts[2])
-                self.get_friends()
-                self.current_friend = None
-                self.chat_display.clear()
-            else:
-                QMessageBox.warning(self, '删除好友失败', parts[2])
-        elif parts[0] == 'ERROR':
-            self.append_text_message('[错误]', parts[1])
-        elif parts[0] == 'FRIEND_ONLINE':
-            username = parts[1]
-            self.update_friend_status(username, True)
-        elif parts[0] == 'FRIEND_OFFLINE':
-            username = parts[1]
-            self.update_friend_status(username, False)
-        elif parts[0] == 'CREATE_GROUP_RESULT':
-            if parts[1] == 'OK':
-                group_id = parts[3] if len(parts) > 3 else ''
-                QMessageBox.information(self, '创建群聊', f'{parts[2]}\n群ID: {group_id}')
-                self.get_groups()
-            else:
-                QMessageBox.warning(self, '创建群聊失败', parts[2])
-        elif parts[0] == 'JOIN_GROUP_RESULT':
-            if parts[1] == 'OK':
-                group_id = parts[3] if len(parts) > 3 else ''
-                QMessageBox.information(self, '加入群聊', f'{parts[2]}\n群ID: {group_id}')
-                self.get_groups()
-            else:
-                QMessageBox.warning(self, '加入群聊失败', parts[2])
+                    QMessageBox.warning(self, '创建群聊失败', parts[2])
+            elif cmd == 'JOIN_GROUP_RESULT':
+                if parts[1] == 'OK':
+                    group_id = parts[3] if len(parts) > 3 else ''
+                    QMessageBox.information(self, '加入群聊', f'{parts[2]}\n群ID: {group_id}')
+                    self.get_groups()
+                else:
+                    QMessageBox.warning(self, '加入群聊失败', parts[2])
+        except Exception as e:
+            print(f"处理消息时出错: {e}, 消息内容: {data}")
 
     def update_friend_status(self, username, online):
         # 更新好友列表项颜色和状态
