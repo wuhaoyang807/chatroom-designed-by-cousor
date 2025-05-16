@@ -131,130 +131,146 @@ def handle_client(conn, addr):
     username = None
     try:
         while True:
-            data = conn.recv(4096).decode('utf-8')
-            if not data:
+            try:
+                data = conn.recv(4096).decode('utf-8')
+                if not data:
+                    print(f"客户端 {addr} 连接关闭")
+                    break
+                
+                parts = data.split('|', 2)
+                cmd = parts[0]
+                if cmd == 'REGISTER':
+                    _, u, p = parts
+                    success, msg = register_user(u, p)
+                    conn.send(f'REGISTER_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                elif cmd == 'LOGIN':
+                    _, u, p = parts
+                    if authenticate_user(u, p):
+                        with lock:
+                            clients[u] = conn
+                        username = u
+                        conn.send('LOGIN_RESULT|OK|Login successful.'.encode('utf-8'))
+                        notify_friends_status(username, True)
+                    else:
+                        conn.send('LOGIN_RESULT|FAIL|Invalid username or password.'.encode('utf-8'))
+                elif cmd == 'ADD_FRIEND':
+                    _, u, f = parts
+                    success, msg = add_friend(u, f)
+                    conn.send(f'ADD_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                elif cmd == 'DEL_FRIEND':
+                    _, u, f = parts
+                    success, msg = del_friend(u, f)
+                    conn.send(f'DEL_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                elif cmd == 'GET_FRIENDS':
+                    _, u = parts[:2]
+                    friends_status = get_friends_with_status(u)
+                    # 格式 FRIEND_LIST|user1:online|user2:offline|...
+                    friend_strs = [f"{f}:{'online' if online else 'offline'}" for f, online in friends_status]
+                    conn.send(f"FRIEND_LIST|{'|'.join(friend_strs)}".encode('utf-8'))
+                elif cmd == 'MSG':
+                    # MSG|to_user|message
+                    _, to_user, msg = parts
+                    # 只允许发给好友
+                    if to_user not in get_friends(username):
+                        conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
+                    else:
+                        with lock:
+                            if to_user in clients:
+                                clients[to_user].send(f'MSG|{username}|{msg}'.encode('utf-8'))
+                            else:
+                                conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
+                elif cmd == 'EMOJI':
+                    # EMOJI|to_user|emoji_id
+                    _, to_user, emoji_id = parts
+                    if to_user not in get_friends(username):
+                        conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
+                    else:
+                        with lock:
+                            if to_user in clients:
+                                clients[to_user].send(f'EMOJI|{username}|{emoji_id}'.encode('utf-8'))
+                            else:
+                                conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
+                elif cmd == 'LOGOUT':
+                    break
+                elif cmd == 'CREATE_GROUP':
+                    _, u, group_name = parts
+                    success, msg, group_id = create_group(group_name)
+                    if success:
+                        join_group(group_id, u)
+                    conn.send(f'CREATE_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
+                elif cmd == 'JOIN_GROUP':
+                    _, u, group_id = parts
+                    success, msg = join_group(group_id, u)
+                    conn.send(f'JOIN_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
+                elif cmd == 'GET_GROUPS':
+                    _, u = parts[:2]
+                    groups = get_user_groups(u)
+                    # 格式 GROUP_LIST|group_id:group_name|...
+                    group_strs = [f'{gid}:{gname}' for gid, gname in groups]
+                    conn.send(f'GROUP_LIST|{"|".join(group_strs)}'.encode('utf-8'))
+                elif cmd == 'GET_GROUP_MEMBERS':
+                    _, group_id = parts[:2]
+                    members = get_group_members(group_id)
+                    conn.send(f'GROUP_MEMBERS|{"|".join(members)}'.encode('utf-8'))
+                elif cmd == 'GROUP_MSG':
+                    # GROUP_MSG|group_id|from_user|msg
+                    _, group_id, from_user, msg = parts
+                    members = get_group_members(group_id)
+                    print(f'群聊广播: group_id={group_id}, members={members}')
+                    save_group_message(group_id, from_user, msg)
+                    with lock:
+                        for m in members:
+                            if m in clients:
+                                try:
+                                    # 发送消息时，带上发送者的在线状态信息
+                                    clients[m].send(f'GROUP_MSG|{str(int(group_id))}|{from_user}|{msg}'.encode('utf-8'))
+                                    # 如果消息接收者与发送者是好友关系，通知发送者在线
+                                    if m != from_user and from_user in get_friends(m):
+                                        clients[m].send(f'FRIEND_ONLINE|{from_user}'.encode('utf-8'))
+                                except Exception as e:
+                                    print(f'发送给{m}失败: {e}')
+                elif cmd == 'GROUP_MSG_ANON':
+                    # GROUP_MSG_ANON|group_id|anon_nick|msg
+                    _, group_id, anon_nick, msg = parts
+                    members = get_group_members(group_id)
+                    print(f'匿名群聊广播: group_id={group_id}, members={members}')
+                    save_group_message(group_id, None, msg, anon_nick=anon_nick)
+                    with lock:
+                        for m in members:
+                            if m in clients:
+                                try:
+                                    clients[m].send(f'GROUP_MSG_ANON|{str(int(group_id))}|{anon_nick}|{msg}'.encode('utf-8'))
+                                except Exception as e:
+                                    print(f'发送给{m}失败: {e}')
+                elif cmd == 'GET_GROUP_HISTORY':
+                    _, group_id = parts[:2]
+                    history = get_group_history(group_id)
+                    # 格式 GROUP_HISTORY|type|sender|msg|...
+                    resp = ['GROUP_HISTORY']
+                    for row in history:
+                        resp.extend(row)
+                    conn.send('|'.join(resp).encode('utf-8'))
+                else:
+                    conn.send('ERROR|Unknown command.'.encode('utf-8'))
+            except ConnectionResetError:
+                print(f"与客户端 {addr} 的连接被重置")
                 break
-            parts = data.split('|', 2)
-            cmd = parts[0]
-            if cmd == 'REGISTER':
-                _, u, p = parts
-                success, msg = register_user(u, p)
-                conn.send(f'REGISTER_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
-            elif cmd == 'LOGIN':
-                _, u, p = parts
-                if authenticate_user(u, p):
-                    with lock:
-                        clients[u] = conn
-                    username = u
-                    conn.send('LOGIN_RESULT|OK|Login successful.'.encode('utf-8'))
-                    notify_friends_status(username, True)
-                else:
-                    conn.send('LOGIN_RESULT|FAIL|Invalid username or password.'.encode('utf-8'))
-            elif cmd == 'ADD_FRIEND':
-                _, u, f = parts
-                success, msg = add_friend(u, f)
-                conn.send(f'ADD_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
-            elif cmd == 'DEL_FRIEND':
-                _, u, f = parts
-                success, msg = del_friend(u, f)
-                conn.send(f'DEL_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
-            elif cmd == 'GET_FRIENDS':
-                _, u = parts[:2]
-                friends_status = get_friends_with_status(u)
-                # 格式 FRIEND_LIST|user1:online|user2:offline|...
-                friend_strs = [f"{f}:{'online' if online else 'offline'}" for f, online in friends_status]
-                conn.send(f"FRIEND_LIST|{'|'.join(friend_strs)}".encode('utf-8'))
-            elif cmd == 'MSG':
-                # MSG|to_user|message
-                _, to_user, msg = parts
-                # 只允许发给好友
-                if to_user not in get_friends(username):
-                    conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
-                else:
-                    with lock:
-                        if to_user in clients:
-                            clients[to_user].send(f'MSG|{username}|{msg}'.encode('utf-8'))
-                        else:
-                            conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
-            elif cmd == 'EMOJI':
-                # EMOJI|to_user|emoji_id
-                _, to_user, emoji_id = parts
-                if to_user not in get_friends(username):
-                    conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
-                else:
-                    with lock:
-                        if to_user in clients:
-                            clients[to_user].send(f'EMOJI|{username}|{emoji_id}'.encode('utf-8'))
-                        else:
-                            conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
-            elif cmd == 'LOGOUT':
-                break
-            elif cmd == 'CREATE_GROUP':
-                _, u, group_name = parts
-                success, msg, group_id = create_group(group_name)
-                if success:
-                    join_group(group_id, u)
-                conn.send(f'CREATE_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
-            elif cmd == 'JOIN_GROUP':
-                _, u, group_id = parts
-                success, msg = join_group(group_id, u)
-                conn.send(f'JOIN_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
-            elif cmd == 'GET_GROUPS':
-                _, u = parts[:2]
-                groups = get_user_groups(u)
-                # 格式 GROUP_LIST|group_id:group_name|...
-                group_strs = [f'{gid}:{gname}' for gid, gname in groups]
-                conn.send(f'GROUP_LIST|{"|".join(group_strs)}'.encode('utf-8'))
-            elif cmd == 'GET_GROUP_MEMBERS':
-                _, group_id = parts[:2]
-                members = get_group_members(group_id)
-                conn.send(f'GROUP_MEMBERS|{"|".join(members)}'.encode('utf-8'))
-            elif cmd == 'GROUP_MSG':
-                # GROUP_MSG|group_id|from_user|msg
-                _, group_id, from_user, msg = parts
-                members = get_group_members(group_id)
-                print(f'群聊广播: group_id={group_id}, members={members}')
-                save_group_message(group_id, from_user, msg)
-                with lock:
-                    for m in members:
-                        if m in clients:
-                            try:
-                                clients[m].send(f'GROUP_MSG|{group_id}|{from_user}|{msg}'.encode('utf-8'))
-                            except Exception as e:
-                                print(f'发送给{m}失败: {e}')
-            elif cmd == 'GROUP_MSG_ANON':
-                # GROUP_MSG_ANON|group_id|anon_nick|msg
-                _, group_id, anon_nick, msg = parts
-                members = get_group_members(group_id)
-                print(f'匿名群聊广播: group_id={group_id}, members={members}')
-                save_group_message(group_id, None, msg, anon_nick=anon_nick)
-                with lock:
-                    for m in members:
-                        if m in clients:
-                            try:
-                                clients[m].send(f'GROUP_MSG_ANON|{group_id}|{anon_nick}|{msg}'.encode('utf-8'))
-                            except Exception as e:
-                                print(f'发送给{m}失败: {e}')
-            elif cmd == 'GET_GROUP_HISTORY':
-                _, group_id = parts[:2]
-                history = get_group_history(group_id)
-                # 格式 GROUP_HISTORY|type|sender|msg|...
-                resp = ['GROUP_HISTORY']
-                for row in history:
-                    resp.extend(row)
-                conn.send('|'.join(resp).encode('utf-8'))
-            else:
-                conn.send('ERROR|Unknown command.'.encode('utf-8'))
+            except Exception as e:
+                print(f"处理客户端 {addr} 命令出错: {e}")
+                continue
     except Exception as e:
-        print(f'Error: {e}')
+        print(f"客户端处理总体错误: {e}")
     finally:
         if username:
             with lock:
                 if username in clients:
                     del clients[username]
             notify_friends_status(username, False)
-        conn.close()
-        print(f'Connection from {addr} closed.')
+        try:
+            conn.close()
+        except:
+            pass
+        print(f'连接 {addr} 已关闭')
 
 def start_server():
     print(f'Server listening on {HOST}:{PORT}')
@@ -325,11 +341,12 @@ def get_user_groups(username):
     return groups
 
 def get_group_members(group_id):
+    group_id = str(int(group_id))  # 统一格式，去除前导零
     members = []
     with open(GROUP_MEMBERS_CSV, 'r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
-            if row['group_id'] == group_id:
+            if str(int(row['group_id'])) == group_id:
                 members.append(row['username'])
     return members
 

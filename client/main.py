@@ -1,7 +1,7 @@
 import sys
 import socket
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget)
-from PyQt5.QtCore import Qt, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
 import os
 
@@ -13,6 +13,7 @@ EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
 
 class ClientThread(QThread):
     message_received = pyqtSignal(str)
+    connection_lost = pyqtSignal()
 
     def __init__(self, sock):
         super().__init__()
@@ -24,9 +25,17 @@ class ClientThread(QThread):
             try:
                 data = self.sock.recv(4096)
                 if not data:
+                    print("服务器连接断开")
+                    self.connection_lost.emit()
                     break
                 self.message_received.emit(data.decode('utf-8'))
-            except Exception:
+            except ConnectionResetError:
+                print("连接被重置")
+                self.connection_lost.emit()
+                break
+            except Exception as e:
+                print(f"接收消息出错: {e}")
+                self.connection_lost.emit()
                 break
 
     def stop(self):
@@ -148,12 +157,19 @@ class MainWindow(QWidget):
             self.current_group = None
             self.groups = []
             self.group_status = {}
+            self.selecting_group = False  # 防重入
+            self.unread_groups = set()  # 新增：未读群聊消息集合
             self.init_ui()
             self.client_thread = ClientThread(self.sock)
             self.client_thread.message_received.connect(self.on_message)
+            self.client_thread.connection_lost.connect(self.on_connection_lost)
             self.client_thread.start()
-            self.get_friends()
-            self.get_groups()
+            
+            # 启动定时器，确保登录后刷新群聊列表
+            self.refresh_timer = QTimer(self)
+            self.refresh_timer.timeout.connect(self.initial_refresh)
+            self.refresh_timer.setSingleShot(True)
+            self.refresh_timer.start(500)  # 延迟500毫秒刷新
         except Exception as e:
             QMessageBox.critical(None, '错误', f'主窗口初始化异常: {e}')
 
@@ -239,10 +255,20 @@ class MainWindow(QWidget):
         self.anon_nick = None
 
     def get_friends(self):
-        self.sock.send(f'GET_FRIENDS|{self.username}'.encode('utf-8'))
+        try:
+            self.sock.send(f'GET_FRIENDS|{self.username}'.encode('utf-8'))
+        except Exception as e:
+            print(f"获取好友列表出错: {e}")
+            QMessageBox.warning(self, '网络错误', '获取好友列表失败，请检查网络连接')
 
     def get_groups(self):
-        self.sock.send(f'GET_GROUPS|{self.username}'.encode('utf-8'))
+        try:
+            self.sock.send(f'GET_GROUPS|{self.username}'.encode('utf-8'))
+            # 清空未读标记
+            self.unread_groups = set()
+        except Exception as e:
+            print(f"获取群聊列表出错: {e}")
+            QMessageBox.warning(self, '网络错误', '获取群聊列表失败，请检查网络连接')
 
     def select_friend(self, item):
         self.current_friend = item.text().split(' ')[0]
@@ -316,13 +342,28 @@ class MainWindow(QWidget):
         self.append_emoji_message('我', emoji_id)
 
     def select_group(self, item):
-        group_info = item.text().split(' ', 1)[0]
-        self.current_group = group_info
-        self.tab_widget.setCurrentWidget(self.group_tab)
-        self.group_chat_display.clear()
-        self.anon_nick = None
-        self.sock.send(f'GET_GROUP_HISTORY|{self.current_group}'.encode('utf-8'))
-        self.sock.send(f'GET_GROUP_MEMBERS|{self.current_group}'.encode('utf-8'))
+        if self.selecting_group:
+            return
+        self.selecting_group = True
+        try:
+            group_info = item.text().split(' ', 1)[0]
+            if self.current_group == group_info:
+                self.selecting_group = False
+                return
+            self.current_group = group_info
+            # 清除未读标记
+            if group_info in self.unread_groups:
+                self.unread_groups.remove(group_info)
+                self.update_group_list()  # 更新群聊列表显示
+            self.tab_widget.setCurrentWidget(self.group_tab)
+            self.group_chat_display.clear()
+            self.anon_nick = None
+            self.group_members_list.clear()
+            # 先获取群聊成员，再获取历史记录
+            self.sock.send(f'GET_GROUP_MEMBERS|{self.current_group}'.encode('utf-8'))
+            self.sock.send(f'GET_GROUP_HISTORY|{self.current_group}'.encode('utf-8'))
+        finally:
+            self.selecting_group = False
 
     def create_group(self):
         group_name, ok = QInputDialog.getText(self, '创建群聊', '输入群聊名称:')
@@ -484,7 +525,12 @@ class MainWindow(QWidget):
             for g in parts[1:]:
                 if g and ':' in g:
                     gid, gname = g.split(':', 1)
-                    item = QListWidgetItem(f'{gid} {gname}')
+                    display_text = f'{gid} {gname}'
+                    if gid in self.unread_groups:
+                        display_text += ' [有新消息]'
+                    item = QListWidgetItem(display_text)
+                    if gid in self.unread_groups:
+                        item.setForeground(QColor('blue'))
                     self.group_list.addItem(item)
         elif parts[0] == 'GROUP_MEMBERS':
             self.group_members_list.clear()
@@ -492,21 +538,42 @@ class MainWindow(QWidget):
                 if m:
                     self.group_members_list.addItem(m)
         elif parts[0] == 'GROUP_MSG':
-            group_id, from_user, msg = parts[1], parts[2], parts[3]
-            if self.tab_widget.currentWidget() == self.group_tab and group_id == self.current_group:
-                if msg.startswith('[EMOJI]'):
-                    emoji_id = msg[8:]
-                    self.append_group_emoji(from_user, emoji_id)
+            try:
+                group_id, from_user, msg = parts[1], parts[2], parts[3]
+                # 收到消息意味着用户在线，更新好友状态
+                if from_user in self.friends:
+                    self.update_friend_status(from_user, True)
+                # 无论当前是否在该群聊界面，都保存接收到的消息
+                if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
+                    # 如果用户当前正在查看该群聊，则显示消息
+                    if msg.startswith('[EMOJI]'):
+                        emoji_id = msg[8:]
+                        self.append_group_emoji(from_user, emoji_id)
+                    else:
+                        self.append_group_message(from_user, msg)
                 else:
-                    self.append_group_message(from_user, msg)
+                    # 用户未查看该群聊，添加未读标记
+                    self.unread_groups.add(group_id)
+                    self.update_group_list()
+            except Exception as e:
+                print(f"处理群聊消息出错: {e}")
         elif parts[0] == 'GROUP_MSG_ANON':
-            group_id, anon_nick, msg = parts[1], parts[2], parts[3]
-            if self.tab_widget.currentWidget() == self.group_tab and group_id == self.current_group:
-                if msg.startswith('[EMOJI]'):
-                    emoji_id = msg[8:]
-                    self.append_group_anon_emoji(anon_nick, emoji_id)
+            try:
+                group_id, anon_nick, msg = parts[1], parts[2], parts[3]
+                # 无论当前是否在该群聊界面，都保存接收到的消息
+                if self.current_group == group_id and self.tab_widget.currentWidget() == self.group_tab:
+                    # 如果用户当前正在查看该群聊，则显示消息
+                    if msg.startswith('[EMOJI]'):
+                        emoji_id = msg[8:]
+                        self.append_group_anon_emoji(anon_nick, emoji_id)
+                    else:
+                        self.append_group_anon_message(anon_nick, msg)
                 else:
-                    self.append_group_anon_message(anon_nick, msg)
+                    # 用户未查看该群聊，添加未读标记
+                    self.unread_groups.add(group_id)
+                    self.update_group_list()
+            except Exception as e:
+                print(f"处理匿名群聊消息出错: {e}")
         elif parts[0] == 'GROUP_HISTORY':
             self.group_chat_display.clear()
             history = parts[1:]
@@ -581,6 +648,30 @@ class MainWindow(QWidget):
         if hasattr(self, 'friend_status'):
             self.friend_status[username] = 'online' if online else 'offline'
 
+    def update_group_list(self):
+        """更新群聊列表，包括未读消息标记"""
+        current_items = []
+        for i in range(self.group_list.count()):
+            current_items.append(self.group_list.item(i).text())
+        
+        self.group_list.clear()
+        for item in current_items:
+            group_id = item.split(' ', 1)[0]
+            display_text = item
+            if group_id in self.unread_groups:
+                display_text = f"{item} [有新消息]"
+            list_item = QListWidgetItem(display_text)
+            if group_id in self.unread_groups:
+                list_item.setForeground(QColor('blue'))
+            self.group_list.addItem(list_item)
+
+    def on_connection_lost(self):
+        QMessageBox.critical(self, '错误', '服务器连接断开，请重新登录')
+        self.close()  # 关闭当前窗口
+        # 重新显示登录窗口
+        self.login_window = LoginWindow()
+        self.login_window.show()
+
     def closeEvent(self, event):
         try:
             self.sock.send('LOGOUT|'.encode('utf-8'))
@@ -589,6 +680,14 @@ class MainWindow(QWidget):
         self.client_thread.stop()
         self.sock.close()
         event.accept()
+
+    def initial_refresh(self):
+        """登录后初始化刷新好友和群聊列表"""
+        try:
+            self.get_friends()
+            self.get_groups()
+        except Exception as e:
+            print(f"初始化刷新出错: {e}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
