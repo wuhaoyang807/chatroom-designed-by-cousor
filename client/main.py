@@ -1,6 +1,6 @@
 import sys
 import socket
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget, QDialog, QDesktopWidget, QFileDialog)
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget, QDialog, QDesktopWidget, QFileDialog, QProgressDialog)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QByteArray
 from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
 import os
@@ -36,6 +36,10 @@ EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
 # 在EMOJI_DIR定义附近添加背景图片文件夹
 BG_DIR = os.path.join(os.path.dirname(__file__), 'backgrounds')
 os.makedirs(BG_DIR, exist_ok=True)
+
+# 添加文件存储目录
+FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
+os.makedirs(FILES_DIR, exist_ok=True)
 
 # 音频配置
 CHUNK = 1024
@@ -470,8 +474,10 @@ class LoginWindow(QWidget):
         self.pwd_edit.setEchoMode(QLineEdit.Password)
         self.login_btn = QPushButton('登录')
         self.reg_btn = QPushButton('注册')
+        self.del_btn = QPushButton('注销')
         self.login_btn.clicked.connect(self.login)
         self.reg_btn.clicked.connect(self.register)
+        self.del_btn.clicked.connect(self.delete_user)
         layout.addWidget(QLabel('用户名:'))
         layout.addWidget(self.user_edit)
         layout.addWidget(QLabel('密码:'))
@@ -479,6 +485,7 @@ class LoginWindow(QWidget):
         btn_layout = QHBoxLayout()
         btn_layout.addWidget(self.login_btn)
         btn_layout.addWidget(self.reg_btn)
+        btn_layout.addWidget(self.del_btn)
         layout.addLayout(btn_layout)
         self.setLayout(layout)
 
@@ -514,6 +521,25 @@ class LoginWindow(QWidget):
             QMessageBox.information(self, '注册成功', parts[2])
         else:
             QMessageBox.warning(self, '注册失败', parts[2] if len(parts) > 2 else '未知错误')
+
+    def delete_user(self):
+        username = self.user_edit.text().strip()
+        password = self.pwd_edit.text().strip()
+        if not username or not password:
+            QMessageBox.warning(self, '提示', '请输入用户名和密码')
+            return
+        try:
+            self.sock.send(f'DELETE_USER|{username}|{password}'.encode('utf-8'))
+            resp = self.sock.recv(4096).decode('utf-8')
+            parts = resp.split('|', 2)
+            if parts[0] == 'DELETE_USER_RESULT' and parts[1] == 'OK':
+                QMessageBox.information(self, '注销成功', '账号已注销，您可以重新注册同名账号。')
+                self.user_edit.clear()
+                self.pwd_edit.clear()
+            else:
+                QMessageBox.warning(self, '注销失败', '用户名或密码错误，或账号不存在。')
+        except Exception as e:
+            QMessageBox.critical(self, '错误', f'注销请求失败: {e}')
 
     def accept_login(self, username):
         try:
@@ -634,6 +660,7 @@ class MainWindow(QWidget):
         center_window(self)  # 居中显示窗口
         # 在MainWindow.__init__中添加self.current_bg_index = 0
         self.current_bg_index = 0
+        self.private_files = []  # 当前私聊文件列表
 
     def init_udp_audio(self):
         """初始化UDP音频通信"""
@@ -761,6 +788,16 @@ class MainWindow(QWidget):
         private_layout = QVBoxLayout()
         self.chat_display = QListWidget()
         private_layout.addWidget(self.chat_display)
+        # 文件区
+        file_layout = QHBoxLayout()
+        self.upload_file_btn = QPushButton('上传文件')
+        self.upload_file_btn.clicked.connect(self.upload_private_file)
+        self.file_list = QListWidget()
+        self.file_list.setFixedHeight(80)
+        self.file_list.itemDoubleClicked.connect(self.download_private_file)
+        file_layout.addWidget(self.upload_file_btn)
+        file_layout.addWidget(self.file_list)
+        private_layout.addLayout(file_layout)
         input_layout = QHBoxLayout()
         self.input_edit = QLineEdit()
         self.input_edit.setPlaceholderText('输入消息...')
@@ -841,8 +878,8 @@ class MainWindow(QWidget):
         self.current_friend = item.text().split(' ')[0]
         self.chat_display.clear()
         self.append_text_message('', f'与 {self.current_friend} 的聊天：')
-        # 获取私聊历史记录
         self.get_private_history()
+        self.get_private_file_list()
 
     def get_private_history(self):
         """获取与当前好友的私聊历史记录"""
@@ -1483,6 +1520,29 @@ class MainWindow(QWidget):
                     self.get_groups()
                 else:
                     QMessageBox.warning(self, '加入群聊失败', parts[2])
+            elif cmd == 'FILE_LIST':
+                # FILE_LIST|file1|file2|...
+                self.update_private_file_list(parts[1:])
+            elif cmd == 'FILE_DATA':
+                # FILE_DATA|filename|filesize
+                fname = parts[1]
+                filesize = int(parts[2])
+                # 接收文件数据
+                filedata = b''
+                while len(filedata) < filesize:
+                    chunk = self.sock.recv(min(4096, filesize - len(filedata)))
+                    if not chunk:
+                        break
+                    filedata += chunk
+                
+                # 确保FILES_DIR存在
+                os.makedirs(FILES_DIR, exist_ok=True)
+                
+                # 保存文件到FILES_DIR目录
+                save_path = os.path.join(FILES_DIR, fname)
+                with open(save_path, 'wb') as f:
+                    f.write(filedata)
+                QMessageBox.information(self, '下载完成', f'文件已保存到: {save_path}')
         except Exception as e:
             logging.error(f"处理消息时出错: {e}, 消息内容: {data}", exc_info=True)
 
@@ -1538,12 +1598,34 @@ class MainWindow(QWidget):
             if self.udp_thread:
                 self.udp_thread.stop()
                 
-            self.sock.send('LOGOUT|'.encode('utf-8'))
-        except Exception:
-            pass
-        self.client_thread.stop()
-        self.sock.close()
-        event.accept()
+            # 尝试发送登出消息，但不等待响应
+            try:
+                self.sock.send('LOGOUT|'.encode('utf-8'))
+            except:
+                pass
+                
+            # 停止客户端线程
+            self.client_thread.stop()
+            
+            # 关闭socket连接
+            try:
+                self.sock.close()
+            except:
+                pass
+                
+            # 接受关闭事件
+            event.accept()
+            
+            # 只有在用户主动关闭窗口时才退出程序
+            if event.spontaneous():
+                QApplication.quit()
+            
+        except Exception as e:
+            print(f"关闭窗口时出错: {e}")
+            event.accept()
+            # 只有在用户主动关闭窗口时才退出程序
+            if event.spontaneous():
+                QApplication.quit()
 
     def initial_refresh(self):
         """登录后初始化刷新好友和群聊列表"""
@@ -1759,6 +1841,334 @@ class MainWindow(QWidget):
             self.resize(w, h)
             center_window(self)
 
+    def upload_private_file(self):
+        if not self.current_friend:
+            QMessageBox.warning(self, '提示', '请先选择好友')
+            return
+        file_path, _ = QFileDialog.getOpenFileName(self, '选择要上传的文件', '', 'All Files (*)')
+        if not file_path:
+            return
+        fname = os.path.basename(file_path)
+        try:
+            with open(file_path, 'rb') as f:
+                data = f.read()
+            # 发送文件上传请求
+            self.sock.send(f'FILE_UPLOAD|{self.username}|{self.current_friend}|{fname}|{len(data)}'.encode('utf-8'))
+            # 等待一小段时间确保服务器准备好接收数据
+            time.sleep(0.1)
+            # 发送文件数据
+            self.sock.sendall(data)
+            QMessageBox.information(self, '上传成功', f'文件 {fname} 已上传')
+            self.get_private_file_list()
+        except Exception as e:
+            QMessageBox.warning(self, '上传失败', f'文件上传失败: {e}')
+
+    def get_private_file_list(self):
+        if not self.current_friend:
+            return
+        try:
+            self.sock.send(f'FILE_LIST|{self.username}|{self.current_friend}'.encode('utf-8'))
+        except Exception as e:
+            QMessageBox.warning(self, '网络错误', f'获取文件列表失败: {e}')
+
+    def update_private_file_list(self, file_list):
+        self.private_files = file_list
+        self.file_list.clear()
+        for fname in file_list:
+            self.file_list.addItem(fname)
+
+    def download_private_file(self, item):
+        if not item:
+            return
+        fname = item.text()
+        temp_path = None
+        progress = None
+        
+        try:
+            # 让用户选择保存位置
+            save_path, _ = QFileDialog.getSaveFileName(
+                self,
+                '选择保存位置',
+                os.path.join(FILES_DIR, fname),
+                'All Files (*)'
+            )
+            
+            if not save_path:  # 用户取消了保存
+                return
+                
+            # 创建进度对话框
+            progress = QProgressDialog("正在准备下载文件...", "取消", 0, 100, self)
+            progress.setWindowTitle("下载进度")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setAutoClose(False)
+            progress.setAutoReset(False)
+            progress.setMinimumDuration(0)
+            progress.setCancelButton(None)
+            progress.show()
+            
+            # 发送下载请求
+            self.sock.send(f'FILE_DOWNLOAD|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
+            
+            # 等待服务器响应
+            response = b''
+            timeout = 300  # 5分钟超时
+            start_time = time.time()
+            last_update_time = start_time
+            retry_count = 0
+            max_retries = 3
+            
+            # 接收响应头
+            while retry_count < max_retries:
+                try:
+                    if time.time() - start_time > timeout:
+                        raise Exception("下载超时")
+                        
+                    self.sock.settimeout(10)
+                    chunk = self.sock.recv(4096)
+                    if not chunk:
+                        raise Exception("服务器连接断开")
+                    response += chunk
+                    if b'\n' in response:
+                        break
+                except socket.timeout:
+                    current_time = time.time()
+                    if current_time - last_update_time >= 1:
+                        if progress and not progress.wasCanceled():
+                            progress.setLabelText(f"正在等待服务器响应...\n已等待: {int(current_time - start_time)}秒")
+                            QApplication.processEvents()
+                            last_update_time = current_time
+                    continue
+                except Exception as e:
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        raise Exception(f"接收响应头失败: {str(e)}")
+                    time.sleep(1)
+                    continue
+                finally:
+                    self.sock.settimeout(None)
+            
+            # 分离响应头和文件数据
+            header, remaining_data = response.split(b'\n', 1)
+            header = header.decode('utf-8')
+            parts = header.split('|')
+            
+            if parts[0] == 'FILE_DATA':
+                filesize = int(parts[2])
+                print(f"开始下载文件: {fname}, 大小: {filesize} 字节")
+                
+                # 发送确认开始传输的信号
+                self.sock.send(b'ACK\n')
+                
+                # 启用取消按钮
+                progress.setCancelButtonText("取消")
+                progress.setCancelButton(progress.findChild(QPushButton))
+                
+                # 使用临时文件保存数据
+                temp_path = save_path + '.tmp'
+                with open(temp_path, 'wb') as f:
+                    # 写入已接收的数据
+                    f.write(remaining_data)
+                    received_size = len(remaining_data)
+                    
+                    # 使用更合适的缓冲区大小
+                    buffer_size = 32768  # 32KB - 较小的缓冲区有助于更平滑的传输
+                    ack_interval = 524288  # 每512KB发送一次ACK，与服务器端匹配
+                    last_ack_size = received_size
+                    
+                    # 用于计算下载速度
+                    speed_samples = []
+                    last_speed_update = time.time()
+                    last_ui_update = time.time()
+                    
+                    # 继续接收剩余数据
+                    while received_size < filesize:
+                        if time.time() - start_time > timeout:
+                            raise Exception("下载超时")
+                        
+                        if progress.wasCanceled():
+                            raise Exception("下载已取消")
+                        
+                        # 更新进度和速度（降低更新频率以减少UI负担）
+                        current_time = time.time()
+                        if current_time - last_ui_update >= 0.25:  # 每250ms更新一次UI
+                            # 计算下载速度
+                            time_diff = current_time - last_speed_update
+                            if time_diff >= 1.0:  # 每秒更新一次速度
+                                speed = (received_size - last_ack_size) / time_diff / 1024  # KB/s
+                                speed_samples.append(speed)
+                                if len(speed_samples) > 3:  # 保留最近3个速度样本，减少内存占用
+                                    speed_samples.pop(0)
+                                avg_speed = sum(speed_samples) / len(speed_samples) if speed_samples else 0
+                                last_speed_update = current_time
+                                last_ack_size = received_size
+                            else:
+                                # 如果未到1秒，使用上次的速度数据
+                                avg_speed = sum(speed_samples) / len(speed_samples) if speed_samples else 0
+                            
+                            # 更新进度条和状态信息
+                            try:
+                                percent_complete = int(received_size * 100 / filesize)
+                                progress.setValue(percent_complete)
+                                # 简化显示内容，减少文本渲染负担
+                                progress.setLabelText(
+                                    f"下载: {fname}\n"
+                                    f"{received_size/1024/1024:.1f}/{filesize/1024/1024:.1f} MB ({percent_complete}%)\n"
+                                    f"速度: {avg_speed:.1f} KB/s"
+                                )
+                                QApplication.processEvents()  # 处理UI事件但不阻塞太久
+                            except Exception as ui_err:
+                                print(f"更新UI出错: {ui_err}")
+                                # UI错误不应该中断下载
+                                pass
+                                
+                            last_ui_update = current_time
+                        
+                        try:
+                            # 使用更短的超时时间和多次尝试，避免卡死
+                            max_retries_per_chunk = 3
+                            retry_count_chunk = 0
+                            received_this_round = False
+                            
+                            # 使用循环来重试接收数据
+                            while retry_count_chunk < max_retries_per_chunk and not received_this_round:
+                                # 处理UI事件以确保UI不卡死
+                                QApplication.processEvents()
+                                
+                                try:
+                                    # 使用更短的超时，这样UI可以更频繁地更新
+                                    self.sock.settimeout(3)  # 设置更短的超时提高响应性
+                                    
+                                    # 合理大小的接收缓冲区
+                                    remain = filesize - received_size
+                                    chunk = self.sock.recv(min(buffer_size, remain))
+                                    
+                                    if chunk:
+                                        received_this_round = True
+                                    else:
+                                        # 如果连接断开但已接收了超过90%的数据，尝试继续使用已接收的部分
+                                        if received_size > filesize * 0.90:
+                                            print(f"连接断开但文件已完成超过90%，使用已下载的部分")
+                                            break
+                                        else:
+                                            retry_count_chunk += 1
+                                            if retry_count_chunk >= max_retries_per_chunk:
+                                                raise Exception("服务器连接断开，数据接收失败")
+                                            print(f"接收空数据，重试 {retry_count_chunk}/{max_retries_per_chunk}")
+                                            time.sleep(0.2)  # 短暂停后重试
+                                except socket.timeout:
+                                    retry_count_chunk += 1
+                                    print(f"接收数据超时，重试 {retry_count_chunk}/{max_retries_per_chunk}")
+                                    if retry_count_chunk >= max_retries_per_chunk:
+                                        # 如果超过最大重试次数且进度不到一半，则抛出异常
+                                        if received_size < filesize / 2:
+                                            raise Exception("接收数据超时，下载进度不足一半")
+                                        # 否则尝试使用已下载的部分
+                                        print("接收数据超时，但已下载超过一半，尝试使用已接收的部分")
+                                        break
+                                    # 展示超时信息并更新UI
+                                    progress.setLabelText(f"接收超时，重试中... ({retry_count_chunk}/{max_retries_per_chunk})\n"
+                                                          f"{received_size/1024/1024:.1f}/{filesize/1024/1024:.1f} MB")
+                                    QApplication.processEvents()
+                                    time.sleep(0.5)  # 等待短暂停后重试
+                                except Exception as e:
+                                    retry_count_chunk += 1
+                                    print(f"接收数据出错: {e}, 重试 {retry_count_chunk}/{max_retries_per_chunk}")
+                                    if retry_count_chunk >= max_retries_per_chunk:
+                                        raise
+                                    time.sleep(0.5)
+                                finally:
+                                    self.sock.settimeout(None)
+                            
+                            # 如果没有收到数据且进度不到一半，则拒绝继续
+                            if not received_this_round and received_size < filesize / 2:
+                                raise Exception("下载失败：多次尝试后无法接收数据")
+                            
+                            f.write(chunk)
+                            received_size += len(chunk)
+                            
+                            # 每接收指定大小的数据发送一次ACK
+                            if received_size - last_ack_size >= ack_interval:
+                                print(f"发送ACK，已接收: {received_size/1024/1024:.2f}MB/{filesize/1024/1024:.2f}MB ({received_size/filesize*100:.1f}%)")
+                                self.sock.send(b'ACK\n')
+                                last_ack_size = received_size
+                            
+                        except socket.timeout:
+                            # 超时但仍然连接，继续尝试
+                            print("接收超时，重试...")
+                            continue
+                        except Exception as e:
+                            retry_count += 1
+                            print(f"接收数据错误 ({retry_count}/{max_retries}): {e}")
+                            if retry_count >= max_retries:
+                                raise Exception(f"接收数据失败: {str(e)}")
+                            time.sleep(0.5)
+                            continue
+                        finally:
+                            self.sock.settimeout(None)
+                
+                # 发送最后的ACK
+                try:
+                    self.sock.send(b'ACK\n')
+                except Exception as e:
+                    print(f"发送最终ACK时出错: {e}")
+                    # 继续执行，因为文件已经下载完成
+                
+                # 下载完成后重命名文件
+                if os.path.exists(save_path):
+                    os.remove(save_path)
+                os.rename(temp_path, save_path)
+                
+                progress.setValue(100)
+                progress.setLabelText("下载完成！")
+                QApplication.processEvents()
+                time.sleep(1)
+                progress.close()
+                
+                QMessageBox.information(self, '下载完成', f'文件已保存到: {save_path}')
+                
+            elif parts[0] == 'ERROR':
+                error_msg = parts[1] if len(parts) > 1 else '未知错误'
+                print(f"下载失败: {error_msg}")
+                if progress and not progress.wasCanceled():
+                    progress.close()
+                QMessageBox.warning(self, '下载失败', error_msg)
+            else:
+                print(f"未知响应: {header}")
+                if progress and not progress.wasCanceled():
+                    progress.close()
+                QMessageBox.warning(self, '下载失败', '服务器响应格式错误')
+                
+        except Exception as e:
+            print(f"下载文件时出错: {e}")
+            if progress and not progress.wasCanceled():
+                progress.close()
+            QMessageBox.warning(self, '下载失败', f'下载文件失败: {e}')
+            
+        finally:
+            # 确保进度对话框被关闭
+            if progress and not progress.wasCanceled():
+                try:
+                    progress.close()
+                except:
+                    pass
+            
+            # 清理临时文件
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except:
+                    pass
+            
+            # 重置socket超时设置
+            try:
+                self.sock.settimeout(None)
+            except:
+                pass
+            
+            # 完全移除下载完成后的连接检查，避免在可能已关闭的套接字上操作
+            # 文件传输完成后不会影响连接状态
+            pass
+
 class CallNotificationWindow(QWidget):
     """独立的通话通知窗口，不会受到主窗口状态的影响"""
     
@@ -1971,6 +2381,9 @@ class CallNotificationWindow(QWidget):
                 self.incoming_call_dialog.show()
             except Exception as e2:
                 logging.error(f"备用通知方式也失败: {e2}", exc_info=True)
+
+FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
+os.makedirs(FILES_DIR, exist_ok=True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

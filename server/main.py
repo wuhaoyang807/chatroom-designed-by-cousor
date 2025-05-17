@@ -4,6 +4,8 @@ import csv
 import hashlib
 import os
 import time
+import shutil
+import threading
 
 # 服务器配置
 HOST = '0.0.0.0'
@@ -14,6 +16,8 @@ FRIENDSHIP_CSV = 'friendships.csv'
 GROUP_CSV = 'groups.csv'
 GROUP_MEMBERS_CSV = 'group_members.csv'
 DEBUG_CALL = True  # 添加调试标志
+USER_FILES_DIR = 'user_files'
+os.makedirs(USER_FILES_DIR, exist_ok=True)
 
 # 确保CSV文件存在
 def ensure_csv(file_path, header):
@@ -99,6 +103,25 @@ def del_friend(user_a, user_b):
             writer.writerows(rows)
     return changed, 'Friend deleted.' if changed else 'Not friends.'
 
+def delete_user(username, password):
+    # 删除 users.csv 中指定用户名和密码的行
+    deleted = False
+    with lock:
+        rows = []
+        with open(USER_CSV, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['username'] == username and row['password_hash'] == hash_password(password):
+                    deleted = True
+                    continue
+                rows.append(row)
+        if deleted:
+            with open(USER_CSV, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=['username', 'password_hash'])
+                writer.writeheader()
+                writer.writerows(rows)
+    return deleted
+
 def get_friends(username):
     friends = set()
     with open(FRIENDSHIP_CSV, 'r', newline='', encoding='utf-8') as f:
@@ -180,8 +203,12 @@ def handle_client(conn, addr):
                     print(f"客户端 {addr} 连接关闭")
                     break
                 
-                parts = data.split('|', 2)
+                parts = data.split('|')
                 cmd = parts[0]
+                # 健壮性检查
+                if not cmd:
+                    continue
+                
                 if cmd == 'REGISTER':
                     _, u, p = parts
                     success, msg = register_user(u, p)
@@ -223,6 +250,11 @@ def handle_client(conn, addr):
                     _, u, f = parts
                     success, msg = del_friend(u, f)
                     send_msg(conn, f'DEL_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}')
+                elif cmd == 'DELETE_USER':
+                    # DELETE_USER|username|password
+                    _, u, p = parts
+                    success = delete_user(u, p)
+                    send_msg(conn, f'DELETE_USER_RESULT|{"OK" if success else "FAIL"}')
                 elif cmd == 'GET_FRIENDS':
                     _, u = parts[:2]
                     friends_status = get_friends_with_status(u)
@@ -521,11 +553,150 @@ def handle_client(conn, addr):
                         except Exception as e:
                             print(f"获取私聊历史出错: {e}")
                             send_msg(conn, 'PRIVATE_HISTORY|error|获取历史记录失败')
+                elif cmd == 'FILE_UPLOAD':
+                    # FILE_UPLOAD|from_user|to_user|filename|filesize
+                    _, from_user, to_user, fname, fsize = parts
+                    fsize = int(fsize)
+                    users = sorted([from_user, to_user])
+                    dir_path = os.path.join(USER_FILES_DIR, f'{users[0]}__{users[1]}')
+                    os.makedirs(dir_path, exist_ok=True)
+                    file_path = os.path.join(dir_path, fname)
+                    
+                    # 接收文件数据
+                    filedata = b''
+                    while len(filedata) < fsize:
+                        chunk = conn.recv(min(4096, fsize - len(filedata)))
+                        if not chunk:
+                            break
+                        filedata += chunk
+                    
+                    # 保存文件
+                    with open(file_path, 'wb') as f:
+                        f.write(filedata)
+                    print(f"文件已保存: {file_path}")
+                    
+                    # 主动推送文件列表给双方
+                    file_list = os.listdir(dir_path)
+                    with lock:
+                        # 给自己推送
+                        if from_user in clients:
+                            send_msg(clients[from_user], 'FILE_LIST|' + '|'.join(file_list))
+                        # 给对方推送
+                        if to_user in clients:
+                            send_msg(clients[to_user], 'FILE_LIST|' + '|'.join(file_list))
+                elif cmd == 'FILE_LIST':
+                    # FILE_LIST|from_user|to_user
+                    _, from_user, to_user = parts
+                    users = sorted([from_user, to_user])
+                    dir_path = os.path.join(USER_FILES_DIR, f'{users[0]}__{users[1]}')
+                    if os.path.exists(dir_path):
+                        files = os.listdir(dir_path)
+                    else:
+                        files = []
+                    send_msg(conn, 'FILE_LIST|' + '|'.join(files))
+                elif cmd == 'FILE_DOWNLOAD':
+                    # FILE_DOWNLOAD|from_user|to_user|filename
+                    _, from_user, to_user, fname = parts
+                    
+                    def send_file_thread(conn, from_user, to_user, fname):
+                        users = sorted([from_user, to_user])
+                        dir_path = os.path.join(USER_FILES_DIR, f'{users[0]}__{users[1]}')
+                        file_path = os.path.join(dir_path, fname)
+                        print(f"[线程] 处理文件下载请求: {from_user} -> {to_user}, 文件: {fname}")
+                        print(f"[线程] 文件路径: {file_path}")
+                        try:
+                            if os.path.exists(file_path):
+                                filesize = os.path.getsize(file_path)
+                                print(f"[线程] 文件大小: {filesize} 字节")
+                                # 发送文件信息（确保以换行符结束）
+                                try:
+                                    response = f'FILE_DATA|{fname}|{filesize}\n'
+                                    conn.send(response.encode('utf-8'))
+                                    # 等待客户端确认开始传输
+                                    try:
+                                        conn.settimeout(5)
+                                        ack = conn.recv(4)
+                                        if not ack or ack != b'ACK\n':
+                                            print(f"[线程] 警告: 客户端发送了标准ACK以外的确认: {ack}")
+                                    except socket.timeout:
+                                        print("[线程] 等待客户端确认超时，继续尝试发送文件")
+                                    finally:
+                                        conn.settimeout(None)
+                                except Exception as e:
+                                    print(f"[线程] 准备发送文件阶段出错: {e}")
+                                    send_msg(conn, f'ERROR|准备发送文件失败: {e}')
+                                    return
+                                # 分块发送文件数据
+                                with open(file_path, 'rb') as f:
+                                    total_sent = 0
+                                    chunk_size = 65536  # 64KB
+                                    last_update_time = time.time()
+                                    last_print_time = time.time()
+                                    ack_interval = 524288  # 每512KB等待一次ACK
+                                    last_ack_size = 0
+                                    while total_sent < filesize:
+                                        try:
+                                            # 是否需要等待ACK
+                                            if total_sent - last_ack_size >= ack_interval:
+                                                try:
+                                                    conn.settimeout(10)
+                                                    print(f"[线程] 等待客户端ACK，已发送: {total_sent}/{filesize} 字节 ({total_sent/filesize*100:.1f}%)")
+                                                    ack = conn.recv(4)
+                                                    if not ack or ack != b'ACK\n':
+                                                        print(f"[线程] 警告: 接收到无效的ACK信号: {ack}，尝试继续")
+                                                    last_ack_size = total_sent
+                                                    print("[线程] 收到ACK，继续发送")
+                                                except socket.timeout:
+                                                    print("[线程] 等待ACK超时，但继续传输")
+                                                    last_ack_size = total_sent
+                                                finally:
+                                                    conn.settimeout(None)
+                                            # 读取数据块
+                                            chunk = f.read(chunk_size)
+                                            if not chunk:
+                                                break
+                                            bytes_sent = conn.send(chunk)
+                                            if bytes_sent == 0:
+                                                print("[线程] 警告: 发送字节为0，可能连接有问题")
+                                                time.sleep(0.1)
+                                                continue
+                                            total_sent += bytes_sent
+                                            # 每秒打印一次传输进度
+                                            current_time = time.time()
+                                            if current_time - last_print_time >= 1.0:
+                                                speed = (total_sent - last_update_time) / (current_time - last_update_time) / 1024 if current_time > last_update_time else 0
+                                                print(f"[线程] 文件发送进度: {total_sent}/{filesize} 字节 ({total_sent/filesize*100:.1f}%), 速度: {speed:.1f} KB/s")
+                                                last_print_time = current_time
+                                                last_update_time = current_time
+                                        except Exception as e:
+                                            print(f"[线程] 发送文件数据时出错: {e}")
+                                            try:
+                                                conn.settimeout(3)
+                                                send_msg(conn, f'ERROR|文件传输错误: {str(e)}')
+                                            except:
+                                                pass
+                                            finally:
+                                                conn.settimeout(None)
+                                            return
+                                    print(f"[线程] 文件 {fname} 发送完成")
+                            else:
+                                print(f"[线程] 文件不存在: {file_path}")
+                                send_msg(conn, f'ERROR|文件不存在: {fname}')
+                        except Exception as e:
+                            print(f"[线程] 处理文件下载请求出错: {e}")
+                            try:
+                                send_msg(conn, f'ERROR|文件下载失败: {str(e)}')
+                            except:
+                                pass
+                    
+                    # 启动文件传输线程
+                    t = threading.Thread(target=send_file_thread, args=(conn, from_user, to_user, fname), daemon=True)
+                    t.start()
+                elif cmd == 'PING':
+                    # 响应客户端的PING请求以保持连接
+                    send_msg(conn, 'PONG')
                 else:
                     send_msg(conn, 'ERROR|Unknown command.')
-            except ConnectionResetError:
-                print(f"与客户端 {addr} 的连接被重置")
-                break
             except Exception as e:
                 print(f"处理客户端 {addr} 命令出错: {e}")
                 continue
