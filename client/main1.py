@@ -2,7 +2,7 @@ import sys
 import socket
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit,
                              QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget, QDialog,
-                             QDesktopWidget, QFileDialog, QProgressDialog)
+                             QDesktopWidget, QFileDialog, QProgressDialog, QGraphicsOpacityEffect, QComboBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QByteArray
 from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
 import os
@@ -14,6 +14,13 @@ import logging
 import datetime
 import random  # 添加随机数模块用于端口分配
 import shutil
+import tkinter.filedialog
+import tkinter.messagebox
+import json
+import threading
+import tkinter.messagebox
+import os
+import hashlib
 
 # 配置日志
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -30,7 +37,7 @@ logging.basicConfig(
 )
 
 # 服务器配置
-SERVER_HOST = '127.0.0.1'
+SERVER_HOST = '127.0.0.1'  # 默认本地地址
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
@@ -57,6 +64,39 @@ def center_window(window):
     size = window.geometry()
     window.move((screen.width() - size.width()) // 2,
                 (screen.height() - size.height()) // 2)
+
+
+def check_network_config():
+    """检查网络配置"""
+    try:
+        # 尝试解析服务器地址
+        socket.gethostbyname(SERVER_HOST)
+        logging.debug(f"服务器地址 {SERVER_HOST} 解析成功")
+
+        # 测试服务器连接
+        test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        test_sock.settimeout(5)  # 设置5秒超时
+        test_sock.connect((SERVER_HOST, SERVER_PORT))
+        test_sock.close()
+        logging.debug(f"成功连接到服务器 {SERVER_HOST}:{SERVER_PORT}")
+
+        return True
+    except socket.gaierror:
+        logging.error(f"无法解析服务器地址: {SERVER_HOST}")
+        QMessageBox.critical(None, '网络错误', f'无法解析服务器地址: {SERVER_HOST}\n请确保服务器地址正确')
+        return False
+    except socket.timeout:
+        logging.error(f"连接服务器超时: {SERVER_HOST}:{SERVER_PORT}")
+        QMessageBox.critical(None, '网络错误', f'连接服务器超时\n请确保服务器正在运行且网络连接正常')
+        return False
+    except ConnectionRefusedError:
+        logging.error(f"服务器拒绝连接: {SERVER_HOST}:{SERVER_PORT}")
+        QMessageBox.critical(None, '网络错误', f'服务器拒绝连接\n请确保服务器正在运行且端口 {SERVER_PORT} 已开放')
+        return False
+    except Exception as e:
+        logging.error(f"网络配置检查失败: {e}")
+        QMessageBox.critical(None, '网络错误', f'网络配置检查失败: {e}')
+        return False
 
 
 class ClientThread(QThread):
@@ -120,27 +160,37 @@ class UDPAudioThread(QThread):
         self.udp_socket.bind(('0.0.0.0', self.local_port))
         self.udp_socket.settimeout(0.5)  # 设置超时以便于停止线程
         self.running = True
-        print(f"UDP音频线程绑定到端口: {self.local_port}")
+        self.error_occurred = False
+        logging.debug(f"UDP音频线程绑定到端口: {self.local_port}")
 
     def run(self):
-        while self.running:
+        while self.running and not self.error_occurred:
             try:
                 data, addr = self.udp_socket.recvfrom(65536)
                 if data and len(data) > 1:
-                    # 解析头部
-                    header_len = data[0]
-                    if len(data) > header_len + 1:
-                        # 提取音频数据（跳过头部）
-                        audio_data = data[header_len + 1:]
-                        self.audio_received.emit(audio_data)
+                    try:
+                        # 解析头部
+                        header_len = data[0]
+                        if len(data) > header_len + 1:
+                            # 提取音频数据（跳过头部）
+                            audio_data = data[header_len + 1:]
+                            if audio_data and len(audio_data) > 0:
+                                logging.debug(f"收到UDP音频数据: {len(audio_data)} 字节，来自: {addr}")
+                                self.audio_received.emit(audio_data)
+                    except Exception as e:
+                        logging.error(f"处理UDP数据包错误: {e}")
+                        self.error_occurred = True
             except socket.timeout:
                 continue
             except Exception as e:
-                print(f"UDP接收错误: {e}")
+                logging.error(f"UDP接收错误: {e}")
+                self.error_occurred = True
+                time.sleep(0.1)
 
     def send_audio(self, audio_data, target_addr, sender, receiver):
         try:
-            if not audio_data:
+            if not audio_data or not target_addr or len(audio_data) == 0:
+                logging.warning("无效的音频数据或目标地址")
                 return
 
             # 创建头部：发送者|接收者
@@ -153,65 +203,164 @@ class UDPAudioThread(QThread):
 
             # 发送数据
             self.udp_socket.sendto(packet, target_addr)
+            logging.debug(f"发送UDP音频数据: {len(audio_data)} 字节，到: {target_addr}")
         except Exception as e:
-            print(f"UDP发送错误: {e}")
+            logging.error(f"UDP发送错误: {e}")
+            self.error_occurred = True
 
     def stop(self):
         self.running = False
         self.quit()
         self.wait()
-        self.udp_socket.close()
+        try:
+            self.udp_socket.close()
+        except Exception as e:
+            print(f"关闭UDP socket错误: {e}")
+
+
+class AudioDeviceSelector(QDialog):
+    """音频设备选择对话框"""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("选择音频设备")
+        self.setFixedSize(400, 300)
+
+        self.audio = pyaudio.PyAudio()
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+
+        # 输入设备选择
+        input_layout = QVBoxLayout()
+        input_layout.addWidget(QLabel("选择输入设备:"))
+        self.input_combo = QComboBox()
+        self.populate_input_devices()
+        input_layout.addWidget(self.input_combo)
+
+        # 输出设备选择
+        output_layout = QVBoxLayout()
+        output_layout.addWidget(QLabel("选择输出设备:"))
+        self.output_combo = QComboBox()
+        self.populate_output_devices()
+        output_layout.addWidget(self.output_combo)
+
+        # 确定按钮
+        self.ok_button = QPushButton("确定")
+        self.ok_button.clicked.connect(self.accept)
+
+        layout.addLayout(input_layout)
+        layout.addLayout(output_layout)
+        layout.addWidget(self.ok_button)
+
+        self.setLayout(layout)
+
+    def populate_input_devices(self):
+        for i in range(self.audio.get_device_count()):
+            device_info = self.audio.get_device_info_by_index(i)
+            if device_info['maxInputChannels'] > 0:  # 只显示有输入功能的设备
+                self.input_combo.addItem(device_info['name'], i)
+
+    def populate_output_devices(self):
+        for i in range(self.audio.get_device_count()):
+            device_info = self.audio.get_device_info_by_index(i)
+            if device_info['maxOutputChannels'] > 0:  # 只显示有输出功能的设备
+                self.output_combo.addItem(device_info['name'], i)
+
+    def get_selected_devices(self):
+        return {
+            'input': self.input_combo.currentData(),
+            'output': self.output_combo.currentData()
+        }
+
+    def closeEvent(self, event):
+        self.audio.terminate()
+        event.accept()
 
 
 class AudioRecorder(QThread):
     """音频录制线程"""
 
-    def __init__(self, udp_thread, target_addr, sender, receiver):
+    def __init__(self, udp_thread, target_addr, sender, receiver, input_device_index=None):
         super().__init__()
         self.udp_thread = udp_thread
         self.target_addr = target_addr
         self.sender = sender
         self.receiver = receiver
         self.running = True
-        self.audio = pyaudio.PyAudio()
+        self.audio = None
         self.stream = None
+        self.error_occurred = False
+        self.input_device_index = input_device_index
+        logging.debug(f"初始化音频录制器: input_device_index={input_device_index}")
 
     def run(self):
         try:
+            # 初始化音频设备
+            self.audio = pyaudio.PyAudio()
+
+            # 获取输入设备信息
+            device_info = self.audio.get_device_info_by_index(self.input_device_index)
+            logging.debug(f"使用输入设备: {device_info['name']}")
+            logging.debug(f"设备信息: {device_info}")
+
             # 打开音频流
             self.stream = self.audio.open(
                 format=FORMAT,
                 channels=CHANNELS,
                 rate=RATE,
                 input=True,
-                frames_per_buffer=CHUNK
+                frames_per_buffer=CHUNK,
+                input_device_index=self.input_device_index,
+                stream_callback=None,
+                start=False
             )
 
-            print("开始录音...")
+            # 启动流
+            self.stream.start_stream()
+            logging.debug("开始录音...")
 
             # 持续录制和发送音频
-            while self.running:
-                if self.stream:
-                    audio_data = self.stream.read(CHUNK, exception_on_overflow=False)
-                    self.udp_thread.send_audio(audio_data, self.target_addr, self.sender, self.receiver)
+            while self.running and not self.error_occurred:
+                if self.stream and self.stream.is_active():
+                    try:
+                        audio_data = self.stream.read(CHUNK, exception_on_overflow=False)
+                        if audio_data and len(audio_data) > 0:
+                            logging.debug(f"录制到音频数据: {len(audio_data)} 字节")
+                            self.udp_thread.send_audio(audio_data, self.target_addr, self.sender, self.receiver)
+                    except Exception as e:
+                        logging.error(f"录音错误: {e}")
+                        self.error_occurred = True
+                        time.sleep(0.1)
                 else:
+                    logging.warning("音频流未激活")
                     time.sleep(0.1)
         except Exception as e:
-            print(f"录音错误: {e}")
+            logging.error(f"录音初始化错误: {e}")
+            self.error_occurred = True
         finally:
             self.stop_recording()
 
     def stop_recording(self):
         if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream = None
+            try:
+                if self.stream.is_active():
+                    self.stream.stop_stream()
+                self.stream.close()
+            except Exception as e:
+                print(f"关闭录音流错误: {e}")
+            finally:
+                self.stream = None
 
     def stop(self):
         self.running = False
         self.stop_recording()
         if self.audio:
-            self.audio.terminate()
+            try:
+                self.audio.terminate()
+            except Exception as e:
+                print(f"终止音频设备错误: {e}")
         self.quit()
         self.wait()
 
@@ -219,54 +368,91 @@ class AudioRecorder(QThread):
 class AudioPlayer(QThread):
     """音频播放线程"""
 
-    def __init__(self):
+    def __init__(self, output_device_index=None):
         super().__init__()
-        self.audio = pyaudio.PyAudio()
+        self.audio = None
         self.stream = None
         self.running = True
         self.audio_queue = []
+        self.queue_lock = threading.Lock()
+        self.error_occurred = False
+        self.output_device_index = output_device_index
+        logging.debug(f"初始化音频播放器: output_device_index={output_device_index}")
 
     def run(self):
         try:
+            # 初始化音频设备
+            self.audio = pyaudio.PyAudio()
+
+            # 获取输出设备信息
+            device_info = self.audio.get_device_info_by_index(self.output_device_index)
+            logging.debug(f"使用输出设备: {device_info['name']}")
+            logging.debug(f"设备信息: {device_info}")
+
             # 打开音频流
             self.stream = self.audio.open(
                 format=FORMAT,
                 channels=CHANNELS,
                 rate=RATE,
                 output=True,
-                frames_per_buffer=CHUNK
+                frames_per_buffer=CHUNK,
+                output_device_index=self.output_device_index,
+                stream_callback=None,
+                start=True  # 改为True，确保流立即启动
             )
 
-            print("开始音频播放...")
+            logging.debug("开始音频播放...")
 
             # 持续从队列中获取和播放音频
-            while self.running:
-                if self.audio_queue and self.stream:
-                    audio_data = self.audio_queue.pop(0)
-                    self.stream.write(audio_data)
+            while self.running and not self.error_occurred:
+                if self.audio_queue and self.stream and self.stream.is_active():
+                    try:
+                        with self.queue_lock:
+                            if self.audio_queue:
+                                audio_data = self.audio_queue.pop(0)
+                                if audio_data and len(audio_data) > 0:
+                                    logging.debug(f"播放音频数据: {len(audio_data)} 字节")
+                                    self.stream.write(audio_data)
+                    except Exception as e:
+                        logging.error(f"播放错误: {e}")
+                        self.error_occurred = True
+                        time.sleep(0.01)
                 else:
                     time.sleep(0.01)
         except Exception as e:
-            print(f"播放错误: {e}")
+            logging.error(f"播放初始化错误: {e}")
+            self.error_occurred = True
         finally:
             self.stop_playback()
 
     def add_audio(self, audio_data):
-        if len(self.audio_queue) > 10:  # 限制队列大小，防止延迟过大
-            self.audio_queue = self.audio_queue[5:]  # 丢弃一些旧的数据
-        self.audio_queue.append(audio_data)
+        if not audio_data or len(audio_data) == 0:
+            return
+
+        with self.queue_lock:
+            if len(self.audio_queue) > 10:  # 限制队列大小，防止延迟过大
+                self.audio_queue = self.audio_queue[5:]  # 丢弃一些旧的数据
+            self.audio_queue.append(audio_data)
 
     def stop_playback(self):
         if self.stream:
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream = None
+            try:
+                if self.stream.is_active():
+                    self.stream.stop_stream()
+                self.stream.close()
+            except Exception as e:
+                print(f"关闭播放流错误: {e}")
+            finally:
+                self.stream = None
 
     def stop(self):
         self.running = False
         self.stop_playback()
         if self.audio:
-            self.audio.terminate()
+            try:
+                self.audio.terminate()
+            except Exception as e:
+                print(f"终止音频设备错误: {e}")
         self.quit()
         self.wait()
 
@@ -286,6 +472,10 @@ class CallDialog(QDialog):
         self.audio_recorder = None
         self.audio_player = None
         self.call_active = False
+        self.error_occurred = False
+
+        # 获取音频设备
+        self.audio_devices = self.get_audio_devices()
 
         self.init_ui()
 
@@ -296,6 +486,7 @@ class CallDialog(QDialog):
             self.start_call()
 
     def init_ui(self):
+        """初始化UI界面"""
         self.setWindowTitle("语音通话")
         self.setFixedSize(300, 150)
 
@@ -312,51 +503,83 @@ class CallDialog(QDialog):
 
         self.setLayout(layout)
 
+    def get_audio_devices(self):
+        """获取音频设备"""
+        dialog = AudioDeviceSelector(self)
+        if dialog.exec_() == QDialog.Accepted:
+            return dialog.get_selected_devices()
+        return {'input': None, 'output': None}
+
     def start_call(self):
         """开始音频通话"""
         if self.call_active:
             return
 
+        logging.debug(f"开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
         self.call_active = True
         self.status_label.setText(f"与 {self.friend_name} 通话中...")
 
-        # 启动音频播放器
-        self.audio_player = AudioPlayer()
-        self.udp_thread.audio_received.connect(self.on_audio_received)
-        self.audio_player.start()
+        try:
+            # 启动音频播放器
+            self.audio_player = AudioPlayer(self.audio_devices['output'])
+            self.udp_thread.audio_received.connect(self.on_audio_received)
+            self.audio_player.start()
+            logging.debug("音频播放器已启动")
 
-        # 启动音频录制器
-        self.audio_recorder = AudioRecorder(
-            self.udp_thread,
-            self.target_addr,
-            self.username,
-            self.friend_name
-        )
-        self.audio_recorder.start()
+            # 启动音频录制器
+            if self.target_addr:  # 确保有目标地址
+                self.audio_recorder = AudioRecorder(
+                    self.udp_thread,
+                    self.target_addr,
+                    self.username,
+                    self.friend_name,
+                    self.audio_devices['input']
+                )
+                self.audio_recorder.start()
+                logging.debug("音频录制器已启动")
+            else:
+                logging.warning("没有目标地址，无法启动音频录制器")
+                self.error_occurred = True
+        except Exception as e:
+            logging.error(f"启动通话失败: {e}")
+            self.error_occurred = True
+            self.end_call()
 
     def on_audio_received(self, audio_data):
         """收到音频数据"""
-        if self.audio_player and self.call_active:
-            self.audio_player.add_audio(audio_data)
+        if self.audio_player and self.call_active and not self.error_occurred:
+            try:
+                logging.debug(f"收到音频数据: {len(audio_data)} 字节")
+                self.audio_player.add_audio(audio_data)
+            except Exception as e:
+                logging.error(f"处理接收到的音频数据失败: {e}")
+                self.error_occurred = True
 
     def end_call(self):
         """结束通话"""
+        print("结束通话")
         self.call_active = False
 
         # 停止音频录制和播放
         if self.audio_recorder:
-            self.audio_recorder.stop()
+            try:
+                self.audio_recorder.stop()
+            except Exception as e:
+                print(f"停止音频录制器失败: {e}")
             self.audio_recorder = None
 
         if self.audio_player:
-            self.audio_player.stop()
+            try:
+                self.audio_player.stop()
+            except Exception as e:
+                print(f"停止音频播放器失败: {e}")
             self.audio_player = None
 
         if self.udp_thread:
             try:
                 self.udp_thread.audio_received.disconnect(self.on_audio_received)
-            except:
-                pass
+            except Exception as e:
+                print(f"断开音频接收信号失败: {e}")
 
         self.call_ended.emit()
         self.close()
@@ -471,6 +694,11 @@ class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('登录/注册')
+
+        # 检查网络配置
+        if not check_network_config():
+            sys.exit(1)
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.sock.connect((SERVER_HOST, SERVER_PORT))
@@ -684,7 +912,6 @@ class MainWindow(QWidget):
         logging.debug("开始初始化UDP音频服务")
 
         # 为了避免在同一台计算机上测试时的冲突，使用随机端口而不是基于用户名
-        # 在实际部署中可以保持原有的基于用户名的端口分配
         self.udp_local_port = random.randint(40000, 65000)
         logging.debug(f"分配随机UDP端口: {self.udp_local_port}")
 
@@ -1293,8 +1520,14 @@ class MainWindow(QWidget):
             elif cmd == 'CALL_ACCEPTED':
                 # 对方接受通话
                 try:
+                    if len(parts) < 4:
+                        logging.error(f"CALL_ACCEPTED消息格式错误: {data}")
+                        return
+
                     from_user = parts[1]
-                    caller_ip, caller_port = parts[2].split('|')
+                    caller_ip = parts[2]
+                    caller_port = parts[3]
+
                     logging.debug(f"收到CALL_ACCEPTED: from={from_user}, ip={caller_ip}, port={caller_port}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
 
@@ -1308,6 +1541,8 @@ class MainWindow(QWidget):
                             logging.debug("更新主叫方通话对话框并开始通话")
                             self.call_dialog.target_addr = target_addr
                             self.call_dialog.start_call()
+                            # 更新状态标签
+                            self.call_dialog.status_label.setText(f"与 {from_user} 通话中...")
                         else:
                             # 如果还没有创建通话对话框（可能是作为被叫方），则创建
                             logging.debug("为被叫方创建通话对话框")
@@ -1316,6 +1551,8 @@ class MainWindow(QWidget):
                         logging.warning(f"收到CALL_ACCEPTED但不匹配当前通话状态: {from_user}")
                 except Exception as e:
                     logging.error(f"处理通话接受消息出错: {e}", exc_info=True)
+                    QMessageBox.warning(self, "通话错误", f"处理通话接受消息失败: {e}")
+                return
             elif cmd == 'CALL_REJECTED':
                 # 对方拒绝通话
                 from_user = parts[1]
@@ -1713,7 +1950,7 @@ class MainWindow(QWidget):
 
     def check_pending_calls(self):
         """定期检查待处理的来电并显示通知"""
-        if not self.pending_calls or self.in_call:
+        if not self.pending_calls:
             return
 
         # 处理队列中的第一个来电
@@ -1730,13 +1967,30 @@ class MainWindow(QWidget):
             self.pending_calls.remove(caller)
             return
 
+        # 如果已经有通知窗口在显示，先关闭它
+        if hasattr(self, 'notification_window') and self.notification_window and self.notification_window.isVisible():
+            try:
+                self.notification_window.close()
+            except:
+                pass
+            self.notification_window = None
+
         # 创建新的通知窗口
         try:
             # 创建独立的通知窗口
-            notification_window = CallNotificationWindow(caller)
-            notification_window.accept_signal.connect(lambda c: self.accept_incoming_call(c))
-            notification_window.reject_signal.connect(lambda c: self.reject_incoming_call(c))
-            notification_window.show()
+            self.notification_window = CallNotificationWindow(caller)
+            self.notification_window.accept_signal.connect(lambda c: self.accept_incoming_call(c))
+            self.notification_window.reject_signal.connect(lambda c: self.reject_incoming_call(c))
+
+            # 确保窗口显示在最前面
+            self.notification_window.setWindowState(self.notification_window.windowState() | Qt.WindowActive)
+            self.notification_window.show()
+            self.notification_window.raise_()
+            self.notification_window.activateWindow()
+
+            # 播放系统提示音
+            QApplication.beep()
+            QApplication.beep()  # 播放两次以引起注意
 
             # 从队列中移除
             self.pending_calls.remove(caller)
@@ -1746,25 +2000,6 @@ class MainWindow(QWidget):
             # 出错时也从队列中移除，避免重复处理
             if caller in self.pending_calls:
                 self.pending_calls.remove(caller)
-
-            # 尝试使用传统方式显示通知
-            try:
-                QMessageBox.information(None, "来电通知", f"收到来自 {caller} 的语音通话请求！")
-
-                # 创建来电对话框
-                if self.incoming_call_dialog:
-                    try:
-                        self.incoming_call_dialog.close()
-                    except:
-                        pass
-                    self.incoming_call_dialog = None
-
-                self.incoming_call_dialog = IncomingCallDialog(None, caller)
-                self.incoming_call_dialog.call_accepted.connect(lambda: self.accept_incoming_call(caller))
-                self.incoming_call_dialog.call_rejected.connect(lambda: self.reject_incoming_call(caller))
-                self.incoming_call_dialog.show()
-            except Exception as e2:
-                logging.error(f"备用通知方式也失败: {e2}", exc_info=True)
 
     def accept_incoming_call(self, caller):
         """接受来电"""
@@ -1818,18 +2053,24 @@ class MainWindow(QWidget):
         target_addr = (caller_ip, int(caller_port))
         logging.debug(f"创建接收方通话对话框，目标地址: {target_addr}")
 
-        # 创建通话对话框
-        self.call_dialog = CallDialog(
-            self,
-            caller,
-            is_caller=False,
-            udp_thread=self.udp_thread,
-            target_addr=target_addr,
-            username=self.username
-        )
-        self.call_dialog.call_ended.connect(self.on_call_ended)
-        self.call_dialog.show()
-        logging.debug(f"已创建接收方通话对话框")
+        # 更新现有通话对话框的目标地址
+        if self.call_dialog:
+            self.call_dialog.target_addr = target_addr
+            self.call_dialog.start_call()
+            logging.debug(f"已更新接收方通话对话框的目标地址并开始通话")
+        else:
+            # 创建新的通话对话框
+            self.call_dialog = CallDialog(
+                self,
+                caller,
+                is_caller=False,
+                udp_thread=self.udp_thread,
+                target_addr=target_addr,
+                username=self.username
+            )
+            self.call_dialog.call_ended.connect(self.on_call_ended)
+            self.call_dialog.show()
+            logging.debug(f"已创建新的接收方通话对话框")
 
     def handle_incoming_call(self, caller):
         """处理来电 - 保留此方法以兼容旧代码"""
@@ -1859,27 +2100,189 @@ class MainWindow(QWidget):
             self.resize(w, h)
             center_window(self)
 
+    class FileTransfer:
+        CHUNK_SIZE = 1024 * 1024  # 1MB per chunk
+        MAX_RETRIES = 3
+        TIMEOUT = 30  # 30 seconds timeout
+
+        @staticmethod
+        def send_file_chunk(sock, chunk_data, chunk_id, total_chunks):
+            """发送单个文件块"""
+            try:
+                header = f'CHUNK|{chunk_id}|{total_chunks}|{len(chunk_data)}'.encode('utf-8')
+                sock.send(header + b'\n' + chunk_data)
+                return True
+            except Exception as e:
+                logging.error(f"发送文件块失败: {e}")
+                return False
+
+        @staticmethod
+        def receive_file_chunk(sock, timeout=TIMEOUT):
+            """接收单个文件块"""
+            sock.settimeout(timeout)
+            try:
+                # 接收头部信息
+                header = b''
+                while b'\n' not in header:
+                    chunk = sock.recv(1024)
+                    if not chunk:
+                        raise Exception("连接断开")
+                    header += chunk
+
+                header, data = header.split(b'\n', 1)
+                header = header.decode('utf-8')
+                parts = header.split('|')
+
+                if parts[0] != 'CHUNK':
+                    raise Exception("无效的数据块格式")
+
+                chunk_id = int(parts[1])
+                total_chunks = int(parts[2])
+                chunk_size = int(parts[3])
+
+                # 接收剩余数据
+                remaining = chunk_size - len(data)
+                while remaining > 0:
+                    chunk = sock.recv(min(remaining, 8192))
+                    if not chunk:
+                        raise Exception("连接断开")
+                    data += chunk
+                    remaining -= len(chunk)
+
+                return chunk_id, total_chunks, data
+
+            except socket.timeout:
+                raise Exception("接收超时")
+            except Exception as e:
+                raise Exception(f"接收文件块失败: {e}")
+            finally:
+                sock.settimeout(None)
+
+        @staticmethod
+        def verify_file_integrity(file_path, expected_size):
+            """验证文件完整性"""
+            try:
+                if not os.path.exists(file_path):
+                    return False
+                actual_size = os.path.getsize(file_path)
+                return actual_size == expected_size
+            except Exception as e:
+                logging.error(f"验证文件完整性失败: {e}")
+                return False
+
     def upload_private_file(self):
         if not self.current_friend:
             QMessageBox.warning(self, '提示', '请先选择好友')
             return
+
         file_path, _ = QFileDialog.getOpenFileName(self, '选择要上传的文件', '', 'All Files (*)')
         if not file_path:
             return
-        fname = os.path.basename(file_path)
+
         try:
+            # 获取文件信息
+            file_size = os.path.getsize(file_path)
+            file_name = os.path.basename(file_path)
+
+            # 创建进度对话框
+            progress = QProgressDialog("准备上传文件...", "取消", 0, 100, self)
+            progress.setWindowTitle("上传进度")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setAutoClose(False)
+            progress.setAutoReset(False)
+            progress.show()
+
+            # 计算分块数量
+            total_chunks = (file_size + self.FileTransfer.CHUNK_SIZE - 1) // self.FileTransfer.CHUNK_SIZE
+
+            logging.info(f"开始上传文件: {file_name}, 大小: {file_size}, 块数: {total_chunks}")
+
+            # 设置socket超时
+            self.sock.settimeout(self.FileTransfer.TIMEOUT)
+
+            # 发送上传请求
+            self.sock.send(
+                f'FILE_UPLOAD_START|{self.username}|{self.current_friend}|{file_name}|{file_size}|{total_chunks}'.encode(
+                    'utf-8'))
+
+            # 等待服务器响应
+            response = self.sock.recv(1024).decode('utf-8')
+            if response.startswith('ERROR'):
+                error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
+                raise Exception(f"服务器错误: {error_msg}")
+
+            if not response.startswith('UPLOAD_READY'):
+                raise Exception(f"服务器响应错误: {response}")
+
+            # 开始分块上传
             with open(file_path, 'rb') as f:
-                data = f.read()
-            # 发送文件上传请求
-            self.sock.send(f'FILE_UPLOAD|{self.username}|{self.current_friend}|{fname}|{len(data)}'.encode('utf-8'))
-            # 等待一小段时间确保服务器准备好接收数据
-            time.sleep(0.1)
-            # 发送文件数据
-            self.sock.sendall(data)
-            QMessageBox.information(self, '上传成功', f'文件 {fname} 已上传')
-            self.get_private_file_list()
+                for chunk_id in range(total_chunks):
+                    if progress.wasCanceled():
+                        self.sock.send('UPLOAD_CANCEL'.encode('utf-8'))
+                        raise Exception("上传已取消")
+
+                    # 读取数据块
+                    chunk_data = f.read(self.FileTransfer.CHUNK_SIZE)
+
+                    # 发送数据块
+                    retry_count = 0
+                    while retry_count < self.FileTransfer.MAX_RETRIES:
+                        try:
+                            if not self.FileTransfer.send_file_chunk(self.sock, chunk_data, chunk_id, total_chunks):
+                                raise Exception("发送数据块失败")
+
+                            # 等待确认
+                            response = self.sock.recv(1024).decode('utf-8')
+                            if response.startswith('CHUNK_OK'):
+                                break
+                            elif response.startswith('CHUNK_RETRY'):
+                                retry_count += 1
+                                logging.warning(f"服务器请求重试第 {retry_count} 次")
+                                time.sleep(1)  # 等待1秒后重试
+                                continue
+                            else:
+                                raise Exception(f"服务器响应错误: {response}")
+                        except socket.timeout:
+                            retry_count += 1
+                            if retry_count >= self.FileTransfer.MAX_RETRIES:
+                                raise Exception("上传超时，请重试")
+                            logging.warning(f"上传超时，重试第 {retry_count} 次")
+                            time.sleep(1)  # 等待1秒后重试
+                            continue
+                        except Exception as e:
+                            retry_count += 1
+                            if retry_count >= self.FileTransfer.MAX_RETRIES:
+                                raise Exception(f"发送数据块失败: {str(e)}")
+                            logging.warning(f"发送数据块出错，重试第 {retry_count} 次: {e}")
+                            time.sleep(1)  # 等待1秒后重试
+                            continue
+
+                    # 更新进度
+                    progress.setValue(int((chunk_id + 1) * 100 / total_chunks))
+                    progress.setLabelText(f"正在上传: {file_name}\n"
+                                          f"进度: {chunk_id + 1}/{total_chunks} 块")
+                    QApplication.processEvents()
+
+            # 发送完成信号
+            self.sock.send('UPLOAD_COMPLETE'.encode('utf-8'))
+
+            # 等待最终确认
+            response = self.sock.recv(1024).decode('utf-8')
+            if response.startswith('UPLOAD_SUCCESS'):
+                QMessageBox.information(self, '上传成功', f'文件 {file_name} 已上传')
+                # 刷新文件列表
+                self.get_private_file_list()
+            else:
+                raise Exception("服务器确认上传失败")
+
         except Exception as e:
-            QMessageBox.warning(self, '上传失败', f'文件上传失败: {e}')
+            logging.error(f"文件上传失败: {e}")
+            QMessageBox.warning(self, '上传失败', f'文件上传失败: {str(e)}')
+        finally:
+            if 'progress' in locals():
+                progress.close()
+            # 恢复默认超时设置
+            self.sock.settimeout(None)
 
     def get_private_file_list(self):
         if not self.current_friend:
@@ -1898,6 +2301,7 @@ class MainWindow(QWidget):
     def download_private_file(self, item):
         if not item:
             return
+
         fname = item.text()
         temp_path = None
         progress = None
@@ -1911,283 +2315,99 @@ class MainWindow(QWidget):
                 'All Files (*)'
             )
 
-            if not save_path:  # 用户取消了保存
+            if not save_path:
                 return
 
             # 创建进度对话框
-            progress = QProgressDialog("正在准备下载文件...", "取消", 0, 100, self)
+            progress = QProgressDialog("准备下载文件...", "取消", 0, 100, self)
             progress.setWindowTitle("下载进度")
             progress.setWindowModality(Qt.WindowModal)
             progress.setAutoClose(False)
             progress.setAutoReset(False)
-            progress.setMinimumDuration(0)
-            progress.setCancelButton(None)
             progress.show()
 
+            logging.info(f"开始下载文件: {fname}")
+
             # 发送下载请求
-            self.sock.send(f'FILE_DOWNLOAD|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
+            self.sock.send(f'FILE_DOWNLOAD_START|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
 
-            # 等待服务器响应
-            response = b''
-            timeout = 300  # 5分钟超时
-            start_time = time.time()
-            last_update_time = start_time
-            retry_count = 0
-            max_retries = 3
+            # 接收文件信息
+            response = self.sock.recv(1024).decode('utf-8')
+            if response.startswith('ERROR'):
+                error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
+                raise Exception(f"服务器错误: {error_msg}")
 
-            # 接收响应头
-            while retry_count < max_retries:
-                try:
-                    if time.time() - start_time > timeout:
-                        raise Exception("下载超时")
+            if not response.startswith('DOWNLOAD_READY'):
+                raise Exception(f"服务器响应错误: {response}")
 
-                    self.sock.settimeout(10)
-                    chunk = self.sock.recv(4096)
-                    if not chunk:
-                        raise Exception("服务器连接断开")
-                    response += chunk
-                    if b'\n' in response:
-                        break
-                except socket.timeout:
-                    current_time = time.time()
-                    if current_time - last_update_time >= 1:
-                        if progress and not progress.wasCanceled():
-                            progress.setLabelText(f"正在等待服务器响应...\n已等待: {int(current_time - start_time)}秒")
-                            QApplication.processEvents()
-                            last_update_time = current_time
-                    continue
-                except Exception as e:
-                    retry_count += 1
-                    if retry_count >= max_retries:
-                        raise Exception(f"接收响应头失败: {str(e)}")
-                    time.sleep(1)
-                    continue
-                finally:
-                    self.sock.settimeout(None)
+            parts = response.split('|')
+            file_size = int(parts[1])
+            total_chunks = int(parts[2])
 
-            # 分离响应头和文件数据
-            header, remaining_data = response.split(b'\n', 1)
-            header = header.decode('utf-8')
-            parts = header.split('|')
+            logging.info(f"文件信息: 大小={file_size}, 块数={total_chunks}")
 
-            if parts[0] == 'FILE_DATA':
-                filesize = int(parts[2])
-                print(f"开始下载文件: {fname}, 大小: {filesize} 字节")
+            # 创建临时文件
+            temp_path = save_path + '.tmp'
+            with open(temp_path, 'wb') as f:
+                received_chunks = 0
 
-                # 发送确认开始传输的信号
-                self.sock.send(b'ACK\n')
+                while received_chunks < total_chunks:
+                    if progress.wasCanceled():
+                        self.sock.send('DOWNLOAD_CANCEL'.encode('utf-8'))
+                        raise Exception("下载已取消")
 
-                # 启用取消按钮
-                progress.setCancelButtonText("取消")
-                progress.setCancelButton(progress.findChild(QPushButton))
+                    try:
+                        # 接收数据块
+                        chunk_id, chunks_total, chunk_data = self.FileTransfer.receive_file_chunk(self.sock)
 
-                # 使用临时文件保存数据
-                temp_path = save_path + '.tmp'
-                with open(temp_path, 'wb') as f:
-                    # 写入已接收的数据
-                    f.write(remaining_data)
-                    received_size = len(remaining_data)
+                        # 写入文件
+                        f.write(chunk_data)
+                        received_chunks += 1
 
-                    # 使用更合适的缓冲区大小
-                    buffer_size = 32768  # 32KB - 较小的缓冲区有助于更平滑的传输
-                    ack_interval = 524288  # 每512KB发送一次ACK，与服务器端匹配
-                    last_ack_size = received_size
+                        # 发送确认
+                        self.sock.send(f'CHUNK_OK|{chunk_id}'.encode('utf-8'))
 
-                    # 用于计算下载速度
-                    speed_samples = []
-                    last_speed_update = time.time()
-                    last_ui_update = time.time()
+                        # 更新进度
+                        progress.setValue(int(received_chunks * 100 / total_chunks))
+                        progress.setLabelText(f"正在下载: {fname}\n"
+                                              f"进度: {received_chunks}/{total_chunks} 块")
+                        QApplication.processEvents()
 
-                    # 继续接收剩余数据
-                    while received_size < filesize:
-                        if time.time() - start_time > timeout:
-                            raise Exception("下载超时")
+                    except Exception as e:
+                        logging.error(f"接收数据块出错: {e}")
+                        # 请求重传
+                        self.sock.send(f'CHUNK_RETRY|{chunk_id}'.encode('utf-8'))
+                        continue
 
-                        if progress.wasCanceled():
-                            raise Exception("下载已取消")
+            # 发送完成信号
+            self.sock.send('DOWNLOAD_COMPLETE'.encode('utf-8'))
 
-                        # 更新进度和速度（降低更新频率以减少UI负担）
-                        current_time = time.time()
-                        if current_time - last_ui_update >= 0.25:  # 每250ms更新一次UI
-                            # 计算下载速度
-                            time_diff = current_time - last_speed_update
-                            if time_diff >= 1.0:  # 每秒更新一次速度
-                                speed = (received_size - last_ack_size) / time_diff / 1024  # KB/s
-                                speed_samples.append(speed)
-                                if len(speed_samples) > 3:  # 保留最近3个速度样本，减少内存占用
-                                    speed_samples.pop(0)
-                                avg_speed = sum(speed_samples) / len(speed_samples) if speed_samples else 0
-                                last_speed_update = current_time
-                                last_ack_size = received_size
-                            else:
-                                # 如果未到1秒，使用上次的速度数据
-                                avg_speed = sum(speed_samples) / len(speed_samples) if speed_samples else 0
-
-                            # 更新进度条和状态信息
-                            try:
-                                percent_complete = int(received_size * 100 / filesize)
-                                progress.setValue(percent_complete)
-                                # 简化显示内容，减少文本渲染负担
-                                progress.setLabelText(
-                                    f"下载: {fname}\n"
-                                    f"{received_size / 1024 / 1024:.1f}/{filesize / 1024 / 1024:.1f} MB ({percent_complete}%)\n"
-                                    f"速度: {avg_speed:.1f} KB/s"
-                                )
-                                QApplication.processEvents()  # 处理UI事件但不阻塞太久
-                            except Exception as ui_err:
-                                print(f"更新UI出错: {ui_err}")
-                                # UI错误不应该中断下载
-                                pass
-
-                            last_ui_update = current_time
-
-                        try:
-                            # 使用更短的超时时间和多次尝试，避免卡死
-                            max_retries_per_chunk = 3
-                            retry_count_chunk = 0
-                            received_this_round = False
-
-                            # 使用循环来重试接收数据
-                            while retry_count_chunk < max_retries_per_chunk and not received_this_round:
-                                # 处理UI事件以确保UI不卡死
-                                QApplication.processEvents()
-
-                                try:
-                                    # 使用更短的超时，这样UI可以更频繁地更新
-                                    self.sock.settimeout(3)  # 设置更短的超时提高响应性
-
-                                    # 合理大小的接收缓冲区
-                                    remain = filesize - received_size
-                                    chunk = self.sock.recv(min(buffer_size, remain))
-
-                                    if chunk:
-                                        received_this_round = True
-                                    else:
-                                        # 如果连接断开但已接收了超过90%的数据，尝试继续使用已接收的部分
-                                        if received_size > filesize * 0.90:
-                                            print(f"连接断开但文件已完成超过90%，使用已下载的部分")
-                                            break
-                                        else:
-                                            retry_count_chunk += 1
-                                            if retry_count_chunk >= max_retries_per_chunk:
-                                                raise Exception("服务器连接断开，数据接收失败")
-                                            print(f"接收空数据，重试 {retry_count_chunk}/{max_retries_per_chunk}")
-                                            time.sleep(0.2)  # 短暂停后重试
-                                except socket.timeout:
-                                    retry_count_chunk += 1
-                                    print(f"接收数据超时，重试 {retry_count_chunk}/{max_retries_per_chunk}")
-                                    if retry_count_chunk >= max_retries_per_chunk:
-                                        # 如果超过最大重试次数且进度不到一半，则抛出异常
-                                        if received_size < filesize / 2:
-                                            raise Exception("接收数据超时，下载进度不足一半")
-                                        # 否则尝试使用已下载的部分
-                                        print("接收数据超时，但已下载超过一半，尝试使用已接收的部分")
-                                        break
-                                    # 展示超时信息并更新UI
-                                    progress.setLabelText(
-                                        f"接收超时，重试中... ({retry_count_chunk}/{max_retries_per_chunk})\n"
-                                        f"{received_size / 1024 / 1024:.1f}/{filesize / 1024 / 1024:.1f} MB")
-                                    QApplication.processEvents()
-                                    time.sleep(0.5)  # 等待短暂停后重试
-                                except Exception as e:
-                                    retry_count_chunk += 1
-                                    print(f"接收数据出错: {e}, 重试 {retry_count_chunk}/{max_retries_per_chunk}")
-                                    if retry_count_chunk >= max_retries_per_chunk:
-                                        raise
-                                    time.sleep(0.5)
-                                finally:
-                                    self.sock.settimeout(None)
-
-                            # 如果没有收到数据且进度不到一半，则拒绝继续
-                            if not received_this_round and received_size < filesize / 2:
-                                raise Exception("下载失败：多次尝试后无法接收数据")
-
-                            f.write(chunk)
-                            received_size += len(chunk)
-
-                            # 每接收指定大小的数据发送一次ACK
-                            if received_size - last_ack_size >= ack_interval:
-                                print(
-                                    f"发送ACK，已接收: {received_size / 1024 / 1024:.2f}MB/{filesize / 1024 / 1024:.2f}MB ({received_size / filesize * 100:.1f}%)")
-                                self.sock.send(b'ACK\n')
-                                last_ack_size = received_size
-
-                        except socket.timeout:
-                            # 超时但仍然连接，继续尝试
-                            print("接收超时，重试...")
-                            continue
-                        except Exception as e:
-                            retry_count += 1
-                            print(f"接收数据错误 ({retry_count}/{max_retries}): {e}")
-                            if retry_count >= max_retries:
-                                raise Exception(f"接收数据失败: {str(e)}")
-                            time.sleep(0.5)
-                            continue
-                        finally:
-                            self.sock.settimeout(None)
-
-                # 发送最后的ACK
-                try:
-                    self.sock.send(b'ACK\n')
-                except Exception as e:
-                    print(f"发送最终ACK时出错: {e}")
-                    # 继续执行，因为文件已经下载完成
-
-                # 下载完成后重命名文件
-                if os.path.exists(save_path):
-                    os.remove(save_path)
-                os.rename(temp_path, save_path)
-
-                progress.setValue(100)
-                progress.setLabelText("下载完成！")
-                QApplication.processEvents()
-                time.sleep(1)
-                progress.close()
-
-                QMessageBox.information(self, '下载完成', f'文件已保存到: {save_path}')
-
-            elif parts[0] == 'ERROR':
-                error_msg = parts[1] if len(parts) > 1 else '未知错误'
-                print(f"下载失败: {error_msg}")
-                if progress and not progress.wasCanceled():
-                    progress.close()
-                QMessageBox.warning(self, '下载失败', error_msg)
+            # 等待最终确认
+            response = self.sock.recv(1024).decode('utf-8')
+            if response.startswith('DOWNLOAD_SUCCESS'):
+                # 验证文件完整性
+                if self.FileTransfer.verify_file_integrity(temp_path, file_size):
+                    # 重命名文件
+                    if os.path.exists(save_path):
+                        os.remove(save_path)
+                    os.rename(temp_path, save_path)
+                    QMessageBox.information(self, '下载完成', f'文件已保存到: {save_path}')
+                else:
+                    raise Exception("文件完整性验证失败")
             else:
-                print(f"未知响应: {header}")
-                if progress and not progress.wasCanceled():
-                    progress.close()
-                QMessageBox.warning(self, '下载失败', '服务器响应格式错误')
+                raise Exception(f"服务器确认下载失败: {response}")
 
         except Exception as e:
-            print(f"下载文件时出错: {e}")
+            logging.error(f"文件下载失败: {e}")
+            QMessageBox.warning(self, '下载失败', f'下载文件失败: {str(e)}')
+        finally:
             if progress and not progress.wasCanceled():
                 progress.close()
-            QMessageBox.warning(self, '下载失败', f'下载文件失败: {e}')
-
-        finally:
-            # 确保进度对话框被关闭
-            if progress and not progress.wasCanceled():
-                try:
-                    progress.close()
-                except:
-                    pass
-
-            # 清理临时文件
             if temp_path and os.path.exists(temp_path):
                 try:
                     os.remove(temp_path)
                 except:
                     pass
-
-            # 重置socket超时设置
-            try:
-                self.sock.settimeout(None)
-            except:
-                pass
-
-            # 完全移除下载完成后的连接检查，避免在可能已关闭的套接字上操作
-            # 文件传输完成后不会影响连接状态
-            pass
 
 
 class CallNotificationWindow(QWidget):
@@ -2199,8 +2419,12 @@ class CallNotificationWindow(QWidget):
     def __init__(self, caller):
         super().__init__(None)  # 没有父窗口，完全独立窗口
         self.caller = caller
-        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)  # 显示窗口但不激活（不抢占焦点）
+        # 修改窗口标志，确保窗口始终可见且在最前面
+        self.setWindowFlags(
+            Qt.Window |  # 独立窗口
+            Qt.WindowStaysOnTopHint |  # 保持在最前面
+            Qt.FramelessWindowHint  # 无边框
+        )
 
         # 设置窗口样式
         self.setStyleSheet("""
@@ -2219,6 +2443,7 @@ class CallNotificationWindow(QWidget):
                 border-radius: 5px;
                 padding: 8px;
                 font-weight: bold;
+                min-width: 80px;
             }
             QPushButton:hover {
                 background-color: #555;
@@ -2242,6 +2467,7 @@ class CallNotificationWindow(QWidget):
 
         # 播放提示音
         QApplication.beep()
+        QApplication.beep()  # 播放两次以引起注意
 
         # 设置定时器自动关闭
         self.auto_close_timer = QTimer(self)
@@ -2261,8 +2487,14 @@ class CallNotificationWindow(QWidget):
         self.update_timer.timeout.connect(self.update_time_left)
         self.update_timer.start(1000)  # 每秒更新一次
 
+        # 确保窗口显示在最前面
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
     def init_ui(self):
         layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)  # 设置边距
 
         # 头部标签
         title_label = QLabel(f"📞 来电通知")
@@ -2280,15 +2512,18 @@ class CallNotificationWindow(QWidget):
 
         # 按钮区域
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(10)  # 设置按钮间距
 
         self.accept_btn = QPushButton("接听")
         self.accept_btn.setObjectName("acceptButton")
         self.accept_btn.setMinimumHeight(40)
+        self.accept_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
         self.accept_btn.clicked.connect(self.on_accept)
 
         self.reject_btn = QPushButton("拒绝")
         self.reject_btn.setObjectName("rejectButton")
         self.reject_btn.setMinimumHeight(40)
+        self.reject_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
         self.reject_btn.clicked.connect(self.on_reject)
 
         btn_layout.addWidget(self.accept_btn)
@@ -2348,60 +2583,17 @@ class CallNotificationWindow(QWidget):
         self.update_timer.stop()
         event.accept()
 
-    def check_pending_calls(self):
-        """定期检查待处理的来电并显示通知"""
-        if not self.pending_calls or self.in_call:
-            return
+    def mousePressEvent(self, event):
+        """允许通过点击窗口任意位置来拖动窗口"""
+        if event.button() == Qt.LeftButton:
+            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
 
-        # 处理队列中的第一个来电
-        caller = self.pending_calls[0]
-        logging.debug(f"从待处理队列中处理来电: {caller}")
-
-        # 如果已经在通话中，自动拒绝
-        if self.in_call:
-            logging.debug(f"已在通话中，自动拒绝来电: {caller}")
-            try:
-                self.sock.send(f'CALL_REJECT|{self.username}|{caller}'.encode('utf-8'))
-            except Exception as e:
-                logging.error(f"发送拒绝通话消息失败: {e}")
-            self.pending_calls.remove(caller)
-            return
-
-        # 创建新的通知窗口
-        try:
-            # 创建独立的通知窗口
-            notification_window = CallNotificationWindow(caller)
-            notification_window.accept_signal.connect(lambda c: self.accept_incoming_call(c))
-            notification_window.reject_signal.connect(lambda c: self.reject_incoming_call(c))
-            notification_window.show()
-
-            # 从队列中移除
-            self.pending_calls.remove(caller)
-            logging.debug(f"已显示通知窗口并从队列中移除: {caller}")
-        except Exception as e:
-            logging.error(f"创建通知窗口失败: {e}", exc_info=True)
-            # 出错时也从队列中移除，避免重复处理
-            if caller in self.pending_calls:
-                self.pending_calls.remove(caller)
-
-            # 尝试使用传统方式显示通知
-            try:
-                QMessageBox.information(None, "来电通知", f"收到来自 {caller} 的语音通话请求！")
-
-                # 创建来电对话框
-                if self.incoming_call_dialog:
-                    try:
-                        self.incoming_call_dialog.close()
-                    except:
-                        pass
-                    self.incoming_call_dialog = None
-
-                self.incoming_call_dialog = IncomingCallDialog(None, caller)
-                self.incoming_call_dialog.call_accepted.connect(lambda: self.accept_incoming_call(caller))
-                self.incoming_call_dialog.call_rejected.connect(lambda: self.reject_incoming_call(caller))
-                self.incoming_call_dialog.show()
-            except Exception as e2:
-                logging.error(f"备用通知方式也失败: {e2}", exc_info=True)
+    def mouseMoveEvent(self, event):
+        """处理窗口拖动"""
+        if event.buttons() == Qt.LeftButton:
+            self.move(event.globalPos() - self.drag_position)
+            event.accept()
 
 
 FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
@@ -2409,6 +2601,11 @@ os.makedirs(FILES_DIR, exist_ok=True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
+    # 检查网络配置
+    if not check_network_config():
+        sys.exit(1)
+
     win = LoginWindow()
     win.show()
     sys.exit(app.exec_())
