@@ -3,14 +3,17 @@ import threading
 import csv
 import hashlib
 import os
+import time
 
 # 服务器配置
 HOST = '0.0.0.0'
 PORT = 12345
+UDP_PORT = 12346  # 为语音通话添加UDP端口
 USER_CSV = 'users.csv'
 FRIENDSHIP_CSV = 'friendships.csv'
 GROUP_CSV = 'groups.csv'
 GROUP_MEMBERS_CSV = 'group_members.csv'
+DEBUG_CALL = True  # 添加调试标志
 
 # 确保CSV文件存在
 def ensure_csv(file_path, header):
@@ -25,7 +28,13 @@ ensure_csv(GROUP_CSV, ['group_id', 'group_name'])
 ensure_csv(GROUP_MEMBERS_CSV, ['group_id', 'username'])
 
 clients = {}  # username: conn
+active_calls = {}  # 跟踪活跃的语音通话: {username: (partner, udp_addr)}
+udp_addresses = {}  # 用户UDP地址映射: {username: (ip, port)}
 lock = threading.Lock()
+
+# 创建UDP套接字用于语音数据传输
+udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+udp_socket.bind((HOST, UDP_PORT))
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -121,11 +130,45 @@ def notify_friends_status(username, online):
             if f in clients:
                 try:
                     if online:
-                        clients[f].send(f'FRIEND_ONLINE|{username}'.encode('utf-8'))
+                        send_msg(clients[f], f'FRIEND_ONLINE|{username}')
                     else:
-                        clients[f].send(f'FRIEND_OFFLINE|{username}'.encode('utf-8'))
+                        send_msg(clients[f], f'FRIEND_OFFLINE|{username}')
                 except Exception:
                     pass
+
+# 处理UDP音频数据中继
+def handle_udp_audio():
+    print(f"UDP音频服务开始监听 {HOST}:{UDP_PORT}")
+    while True:
+        try:
+            data, addr = udp_socket.recvfrom(65536)  # 更大的缓冲区用于音频
+            # 解析头部以确定目标用户
+            if len(data) < 2:  # 确保数据至少包含2字节头部
+                continue
+                
+            header_len = data[0]  # 第一个字节表示头部长度
+            if len(data) < header_len + 1:
+                continue
+                
+            header = data[1:header_len+1].decode('utf-8')
+            # 头部格式：发送者|接收者
+            try:
+                sender, receiver = header.split('|')
+                
+                # 检查接收者是否在线和是否处于通话中
+                with lock:
+                    if receiver in active_calls and active_calls[receiver][0] == sender and receiver in udp_addresses:
+                        # 转发音频数据到接收者
+                        udp_socket.sendto(data, udp_addresses[receiver])
+            except Exception as e:
+                print(f"处理UDP音频数据出错: {e}")
+        except Exception as e:
+            print(f"UDP音频处理异常: {e}")
+
+def send_msg(conn, msg):
+    if not msg.endswith('\n'):
+        msg += '\n'
+    conn.send(msg.encode('utf-8'))
 
 def handle_client(conn, addr):
     username = None
@@ -142,60 +185,235 @@ def handle_client(conn, addr):
                 if cmd == 'REGISTER':
                     _, u, p = parts
                     success, msg = register_user(u, p)
-                    conn.send(f'REGISTER_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                    send_msg(conn, f'REGISTER_RESULT|{"OK" if success else "FAIL"}|{msg}')
                 elif cmd == 'LOGIN':
                     _, u, p = parts
                     if authenticate_user(u, p):
+                        # 检查用户是否已经登录，如果是，则断开前一个连接
                         with lock:
+                            if u in clients:
+                                try:
+                                    # 尝试向旧连接发送下线通知
+                                    try:
+                                        send_msg(clients[u], 'FORCE_LOGOUT|另一个客户端登录了您的账号')
+                                    except:
+                                        pass
+                                    # 关闭旧连接
+                                    try:
+                                        clients[u].close()
+                                    except:
+                                        pass
+                                    print(f"用户 {u} 的旧连接已被强制下线")
+                                except Exception as e:
+                                    print(f"强制下线旧连接异常: {e}")
+                        
+                            # 更新连接信息
                             clients[u] = conn
+                        
                         username = u
-                        conn.send('LOGIN_RESULT|OK|Login successful.'.encode('utf-8'))
+                        send_msg(conn, 'LOGIN_RESULT|OK|Login successful.')
                         notify_friends_status(username, True)
                     else:
-                        conn.send('LOGIN_RESULT|FAIL|Invalid username or password.'.encode('utf-8'))
+                        send_msg(conn, 'LOGIN_RESULT|FAIL|Invalid username or password.')
                 elif cmd == 'ADD_FRIEND':
                     _, u, f = parts
                     success, msg = add_friend(u, f)
-                    conn.send(f'ADD_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                    send_msg(conn, f'ADD_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}')
                 elif cmd == 'DEL_FRIEND':
                     _, u, f = parts
                     success, msg = del_friend(u, f)
-                    conn.send(f'DEL_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}'.encode('utf-8'))
+                    send_msg(conn, f'DEL_FRIEND_RESULT|{"OK" if success else "FAIL"}|{msg}')
                 elif cmd == 'GET_FRIENDS':
                     _, u = parts[:2]
                     friends_status = get_friends_with_status(u)
                     # 格式 FRIEND_LIST|user1:online|user2:offline|...
                     friend_strs = [f"{f}:{'online' if online else 'offline'}" for f, online in friends_status]
-                    conn.send(f"FRIEND_LIST|{'|'.join(friend_strs)}".encode('utf-8'))
+                    send_msg(conn, f"FRIEND_LIST|{'|'.join(friend_strs)}")
                 elif cmd == 'MSG':
                     # MSG|to_user|message
                     _, to_user, msg = parts
                     # 只允许发给好友
                     if to_user not in get_friends(username):
-                        conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
+                        send_msg(conn, f'ERROR|You are not friends with {to_user}.')
                     else:
                         # 保存消息历史
                         save_private_message(username, to_user, msg)
                         
                         with lock:
                             if to_user in clients:
-                                clients[to_user].send(f'MSG|{username}|{msg}'.encode('utf-8'))
+                                send_msg(clients[to_user], f'MSG|{username}|{msg}')
                             else:
-                                conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
+                                send_msg(conn, f'ERROR|User {to_user} not online.')
                 elif cmd == 'EMOJI':
                     # EMOJI|to_user|emoji_id
                     _, to_user, emoji_id = parts
                     if to_user not in get_friends(username):
-                        conn.send(f'ERROR|You are not friends with {to_user}.'.encode('utf-8'))
+                        send_msg(conn, f'ERROR|You are not friends with {to_user}.')
                     else:
                         # 保存表情消息历史
                         save_private_message(username, to_user, f"[EMOJI]{emoji_id}")
                         
                         with lock:
                             if to_user in clients:
-                                clients[to_user].send(f'EMOJI|{username}|{emoji_id}'.encode('utf-8'))
+                                send_msg(clients[to_user], f'EMOJI|{username}|{emoji_id}')
                             else:
-                                conn.send(f'ERROR|User {to_user} not online.'.encode('utf-8'))
+                                send_msg(conn, f'ERROR|User {to_user} not online.')
+                # 处理语音通话请求
+                elif cmd == 'CALL_REQUEST':
+                    # CALL_REQUEST|from_user|to_user|udp_port
+                    _, from_user, to_user, udp_port = parts
+                    if DEBUG_CALL:
+                        print(f"===== CALL REQUEST DEBUG =====")
+                        print(f"  从 {from_user} 到 {to_user}")
+                        print(f"  客户端IP: {addr[0]}, UDP端口: {udp_port}")
+                        print(f"  当前在线用户: {list(clients.keys())}")
+                        print(f"  to_user在clients中: {to_user in clients}")
+                        print(f"  to_user在active_calls中: {to_user in active_calls}")
+                    
+                    if to_user not in get_friends(from_user):
+                        if DEBUG_CALL:
+                            print(f"  错误: {to_user} 不是 {from_user} 的好友")
+                        send_msg(conn, f'ERROR|You are not friends with {to_user}.')
+                    else:
+                        client_ip = addr[0]
+                        client_udp_port = int(udp_port)
+                        print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
+                        
+                        # 保存发起者的UDP地址
+                        with lock:
+                            udp_addresses[from_user] = (client_ip, client_udp_port)
+                            
+                            # 检查对方是否在线
+                            if to_user in clients:
+                                to_user_conn = clients[to_user]
+                                # 验证连接是否有效
+                                try:
+                                    # 简单测试连接是否有效
+                                    error_test = to_user_conn.fileno()
+                                    if error_test < 0:
+                                        raise Exception("Invalid socket descriptor")
+                                        
+                                    # 检查对方是否已经在通话中
+                                    if to_user in active_calls:
+                                        if DEBUG_CALL:
+                                            print(f"  目标用户 {to_user} 已在通话中")
+                                        send_msg(conn, f'CALL_RESPONSE|BUSY|{to_user}')
+                                    else:
+                                        # 将通话请求转发给对方
+                                        try:
+                                            if DEBUG_CALL:
+                                                print(f"  发送CALL_INCOMING到 {to_user}")
+                                                print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
+                                            
+                                            # 使用多次发送和确认，增加可靠性
+                                            for i in range(3):  # 发送3次确保收到
+                                                # 发送通话请求消息
+                                                send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
+                                                
+                                                if DEBUG_CALL:
+                                                    print(f"  第{i+1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
+                                                
+                                                # 短暂延迟确保接收方有时间处理
+                                                time.sleep(0.5)
+                                            
+                                            # 发送确认到发起方
+                                            send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
+                                            
+                                            # 通知发起方对方已经收到通话请求
+                                            if DEBUG_CALL:
+                                                print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
+                                        except Exception as e:
+                                            if DEBUG_CALL:
+                                                print(f"  发送CALL_INCOMING失败: {e}")
+                                            # 从客户端列表中移除无效连接
+                                            del clients[to_user]
+                                            send_msg(conn, f'CALL_RESPONSE|ERROR|{to_user}|{str(e)}')
+                                except Exception as e:
+                                    if DEBUG_CALL:
+                                        print(f"  连接错误: {e}")
+                                    # 连接无效，从客户端列表中移除
+                                    del clients[to_user]
+                                    send_msg(conn, f'CALL_RESPONSE|OFFLINE|{to_user}')
+                            else:
+                                if DEBUG_CALL:
+                                    print(f"  目标用户 {to_user} 不在线")
+                                send_msg(conn, f'CALL_RESPONSE|OFFLINE|{to_user}')
+                    if DEBUG_CALL:
+                        print("===== CALL REQUEST DEBUG END =====")
+                elif cmd == 'CALL_ACCEPT':
+                    # CALL_ACCEPT|from_user|to_user|udp_port
+                    _, from_user, to_user, udp_port = parts
+                    if DEBUG_CALL:
+                        print(f"===== CALL ACCEPT DEBUG =====")
+                        print(f"  从 {from_user} 接受 {to_user} 的通话")
+                        print(f"  客户端IP: {addr[0]}, UDP端口: {udp_port}")
+                        print(f"  当前在线用户: {list(clients.keys())}")
+                        print(f"  to_user在clients中: {to_user in clients}")
+                    
+                    client_ip = addr[0]
+                    client_udp_port = int(udp_port)
+                    print(f"接受语音通话: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
+                    
+                    with lock:
+                        # 保存接受者的UDP地址
+                        udp_addresses[from_user] = (client_ip, client_udp_port)
+                        
+                        # 记录通话状态
+                        active_calls[from_user] = (to_user, (client_ip, client_udp_port))
+                        active_calls[to_user] = (from_user, udp_addresses.get(to_user, (None, None)))
+                        
+                        # 转发通话已接受消息给发起者
+                        if to_user in clients:
+                            try:
+                                to_user_udp_info = f"{client_ip}|{client_udp_port}"
+                                
+                                # 多次发送确保可靠性
+                                for i in range(3):
+                                    send_msg(clients[to_user], f'CALL_ACCEPTED|{from_user}|{to_user_udp_info}')
+                                    if DEBUG_CALL:
+                                        print(f"  第{i+1}次发送CALL_ACCEPTED给 {to_user}，长度: {len(f'CALL_ACCEPTED|{from_user}|{to_user_udp_info}')}，实际发送: {len(f'CALL_ACCEPTED|{from_user}|{to_user_udp_info}')}字节")
+                                    time.sleep(0.5)
+                            except Exception as e:
+                                if DEBUG_CALL:
+                                    print(f"  发送CALL_ACCEPTED失败: {e}")
+                                del clients[to_user]  # 清理无效连接
+                        elif DEBUG_CALL:
+                            print(f"  错误: {to_user} 不在线，无法发送CALL_ACCEPTED")
+                    
+                    if DEBUG_CALL:
+                        print("===== CALL ACCEPT DEBUG END =====")
+                elif cmd == 'CALL_REJECT':
+                    # CALL_REJECT|from_user|to_user
+                    _, from_user, to_user = parts
+                    print(f"拒绝语音通话: {from_user} -> {to_user}")
+                    
+                    with lock:
+                        # 转发拒绝消息给发起者
+                        if to_user in clients:
+                            send_msg(clients[to_user], f'CALL_REJECTED|{from_user}')
+                elif cmd == 'CALL_END':
+                    # CALL_END|from_user|to_user
+                    _, from_user, to_user = parts
+                    print(f"结束语音通话: {from_user} -> {to_user}")
+                    
+                    with lock:
+                        # 清除通话记录
+                        if from_user in active_calls:
+                            del active_calls[from_user]
+                        
+                        # 发送通话结束消息给对方
+                        if to_user in clients and to_user in active_calls:
+                            send_msg(clients[to_user], f'CALL_ENDED|{from_user}')
+                            del active_calls[to_user]
+                elif cmd == 'UDP_PORT_UPDATE':
+                    # UDP_PORT_UPDATE|username|udp_port
+                    _, user, udp_port = parts
+                    client_ip = addr[0]
+                    client_udp_port = int(udp_port)
+                    
+                    with lock:
+                        udp_addresses[user] = (client_ip, client_udp_port)
+                        print(f"更新用户UDP地址: {user} -> {client_ip}:{client_udp_port}")
                 elif cmd == 'LOGOUT':
                     break
                 elif cmd == 'CREATE_GROUP':
@@ -203,21 +421,21 @@ def handle_client(conn, addr):
                     success, msg, group_id = create_group(group_name)
                     if success:
                         join_group(group_id, u)
-                    conn.send(f'CREATE_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
+                    send_msg(conn, f'CREATE_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}')
                 elif cmd == 'JOIN_GROUP':
                     _, u, group_id = parts
                     success, msg = join_group(group_id, u)
-                    conn.send(f'JOIN_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}'.encode('utf-8'))
+                    send_msg(conn, f'JOIN_GROUP_RESULT|{"OK" if success else "FAIL"}|{msg}|{group_id}')
                 elif cmd == 'GET_GROUPS':
                     _, u = parts[:2]
                     groups = get_user_groups(u)
                     # 格式 GROUP_LIST|group_id:group_name|...
                     group_strs = [f'{gid}:{gname}' for gid, gname in groups]
-                    conn.send(f'GROUP_LIST|{"|".join(group_strs)}'.encode('utf-8'))
+                    send_msg(conn, f'GROUP_LIST|{"|".join(group_strs)}')
                 elif cmd == 'GET_GROUP_MEMBERS':
                     _, group_id = parts[:2]
                     members = get_group_members(group_id)
-                    conn.send(f'GROUP_MEMBERS|{"|".join(members)}'.encode('utf-8'))
+                    send_msg(conn, f'GROUP_MEMBERS|{"|".join(members)}')
                 elif cmd == 'GROUP_MSG':
                     # GROUP_MSG|group_id|from_user|msg
                     try:
@@ -238,10 +456,10 @@ def handle_client(conn, addr):
                                 if m in clients:
                                     try:
                                         # 发送消息时，带上发送者的在线状态信息
-                                        clients[m].send(f'GROUP_MSG|{str(int(group_id))}|{from_user}|{msg}'.encode('utf-8'))
+                                        send_msg(clients[m], f'GROUP_MSG|{str(int(group_id))}|{from_user}|{msg}')
                                         # 如果消息接收者与发送者是好友关系，通知发送者在线
                                         if m != from_user and from_user in get_friends(m):
-                                            clients[m].send(f'FRIEND_ONLINE|{from_user}'.encode('utf-8'))
+                                            send_msg(clients[m], f'FRIEND_ONLINE|{from_user}')
                                     except Exception as e:
                                         print(f'发送给{m}失败: {e}')
                     except Exception as e:
@@ -266,7 +484,7 @@ def handle_client(conn, addr):
                             for m in members:
                                 if m in clients:
                                     try:
-                                        clients[m].send(f'GROUP_MSG_ANON|{str(int(group_id))}|{anon_nick}|{msg}'.encode('utf-8'))
+                                        send_msg(clients[m], f'GROUP_MSG_ANON|{str(int(group_id))}|{anon_nick}|{msg}')
                                     except Exception as e:
                                         print(f'发送给{m}失败: {e}')
                     except Exception as e:
@@ -282,15 +500,15 @@ def handle_client(conn, addr):
                             resp.extend(row)
                         response_str = '|'.join(resp)
                         print(f"发送群聊历史: {len(history)}条消息")
-                        conn.send(response_str.encode('utf-8'))
+                        send_msg(conn, response_str)
                     except Exception as e:
                         print(f"处理群聊历史请求出错: {e}")
-                        conn.send('GROUP_HISTORY|error|获取群聊历史失败'.encode('utf-8'))
+                        send_msg(conn, 'GROUP_HISTORY|error|获取群聊历史失败')
                 elif cmd == 'GET_PRIVATE_HISTORY':
                     # GET_PRIVATE_HISTORY|from_user|to_user
                     _, from_user, to_user = parts
                     if to_user not in get_friends(from_user):
-                        conn.send('PRIVATE_HISTORY|error|不是好友关系'.encode('utf-8'))
+                        send_msg(conn, 'PRIVATE_HISTORY|error|不是好友关系')
                     else:
                         try:
                             history = get_private_history(from_user, to_user)
@@ -299,12 +517,12 @@ def handle_client(conn, addr):
                             for row in history:
                                 resp.extend(row)
                             response_str = '|'.join(resp)
-                            conn.send(response_str.encode('utf-8'))
+                            send_msg(conn, response_str)
                         except Exception as e:
                             print(f"获取私聊历史出错: {e}")
-                            conn.send('PRIVATE_HISTORY|error|获取历史记录失败'.encode('utf-8'))
+                            send_msg(conn, 'PRIVATE_HISTORY|error|获取历史记录失败')
                 else:
-                    conn.send('ERROR|Unknown command.'.encode('utf-8'))
+                    send_msg(conn, 'ERROR|Unknown command.')
             except ConnectionResetError:
                 print(f"与客户端 {addr} 的连接被重置")
                 break
@@ -318,6 +536,17 @@ def handle_client(conn, addr):
             with lock:
                 if username in clients:
                     del clients[username]
+                # 清理用户的通话状态
+                if username in active_calls:
+                    partner = active_calls[username][0]
+                    del active_calls[username]
+                    # 通知通话伙伴通话已结束
+                    if partner in clients and partner in active_calls:
+                        send_msg(clients[partner], f'CALL_ENDED|{username}')
+                        del active_calls[partner]
+                # 清理UDP地址映射
+                if username in udp_addresses:
+                    del udp_addresses[username]
             notify_friends_status(username, False)
         try:
             conn.close()
@@ -326,7 +555,12 @@ def handle_client(conn, addr):
         print(f'连接 {addr} 已关闭')
 
 def start_server():
-    print(f'Server listening on {HOST}:{PORT}')
+    print(f'Server listening on {HOST}:{PORT} (TCP) and {HOST}:{UDP_PORT} (UDP)')
+    
+    # 启动UDP音频处理线程
+    udp_thread = threading.Thread(target=handle_udp_audio, daemon=True)
+    udp_thread.start()
+    
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((HOST, PORT))

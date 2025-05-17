@@ -1,2 +1,2 @@
-PyQt5
-pyaudio 
+PyQt5>=5.15.0
+pyaudio>=0.2.11 
