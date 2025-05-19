@@ -12,6 +12,7 @@ import json
 HOST = '0.0.0.0'
 PORT = 12345
 UDP_PORT = 12346  # 为语音通话添加UDP端口
+FILE_PORT = 12347  # 专用文件传输端口
 USER_CSV = 'users.csv'
 FRIENDSHIP_CSV = 'friendships.csv'
 GROUP_CSV = 'groups.csv'
@@ -24,12 +25,17 @@ os.makedirs(USER_FILES_DIR, exist_ok=True)
 FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
 os.makedirs(FILES_DIR, exist_ok=True)
 
+# 文件传输服务器
+file_transfer_server = None
+
+
 # 确保CSV文件存在
 def ensure_csv(file_path, header):
     if not os.path.exists(file_path):
         with open(file_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(header)
+
 
 ensure_csv(USER_CSV, ['username', 'password_hash'])
 ensure_csv(FRIENDSHIP_CSV, ['user_a', 'user_b'])
@@ -45,8 +51,10 @@ lock = threading.Lock()
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_socket.bind((HOST, UDP_PORT))
 
+
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
 
 def register_user(username, password):
     with lock:
@@ -60,6 +68,7 @@ def register_user(username, password):
             writer.writerow([username, hash_password(password)])
         return True, 'Registration successful.'
 
+
 def authenticate_user(username, password):
     with open(USER_CSV, 'r', newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -67,6 +76,7 @@ def authenticate_user(username, password):
             if row['username'] == username and row['password_hash'] == hash_password(password):
                 return True
     return False
+
 
 def add_friend(user_a, user_b):
     if user_a == user_b:
@@ -84,12 +94,14 @@ def add_friend(user_a, user_b):
         with open(FRIENDSHIP_CSV, 'r', newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if (row['user_a'] == user_a and row['user_b'] == user_b) or (row['user_a'] == user_b and row['user_b'] == user_a):
+                if (row['user_a'] == user_a and row['user_b'] == user_b) or (
+                        row['user_a'] == user_b and row['user_b'] == user_a):
                     return False, 'Already friends.'
         with open(FRIENDSHIP_CSV, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow([user_a, user_b])
         return True, 'Friend added.'
+
 
 def del_friend(user_a, user_b):
     changed = False
@@ -98,7 +110,8 @@ def del_friend(user_a, user_b):
         with open(FRIENDSHIP_CSV, 'r', newline='', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if (row['user_a'] == user_a and row['user_b'] == user_b) or (row['user_a'] == user_b and row['user_b'] == user_a):
+                if (row['user_a'] == user_a and row['user_b'] == user_b) or (
+                        row['user_a'] == user_b and row['user_b'] == user_a):
                     changed = True
                     continue
                 rows.append(row)
@@ -107,6 +120,7 @@ def del_friend(user_a, user_b):
             writer.writeheader()
             writer.writerows(rows)
     return changed, 'Friend deleted.' if changed else 'Not friends.'
+
 
 def delete_user(username, password):
     # 删除 users.csv 中指定用户名和密码的行
@@ -127,6 +141,7 @@ def delete_user(username, password):
                 writer.writerows(rows)
     return deleted
 
+
 def get_friends(username):
     friends = set()
     with open(FRIENDSHIP_CSV, 'r', newline='', encoding='utf-8') as f:
@@ -137,6 +152,7 @@ def get_friends(username):
             elif row['user_b'] == username:
                 friends.add(row['user_a'])
     return list(friends)
+
 
 def get_friends_with_status(username):
     friends = []
@@ -151,6 +167,7 @@ def get_friends_with_status(username):
     with lock:
         return [(f, f in clients) for f in friends]
 
+
 def notify_friends_status(username, online):
     friends = get_friends(username)
     with lock:
@@ -164,6 +181,7 @@ def notify_friends_status(username, online):
                 except Exception:
                     pass
 
+
 # 处理UDP音频数据中继
 def handle_udp_audio():
     print(f"UDP音频服务开始监听 {HOST}:{UDP_PORT}")
@@ -173,16 +191,16 @@ def handle_udp_audio():
             # 解析头部以确定目标用户
             if len(data) < 2:  # 确保数据至少包含2字节头部
                 continue
-                
+
             header_len = data[0]  # 第一个字节表示头部长度
             if len(data) < header_len + 1:
                 continue
-                
-            header = data[1:header_len+1].decode('utf-8')
+
+            header = data[1:header_len + 1].decode('utf-8')
             # 头部格式：发送者|接收者
             try:
                 sender, receiver = header.split('|')
-                
+
                 # 检查接收者是否在线和是否处于通话中
                 with lock:
                     if receiver in active_calls and active_calls[receiver][0] == sender and receiver in udp_addresses:
@@ -193,15 +211,17 @@ def handle_udp_audio():
         except Exception as e:
             print(f"UDP音频处理异常: {e}")
 
+
 def send_msg(conn, msg):
     if not msg.endswith('\n'):
         msg += '\n'
     conn.send(msg.encode('utf-8'))
 
+
 class FileTransfer:
     CHUNK_SIZE = 1024 * 1024  # 1MB per chunk
     MAX_RETRIES = 3
-    
+
     @staticmethod
     def calculate_file_hash(file_path):
         """计算文件的MD5哈希值"""
@@ -210,7 +230,7 @@ class FileTransfer:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
         return hash_md5.hexdigest()
-    
+
     @staticmethod
     def save_file_chunk(file_path, chunk_id, chunk_data):
         """保存文件块到临时文件"""
@@ -219,20 +239,21 @@ class FileTransfer:
         chunk_path = os.path.join(chunk_dir, f'{os.path.basename(file_path)}.chunk{chunk_id}')
         with open(chunk_path, 'wb') as f:
             f.write(chunk_data)
-    
+
     @staticmethod
     def get_file_chunk(file_path, chunk_id):
         """获取文件块"""
         with open(file_path, 'rb') as f:
             f.seek(chunk_id * FileTransfer.CHUNK_SIZE)
             return f.read(FileTransfer.CHUNK_SIZE)
-    
+
     @staticmethod
     def cleanup_chunks(file_path):
         """清理临时文件块"""
         chunk_dir = os.path.join(os.path.dirname(file_path), '.chunks')
         if os.path.exists(chunk_dir):
             shutil.rmtree(chunk_dir)
+
 
 def get_user_file_dir(user1, user2):
     """获取两个用户之间的文件存储目录"""
@@ -241,166 +262,30 @@ def get_user_file_dir(user1, user2):
     os.makedirs(dir_path, exist_ok=True)
     return dir_path
 
+
 def handle_file_upload(conn, from_user, to_user, fname, file_size, total_chunks):
-    """处理文件上传请求"""
+    """通知客户端使用专用文件传输连接"""
     try:
-        # 获取文件存储目录
-        file_dir = get_user_file_dir(from_user, to_user)
-        file_path = os.path.join(file_dir, fname)
-        
-        # 检查文件是否已存在
-        if os.path.exists(file_path):
-            # 如果文件已存在，添加时间戳
-            base, ext = os.path.splitext(fname)
-            timestamp = int(time.time())
-            fname = f"{base}_{timestamp}{ext}"
-            file_path = os.path.join(file_dir, fname)
-        
-        # 发送准备就绪消息
-        conn.send(f'UPLOAD_READY|{fname}'.encode('utf-8'))
-        
-        # 接收文件块
-        received_chunks = 0
-        while received_chunks < total_chunks:
-            try:
-                # 接收头部信息
-                header = b''
-                while b'\n' not in header:
-                    chunk = conn.recv(1024)
-                    if not chunk:
-                        raise Exception("连接断开")
-                    header += chunk
-                
-                header, data = header.split(b'\n', 1)
-                header = header.decode('utf-8')
-                parts = header.split('|')
-                
-                if parts[0] != 'CHUNK':
-                    raise Exception("无效的数据块格式")
-                    
-                chunk_id = int(parts[1])
-                chunks_total = int(parts[2])
-                chunk_size = int(parts[3])
-                
-                # 接收剩余数据
-                remaining = chunk_size - len(data)
-                while remaining > 0:
-                    chunk = conn.recv(min(remaining, 8192))
-                    if not chunk:
-                        raise Exception("连接断开")
-                    data += chunk
-                    remaining -= len(chunk)
-                
-                # 保存文件块
-                FileTransfer.save_file_chunk(file_path, chunk_id, data)
-                received_chunks += 1
-                
-                # 发送确认
-                conn.send(f'CHUNK_OK|{chunk_id}'.encode('utf-8'))
-                
-            except Exception as e:
-                print(f"接收文件块出错: {e}")
-                # 请求重传
-                conn.send(f'CHUNK_RETRY|{chunk_id}'.encode('utf-8'))
-                continue
-        
-        # 合并文件块
-        with open(file_path, 'wb') as f:
-            for i in range(total_chunks):
-                chunk_path = os.path.join(os.path.dirname(file_path), '.chunks', 
-                                        f'{os.path.basename(file_path)}.chunk{i}')
-                with open(chunk_path, 'rb') as chunk_file:
-                    f.write(chunk_file.read())
-        
-        # 清理临时文件
-        FileTransfer.cleanup_chunks(file_path)
-        
-        # 发送成功消息
-        conn.send('UPLOAD_SUCCESS'.encode('utf-8'))
-        
+        # 发送重定向指令，告知客户端使用专用端口
+        redirect_msg = f'USE_FILE_PORT|{FILE_PORT}|{from_user}|{to_user}|{fname}|{file_size}'
+        conn.send(redirect_msg.encode('utf-8'))
+        print(f"已通知客户端使用专用文件传输端口: {FILE_PORT}")
     except Exception as e:
-        print(f"文件上传处理出错: {e}")
+        print(f"通知客户端使用专用文件端口出错: {e}")
         conn.send(f'ERROR|{str(e)}'.encode('utf-8'))
-        # 清理临时文件
-        FileTransfer.cleanup_chunks(file_path)
+
 
 def handle_file_download(conn, from_user, to_user, fname):
-    """处理文件下载请求"""
+    """通知客户端使用专用文件传输连接"""
     try:
-        # 获取文件路径
-        file_dir = get_user_file_dir(from_user, to_user)
-        file_path = os.path.join(file_dir, fname)
-        
-        if not os.path.exists(file_path):
-            conn.send(f'ERROR|File not found: {fname}'.encode('utf-8'))
-            return
-        
-        # 获取文件大小
-        file_size = os.path.getsize(file_path)
-        total_chunks = (file_size + FileTransfer.CHUNK_SIZE - 1) // FileTransfer.CHUNK_SIZE
-        
-        # 发送准备就绪消息
-        conn.send(f'DOWNLOAD_READY|{file_size}|{total_chunks}'.encode('utf-8'))
-        
-        # 发送文件块
-        with open(file_path, 'rb') as f:
-            for chunk_id in range(total_chunks):
-                retry_count = 0
-                while retry_count < FileTransfer.MAX_RETRIES:
-                    try:
-                        # 读取数据块
-                        chunk_data = f.read(FileTransfer.CHUNK_SIZE)
-                        
-                        # 发送数据块
-                        header = f'CHUNK|{chunk_id}|{total_chunks}|{len(chunk_data)}'.encode('utf-8')
-                        conn.send(header + b'\n' + chunk_data)
-                        
-                        # 等待确认
-                        response = b''
-                        while b'\n' not in response:
-                            chunk = conn.recv(1024)
-                            if not chunk:
-                                raise Exception("连接断开")
-                            response += chunk
-                        
-                        response = response.split(b'\n')[0].decode('utf-8')
-                        if response.startswith('CHUNK_OK'):
-                            break
-                        elif response.startswith('CHUNK_RETRY'):
-                            retry_count += 1
-                            if retry_count >= FileTransfer.MAX_RETRIES:
-                                raise Exception(f"达到最大重试次数: {chunk_id}")
-                            print(f"重传数据块 {chunk_id}, 第 {retry_count} 次重试")
-                            f.seek(chunk_id * FileTransfer.CHUNK_SIZE)
-                            continue
-                        else:
-                            raise Exception(f"无效的响应: {response}")
-                            
-                    except Exception as e:
-                        retry_count += 1
-                        if retry_count >= FileTransfer.MAX_RETRIES:
-                            raise Exception(f"发送数据块 {chunk_id} 失败: {str(e)}")
-                        print(f"发送数据块 {chunk_id} 出错: {e}, 第 {retry_count} 次重试")
-                        f.seek(chunk_id * FileTransfer.CHUNK_SIZE)
-                        continue
-        
-        # 等待完成确认
-        response = b''
-        while b'\n' not in response:
-            chunk = conn.recv(1024)
-            if not chunk:
-                raise Exception("连接断开")
-            response += chunk
-        
-        response = response.split(b'\n')[0].decode('utf-8')
-        if response == 'DOWNLOAD_COMPLETE':
-            conn.send('DOWNLOAD_SUCCESS'.encode('utf-8'))
-        else:
-            raise Exception(f"无效的完成确认: {response}")
-            
+        # 发送重定向指令，告知客户端使用专用端口
+        redirect_msg = f'USE_FILE_PORT|{FILE_PORT}|{from_user}|{to_user}|{fname}'
+        conn.send(redirect_msg.encode('utf-8'))
+        print(f"已通知客户端使用专用文件传输端口: {FILE_PORT}")
     except Exception as e:
-        print(f"文件下载处理出错: {e}")
+        print(f"通知客户端使用专用文件端口出错: {e}")
         conn.send(f'ERROR|{str(e)}'.encode('utf-8'))
+
 
 def handle_client(conn, addr):
     username = None
@@ -411,13 +296,13 @@ def handle_client(conn, addr):
                 if not data:
                     print(f"客户端 {addr} 连接关闭")
                     break
-                
+
                 parts = data.split('|')
                 cmd = parts[0]
                 # 健壮性检查
                 if not cmd:
                     continue
-                
+
                 if cmd == 'REGISTER':
                     _, u, p = parts
                     success, msg = register_user(u, p)
@@ -442,10 +327,10 @@ def handle_client(conn, addr):
                                     print(f"用户 {u} 的旧连接已被强制下线")
                                 except Exception as e:
                                     print(f"强制下线旧连接异常: {e}")
-                        
+
                             # 更新连接信息
                             clients[u] = conn
-                        
+
                         username = u
                         send_msg(conn, 'LOGIN_RESULT|OK|Login successful.')
                         notify_friends_status(username, True)
@@ -479,7 +364,7 @@ def handle_client(conn, addr):
                     else:
                         # 保存消息历史
                         save_private_message(username, to_user, msg)
-                        
+
                         with lock:
                             if to_user in clients:
                                 send_msg(clients[to_user], f'MSG|{username}|{msg}')
@@ -493,7 +378,7 @@ def handle_client(conn, addr):
                     else:
                         # 保存表情消息历史
                         save_private_message(username, to_user, f"[EMOJI]{emoji_id}")
-                        
+
                         with lock:
                             if to_user in clients:
                                 send_msg(clients[to_user], f'EMOJI|{username}|{emoji_id}')
@@ -510,7 +395,7 @@ def handle_client(conn, addr):
                         print(f"  当前在线用户: {list(clients.keys())}")
                         print(f"  to_user在clients中: {to_user in clients}")
                         print(f"  to_user在active_calls中: {to_user in active_calls}")
-                    
+
                     if to_user not in get_friends(from_user):
                         if DEBUG_CALL:
                             print(f"  错误: {to_user} 不是 {from_user} 的好友")
@@ -519,11 +404,11 @@ def handle_client(conn, addr):
                         client_ip = addr[0]
                         client_udp_port = int(udp_port)
                         print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
-                        
+
                         # 保存发起者的UDP地址
                         with lock:
                             udp_addresses[from_user] = (client_ip, client_udp_port)
-                            
+
                             # 检查对方是否在线
                             if to_user in clients:
                                 to_user_conn = clients[to_user]
@@ -533,7 +418,7 @@ def handle_client(conn, addr):
                                     error_test = to_user_conn.fileno()
                                     if error_test < 0:
                                         raise Exception("Invalid socket descriptor")
-                                        
+
                                     # 检查对方是否已经在通话中
                                     if to_user in active_calls:
                                         if DEBUG_CALL:
@@ -545,21 +430,22 @@ def handle_client(conn, addr):
                                             if DEBUG_CALL:
                                                 print(f"  发送CALL_INCOMING到 {to_user}")
                                                 print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
-                                            
+
                                             # 使用多次发送和确认，增加可靠性
                                             for i in range(3):  # 发送3次确保收到
                                                 # 发送通话请求消息
                                                 send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
-                                                
+
                                                 if DEBUG_CALL:
-                                                    print(f"  第{i+1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
-                                                
+                                                    print(
+                                                        f"  第{i + 1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
+
                                                 # 短暂延迟确保接收方有时间处理
                                                 time.sleep(0.5)
-                                            
+
                                             # 发送确认到发起方
                                             send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
-                                            
+
                                             # 通知发起方对方已经收到通话请求
                                             if DEBUG_CALL:
                                                 print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
@@ -587,7 +473,7 @@ def handle_client(conn, addr):
                         if len(parts) < 4:
                             print(f"CALL_ACCEPT消息格式错误: {data}")
                             return
-                            
+
                         _, from_user, to_user, udp_port = parts
                         if DEBUG_CALL:
                             print(f"===== CALL ACCEPT DEBUG =====")
@@ -595,30 +481,30 @@ def handle_client(conn, addr):
                             print(f"  客户端IP: {addr[0]}, UDP端口: {udp_port}")
                             print(f"  当前在线用户: {list(clients.keys())}")
                             print(f"  to_user在clients中: {to_user in clients}")
-                        
+
                         client_ip = addr[0]
                         client_udp_port = int(udp_port)
                         print(f"接受语音通话: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
-                        
+
                         with lock:
                             # 保存接受者的UDP地址
                             udp_addresses[from_user] = (client_ip, client_udp_port)
-                            
+
                             # 记录通话状态
                             active_calls[from_user] = (to_user, (client_ip, client_udp_port))
                             active_calls[to_user] = (from_user, udp_addresses.get(to_user, (None, None)))
-                            
+
                             # 转发通话已接受消息给发起者
                             if to_user in clients:
                                 try:
                                     to_user_udp_info = f"{client_ip}|{client_udp_port}"
-                                    
+
                                     # 多次发送确保可靠性
                                     for i in range(3):
                                         accept_msg = f'CALL_ACCEPTED|{from_user}|{to_user_udp_info}'
                                         send_msg(clients[to_user], accept_msg)
                                         if DEBUG_CALL:
-                                            print(f"  第{i+1}次发送CALL_ACCEPTED给 {to_user}")
+                                            print(f"  第{i + 1}次发送CALL_ACCEPTED给 {to_user}")
                                             print(f"  消息内容: {accept_msg}")
                                         time.sleep(0.5)
                                 except Exception as e:
@@ -627,7 +513,7 @@ def handle_client(conn, addr):
                                     del clients[to_user]  # 清理无效连接
                             elif DEBUG_CALL:
                                 print(f"  错误: {to_user} 不在线，无法发送CALL_ACCEPTED")
-                        
+
                         if DEBUG_CALL:
                             print("===== CALL ACCEPT DEBUG END =====")
                     except Exception as e:
@@ -638,7 +524,7 @@ def handle_client(conn, addr):
                     # CALL_REJECT|from_user|to_user
                     _, from_user, to_user = parts
                     print(f"拒绝语音通话: {from_user} -> {to_user}")
-                    
+
                     with lock:
                         # 转发拒绝消息给发起者
                         if to_user in clients:
@@ -647,12 +533,12 @@ def handle_client(conn, addr):
                     # CALL_END|from_user|to_user
                     _, from_user, to_user = parts
                     print(f"结束语音通话: {from_user} -> {to_user}")
-                    
+
                     with lock:
                         # 清除通话记录
                         if from_user in active_calls:
                             del active_calls[from_user]
-                        
+
                         # 发送通话结束消息给对方
                         if to_user in clients and to_user in active_calls:
                             send_msg(clients[to_user], f'CALL_ENDED|{from_user}')
@@ -662,7 +548,7 @@ def handle_client(conn, addr):
                     _, user, udp_port = parts
                     client_ip = addr[0]
                     client_udp_port = int(udp_port)
-                    
+
                     with lock:
                         udp_addresses[user] = (client_ip, client_udp_port)
                         print(f"更新用户UDP地址: {user} -> {client_ip}:{client_udp_port}")
@@ -694,12 +580,12 @@ def handle_client(conn, addr):
                         if len(parts) < 3:
                             print(f"群聊消息格式错误: {data}")
                             continue
-                            
+
                         _, group_id, from_user = parts[:3]
                         msg = '|'.join(parts[3:])  # 正确获取消息内容
-                            
+
                         print(f"处理群聊消息: group_id={group_id}, from_user={from_user}, msg={msg}")
-                        
+
                         members = get_group_members(group_id)
                         print(f'群聊广播: group_id={group_id}, members={members}')
                         save_group_message(group_id, from_user, msg)
@@ -716,19 +602,19 @@ def handle_client(conn, addr):
                                         print(f'发送给{m}失败: {e}')
                     except Exception as e:
                         print(f"处理群聊消息出错: {e}, 原始数据: {data}")
-                        
+
                 elif cmd == 'GROUP_MSG_ANON':
                     # GROUP_MSG_ANON|group_id|anon_nick|msg
                     try:
                         if len(parts) < 3:
                             print(f"匿名群聊消息格式错误: {data}")
                             continue
-                            
+
                         _, group_id, anon_nick = parts[:3]
                         msg = '|'.join(parts[3:])  # 正确获取消息内容
-                            
+
                         print(f"处理匿名群聊消息: group_id={group_id}, anon_nick={anon_nick}, msg={msg}")
-                        
+
                         members = get_group_members(group_id)
                         print(f'匿名群聊广播: group_id={group_id}, members={members}')
                         save_group_message(group_id, None, msg, anon_nick=anon_nick)
@@ -781,14 +667,14 @@ def handle_client(conn, addr):
                     file_size = int(parts[4])
                     total_chunks = int(parts[5])
                     handle_file_upload(conn, from_user, to_user, fname, file_size, total_chunks)
-                    
+
                 elif cmd == 'FILE_DOWNLOAD_START':
                     # 新的文件下载处理
                     from_user = parts[1]
                     to_user = parts[2]
                     fname = parts[3]
                     handle_file_download(conn, from_user, to_user, fname)
-                    
+
                 elif cmd == 'FILE_LIST':
                     # FILE_LIST|from_user|to_user
                     _, from_user, to_user = parts
@@ -831,21 +717,32 @@ def handle_client(conn, addr):
             pass
         print(f'连接 {addr} 已关闭')
 
+
 def start_server():
+    global file_transfer_server
+
     print(f'Server listening on {HOST}:{PORT} (TCP) and {HOST}:{UDP_PORT} (UDP)')
-    
+
     # 启动UDP音频处理线程
     udp_thread = threading.Thread(target=handle_udp_audio, daemon=True)
     udp_thread.start()
-    
+
+    # 启动文件传输服务器
+    file_transfer_server = FileTransferServer(HOST, FILE_PORT)
+    file_transfer_server.start()
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((HOST, PORT))
         s.listen()
         while True:
-            conn, addr = s.accept()
-            print(f'Connected by {addr}')
-            threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+            try:
+                conn, addr = s.accept()
+                threading.Thread(target=handle_client, args=(conn, addr), daemon=True).start()
+            except Exception as e:
+                print(f"接受连接错误: {e}")
+                time.sleep(1)  # 避免CPU空转
+
 
 def get_next_group_id():
     max_id = 0
@@ -860,6 +757,7 @@ def get_next_group_id():
                 continue
     return str(max_id + 1)
 
+
 def create_group(group_name):
     with lock:
         with open(GROUP_CSV, 'r', newline='', encoding='utf-8') as f:
@@ -872,6 +770,7 @@ def create_group(group_name):
             writer = csv.writer(f)
             writer.writerow([group_id, group_name])
     return True, 'Group created.', group_id
+
 
 def join_group(group_id, username):
     with lock:
@@ -889,6 +788,7 @@ def join_group(group_id, username):
                 writer.writerow([group_id, username])
     return True, 'Joined group.'
 
+
 def get_user_groups(username):
     group_ids = set()
     with open(GROUP_MEMBERS_CSV, 'r', newline='', encoding='utf-8') as f:
@@ -904,6 +804,7 @@ def get_user_groups(username):
                 groups.append((row['group_id'], row['group_name']))
     return groups
 
+
 def get_group_members(group_id):
     group_id = str(int(group_id))  # 统一格式，去除前导零
     members = []
@@ -914,6 +815,7 @@ def get_group_members(group_id):
                 members.append(row['username'])
     return members
 
+
 def save_group_message(group_id, sender, msg, anon_nick=None):
     fname = f'group_{group_id}_history.csv'
     with open(fname, 'a', newline='', encoding='utf-8') as f:
@@ -922,6 +824,7 @@ def save_group_message(group_id, sender, msg, anon_nick=None):
             writer.writerow(['anon', anon_nick, msg])
         else:
             writer.writerow(['user', sender, msg])
+
 
 def get_group_history(group_id):
     fname = f'group_{group_id}_history.csv'
@@ -934,6 +837,7 @@ def get_group_history(group_id):
             history.append(row)
     return history
 
+
 def save_private_message(sender, receiver, msg):
     """保存私聊消息历史"""
     # 使用字典序排序确保两个用户之间的消息保存在同一个文件中
@@ -942,6 +846,7 @@ def save_private_message(sender, receiver, msg):
     with open(fname, 'a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([sender, msg])
+
 
 def get_private_history(user1, user2):
     """获取两个用户之间的私聊历史记录"""
@@ -955,6 +860,239 @@ def get_private_history(user1, user2):
         for row in reader:
             history.append(row)
     return history
+
+
+# 文件传输服务
+class FileTransferServer:
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind((host, port))
+        self.socket.listen(5)
+        self.running = True
+        self.thread = threading.Thread(target=self.run)
+        self.thread.daemon = True
+        print(f"文件传输服务器开始监听 {host}:{port}")
+
+    def start(self):
+        self.thread.start()
+
+    def run(self):
+        while self.running:
+            try:
+                client_socket, addr = self.socket.accept()
+                client_handler = threading.Thread(
+                    target=self.handle_client,
+                    args=(client_socket, addr)
+                )
+                client_handler.daemon = True
+                client_handler.start()
+            except Exception as e:
+                print(f"接受文件传输连接错误: {e}")
+                time.sleep(1)  # 避免CPU空转
+
+    def handle_client(self, client_socket, addr):
+        print(f"新文件传输连接: {addr}")
+        try:
+            # 接收登录凭证和请求类型
+            auth_data = client_socket.recv(1024).decode('utf-8')
+            parts = auth_data.split('|')
+            if len(parts) < 3:
+                client_socket.send('ERROR|Invalid request format'.encode('utf-8'))
+                client_socket.close()
+                return
+
+            request_type = parts[0]
+            username = parts[1]
+
+            if request_type == 'UPLOAD':
+                # UPLOAD|username|to_user|filename|filesize
+                if len(parts) < 5:
+                    client_socket.send('ERROR|Invalid upload request'.encode('utf-8'))
+                    client_socket.close()
+                    return
+
+                to_user = parts[2]
+                filename = parts[3]
+                filesize = int(parts[4])
+
+                # 检查接收者是否是发送者的好友
+                if not self.is_friend(username, to_user):
+                    client_socket.send('ERROR|Not friends'.encode('utf-8'))
+                    client_socket.close()
+                    return
+
+                self.handle_upload(client_socket, username, to_user, filename, filesize)
+
+            elif request_type == 'DOWNLOAD':
+                # DOWNLOAD|username|from_user|filename
+                if len(parts) < 4:
+                    client_socket.send('ERROR|Invalid download request'.encode('utf-8'))
+                    client_socket.close()
+                    return
+
+                from_user = parts[2]
+                filename = parts[3]
+
+                # 检查请求者是否是文件所有者的好友
+                if not self.is_friend(username, from_user):
+                    client_socket.send('ERROR|Not friends'.encode('utf-8'))
+                    client_socket.close()
+                    return
+
+                self.handle_download(client_socket, username, from_user, filename)
+
+            else:
+                client_socket.send('ERROR|Unknown request type'.encode('utf-8'))
+                client_socket.close()
+
+        except Exception as e:
+            print(f"文件传输处理错误: {e}")
+            try:
+                client_socket.send(f'ERROR|{str(e)}'.encode('utf-8'))
+            except:
+                pass
+            finally:
+                client_socket.close()
+
+    def is_friend(self, user1, user2):
+        """检查两个用户是否是好友"""
+        try:
+            with open(FRIENDSHIP_CSV, 'r', newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    if (row['user_a'] == user1 and row['user_b'] == user2) or \
+                            (row['user_a'] == user2 and row['user_b'] == user1):
+                        return True
+            return False
+        except Exception as e:
+            print(f"检查好友关系错误: {e}")
+            return False
+
+    def handle_upload(self, client_socket, from_user, to_user, filename, filesize):
+        """处理文件上传"""
+        file_path = None
+        try:
+            # 获取存储目录
+            file_dir = get_user_file_dir(from_user, to_user)
+            file_path = os.path.join(file_dir, filename)
+
+            # 检查文件是否已存在，如果存在则添加时间戳
+            if os.path.exists(file_path):
+                base, ext = os.path.splitext(filename)
+                timestamp = int(time.time())
+                filename = f"{base}_{timestamp}{ext}"
+                file_path = os.path.join(file_dir, filename)
+
+            # 通知客户端准备好接收
+            client_socket.send(f'READY|{filename}'.encode('utf-8'))
+
+            # 接收文件数据
+            received = 0
+            with open(file_path, 'wb') as f:
+                while received < filesize:
+                    chunk = client_socket.recv(min(8192, filesize - received))
+                    if not chunk:
+                        raise Exception("Connection closed during upload")
+                    f.write(chunk)
+                    received += len(chunk)
+                    # 发送进度更新
+                    if received % (1024 * 1024) == 0 or received == filesize:  # 每1MB或完成时更新
+                        progress = min(100, int(received * 100 / filesize))
+                        try:
+                            client_socket.send(f'PROGRESS|{progress}'.encode('utf-8'))
+                        except:
+                            pass
+
+            # 发送成功消息
+            client_socket.send('SUCCESS'.encode('utf-8'))
+            print(f"文件上传成功: {filename}, 大小: {filesize}字节, 从 {from_user} 到 {to_user}")
+
+        except Exception as e:
+            print(f"文件上传错误: {e}")
+            try:
+                client_socket.send(f'ERROR|{str(e)}'.encode('utf-8'))
+            except:
+                pass
+            # 删除不完整的文件
+            if file_path and os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+        finally:
+            client_socket.close()
+
+    def handle_download(self, client_socket, username, from_user, filename):
+        """处理文件下载"""
+        try:
+            # 获取文件路径
+            file_dir = get_user_file_dir(from_user, username)
+            file_path = os.path.join(file_dir, filename)
+
+            if not os.path.exists(file_path):
+                client_socket.send(f'ERROR|File not found: {filename}'.encode('utf-8'))
+                client_socket.close()
+                return
+
+            # 获取文件大小
+            filesize = os.path.getsize(file_path)
+
+            # 发送准备就绪消息
+            client_socket.send(f'READY|{filesize}'.encode('utf-8'))
+
+            # 发送文件数据
+            sent = 0
+            with open(file_path, 'rb') as f:
+                while sent < filesize:
+                    # 读取并发送数据块
+                    chunk = f.read(8192)
+                    if not chunk:
+                        break
+                    client_socket.sendall(chunk)
+                    sent += len(chunk)
+                    # 每发送1MB数据或完成时检查客户端进度确认
+                    if sent % (1024 * 1024) == 0 or sent == filesize:
+                        try:
+                            # 设置短超时等待确认
+                            client_socket.settimeout(5)
+                            ack = client_socket.recv(1024).decode('utf-8')
+                            if ack.startswith('ACK'):
+                                progress = min(100, int(sent * 100 / filesize))
+                                print(f"文件下载进度: {progress}%, {sent}/{filesize}字节")
+                            else:
+                                print(f"意外的客户端响应: {ack}")
+                        except socket.timeout:
+                            # 不因超时中断传输
+                            print("等待客户端确认超时，继续传输")
+                        except Exception as e:
+                            print(f"检查客户端确认时出错: {e}")
+                            # 继续传输而不中断
+                        finally:
+                            # 恢复无超时
+                            client_socket.settimeout(None)
+
+            print(f"文件下载完成: {filename}, 大小: {filesize}字节, 发送给 {username}")
+
+        except Exception as e:
+            print(f"文件下载错误: {e}")
+            try:
+                client_socket.send(f'ERROR|{str(e)}'.encode('utf-8'))
+            except:
+                pass
+        finally:
+            client_socket.close()
+
+    def stop(self):
+        """停止文件传输服务器"""
+        self.running = False
+        try:
+            self.socket.close()
+        except:
+            pass
+
 
 if __name__ == '__main__':
     start_server() 

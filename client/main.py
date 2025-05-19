@@ -1,6 +1,8 @@
 import sys
 import socket
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget, QDialog, QDesktopWidget, QFileDialog, QProgressDialog, QGraphicsOpacityEffect, QComboBox)
+from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit,
+                             QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget, QDialog,
+                             QDesktopWidget, QFileDialog, QProgressDialog, QGraphicsOpacityEffect, QComboBox)
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer, QByteArray
 from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
 import os
@@ -54,13 +56,15 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
 
+
 # 添加一个全局函数来确保窗口显示在屏幕中央
 def center_window(window):
     """将窗口定位到屏幕中央"""
     screen = QDesktopWidget().screenGeometry()
     size = window.geometry()
-    window.move((screen.width() - size.width()) // 2, 
+    window.move((screen.width() - size.width()) // 2,
                 (screen.height() - size.height()) // 2)
+
 
 def check_network_config():
     """检查网络配置"""
@@ -68,14 +72,14 @@ def check_network_config():
         # 尝试解析服务器地址
         socket.gethostbyname(SERVER_HOST)
         logging.debug(f"服务器地址 {SERVER_HOST} 解析成功")
-        
+
         # 测试服务器连接
         test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         test_sock.settimeout(5)  # 设置5秒超时
         test_sock.connect((SERVER_HOST, SERVER_PORT))
         test_sock.close()
         logging.debug(f"成功连接到服务器 {SERVER_HOST}:{SERVER_PORT}")
-        
+
         return True
     except socket.gaierror:
         logging.error(f"无法解析服务器地址: {SERVER_HOST}")
@@ -94,6 +98,7 @@ def check_network_config():
         QMessageBox.critical(None, '网络错误', f'网络配置检查失败: {e}')
         return False
 
+
 class ClientThread(QThread):
     message_received = pyqtSignal(str)
     connection_lost = pyqtSignal()
@@ -108,7 +113,7 @@ class ClientThread(QThread):
     def run(self):
         logging.debug("客户端线程开始运行")
         self.sock.settimeout(1.0)  # 设置1秒超时，使循环可以被中断
-        
+
         while self.running:
             try:
                 try:
@@ -143,10 +148,11 @@ class ClientThread(QThread):
         self.quit()
         self.wait()
 
+
 class UDPAudioThread(QThread):
     """处理UDP音频数据接收的线程"""
     audio_received = pyqtSignal(bytes)
-    
+
     def __init__(self, local_port):
         super().__init__()
         self.local_port = local_port
@@ -156,7 +162,7 @@ class UDPAudioThread(QThread):
         self.running = True
         self.error_occurred = False
         logging.debug(f"UDP音频线程绑定到端口: {self.local_port}")
-        
+
     def run(self):
         while self.running and not self.error_occurred:
             try:
@@ -167,7 +173,7 @@ class UDPAudioThread(QThread):
                         header_len = data[0]
                         if len(data) > header_len + 1:
                             # 提取音频数据（跳过头部）
-                            audio_data = data[header_len+1:]
+                            audio_data = data[header_len + 1:]
                             if audio_data and len(audio_data) > 0:
                                 logging.debug(f"收到UDP音频数据: {len(audio_data)} 字节，来自: {addr}")
                                 self.audio_received.emit(audio_data)
@@ -180,28 +186,28 @@ class UDPAudioThread(QThread):
                 logging.error(f"UDP接收错误: {e}")
                 self.error_occurred = True
                 time.sleep(0.1)
-    
+
     def send_audio(self, audio_data, target_addr, sender, receiver):
         try:
             if not audio_data or not target_addr or len(audio_data) == 0:
                 logging.warning("无效的音频数据或目标地址")
                 return
-                
+
             # 创建头部：发送者|接收者
             header = f"{sender}|{receiver}"
             header_bytes = header.encode('utf-8')
             header_len = len(header_bytes)
-            
+
             # 创建完整的数据包：头部长度(1字节) + 头部 + 音频数据
             packet = bytearray([header_len]) + header_bytes + audio_data
-            
+
             # 发送数据
             self.udp_socket.sendto(packet, target_addr)
             logging.debug(f"发送UDP音频数据: {len(audio_data)} 字节，到: {target_addr}")
         except Exception as e:
             logging.error(f"UDP发送错误: {e}")
             self.error_occurred = True
-    
+
     def stop(self):
         self.running = False
         self.quit()
@@ -211,68 +217,71 @@ class UDPAudioThread(QThread):
         except Exception as e:
             print(f"关闭UDP socket错误: {e}")
 
+
 class AudioDeviceSelector(QDialog):
     """音频设备选择对话框"""
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("选择音频设备")
         self.setFixedSize(400, 300)
-        
+
         self.audio = pyaudio.PyAudio()
         self.init_ui()
-        
+
     def init_ui(self):
         layout = QVBoxLayout()
-        
+
         # 输入设备选择
         input_layout = QVBoxLayout()
         input_layout.addWidget(QLabel("选择输入设备:"))
         self.input_combo = QComboBox()
         self.populate_input_devices()
         input_layout.addWidget(self.input_combo)
-        
+
         # 输出设备选择
         output_layout = QVBoxLayout()
         output_layout.addWidget(QLabel("选择输出设备:"))
         self.output_combo = QComboBox()
         self.populate_output_devices()
         output_layout.addWidget(self.output_combo)
-        
+
         # 确定按钮
         self.ok_button = QPushButton("确定")
         self.ok_button.clicked.connect(self.accept)
-        
+
         layout.addLayout(input_layout)
         layout.addLayout(output_layout)
         layout.addWidget(self.ok_button)
-        
+
         self.setLayout(layout)
-    
+
     def populate_input_devices(self):
         for i in range(self.audio.get_device_count()):
             device_info = self.audio.get_device_info_by_index(i)
             if device_info['maxInputChannels'] > 0:  # 只显示有输入功能的设备
                 self.input_combo.addItem(device_info['name'], i)
-    
+
     def populate_output_devices(self):
         for i in range(self.audio.get_device_count()):
             device_info = self.audio.get_device_info_by_index(i)
             if device_info['maxOutputChannels'] > 0:  # 只显示有输出功能的设备
                 self.output_combo.addItem(device_info['name'], i)
-    
+
     def get_selected_devices(self):
         return {
             'input': self.input_combo.currentData(),
             'output': self.output_combo.currentData()
         }
-    
+
     def closeEvent(self, event):
         self.audio.terminate()
         event.accept()
 
+
 class AudioRecorder(QThread):
     """音频录制线程"""
-    
+
     def __init__(self, udp_thread, target_addr, sender, receiver, input_device_index=None):
         super().__init__()
         self.udp_thread = udp_thread
@@ -285,17 +294,17 @@ class AudioRecorder(QThread):
         self.error_occurred = False
         self.input_device_index = input_device_index
         logging.debug(f"初始化音频录制器: input_device_index={input_device_index}")
-        
+
     def run(self):
         try:
             # 初始化音频设备
             self.audio = pyaudio.PyAudio()
-            
+
             # 获取输入设备信息
             device_info = self.audio.get_device_info_by_index(self.input_device_index)
             logging.debug(f"使用输入设备: {device_info['name']}")
             logging.debug(f"设备信息: {device_info}")
-            
+
             # 打开音频流
             self.stream = self.audio.open(
                 format=FORMAT,
@@ -307,11 +316,11 @@ class AudioRecorder(QThread):
                 stream_callback=None,
                 start=False
             )
-            
+
             # 启动流
             self.stream.start_stream()
             logging.debug("开始录音...")
-            
+
             # 持续录制和发送音频
             while self.running and not self.error_occurred:
                 if self.stream and self.stream.is_active():
@@ -332,7 +341,7 @@ class AudioRecorder(QThread):
             self.error_occurred = True
         finally:
             self.stop_recording()
-    
+
     def stop_recording(self):
         if self.stream:
             try:
@@ -343,7 +352,7 @@ class AudioRecorder(QThread):
                 print(f"关闭录音流错误: {e}")
             finally:
                 self.stream = None
-        
+
     def stop(self):
         self.running = False
         self.stop_recording()
@@ -355,9 +364,10 @@ class AudioRecorder(QThread):
         self.quit()
         self.wait()
 
+
 class AudioPlayer(QThread):
     """音频播放线程"""
-    
+
     def __init__(self, output_device_index=None):
         super().__init__()
         self.audio = None
@@ -368,17 +378,17 @@ class AudioPlayer(QThread):
         self.error_occurred = False
         self.output_device_index = output_device_index
         logging.debug(f"初始化音频播放器: output_device_index={output_device_index}")
-        
+
     def run(self):
         try:
             # 初始化音频设备
             self.audio = pyaudio.PyAudio()
-            
+
             # 获取输出设备信息
             device_info = self.audio.get_device_info_by_index(self.output_device_index)
             logging.debug(f"使用输出设备: {device_info['name']}")
             logging.debug(f"设备信息: {device_info}")
-            
+
             # 打开音频流
             self.stream = self.audio.open(
                 format=FORMAT,
@@ -390,9 +400,9 @@ class AudioPlayer(QThread):
                 stream_callback=None,
                 start=True  # 改为True，确保流立即启动
             )
-            
+
             logging.debug("开始音频播放...")
-            
+
             # 持续从队列中获取和播放音频
             while self.running and not self.error_occurred:
                 if self.audio_queue and self.stream and self.stream.is_active():
@@ -414,16 +424,16 @@ class AudioPlayer(QThread):
             self.error_occurred = True
         finally:
             self.stop_playback()
-    
+
     def add_audio(self, audio_data):
         if not audio_data or len(audio_data) == 0:
             return
-            
+
         with self.queue_lock:
             if len(self.audio_queue) > 10:  # 限制队列大小，防止延迟过大
                 self.audio_queue = self.audio_queue[5:]  # 丢弃一些旧的数据
             self.audio_queue.append(audio_data)
-    
+
     def stop_playback(self):
         if self.stream:
             try:
@@ -434,7 +444,7 @@ class AudioPlayer(QThread):
                 print(f"关闭播放流错误: {e}")
             finally:
                 self.stream = None
-        
+
     def stop(self):
         self.running = False
         self.stop_playback()
@@ -446,11 +456,13 @@ class AudioPlayer(QThread):
         self.quit()
         self.wait()
 
+
 class CallDialog(QDialog):
     """语音通话对话框"""
     call_ended = pyqtSignal()
-    
-    def __init__(self, parent=None, friend_name=None, is_caller=False, udp_thread=None, target_addr=None, username=None):
+
+    def __init__(self, parent=None, friend_name=None, is_caller=False, udp_thread=None, target_addr=None,
+                 username=None):
         super().__init__(parent)
         self.friend_name = friend_name
         self.is_caller = is_caller
@@ -461,65 +473,65 @@ class CallDialog(QDialog):
         self.audio_player = None
         self.call_active = False
         self.error_occurred = False
-        
+
         # 获取音频设备
         self.audio_devices = self.get_audio_devices()
-        
+
         self.init_ui()
-        
+
         if is_caller:
             self.status_label.setText(f"正在等待 {friend_name} 接听...")
         else:
             self.status_label.setText(f"与 {friend_name} 通话中...")
             self.start_call()
-    
+
     def init_ui(self):
         """初始化UI界面"""
         self.setWindowTitle("语音通话")
         self.setFixedSize(300, 150)
-        
+
         layout = QVBoxLayout()
-        
+
         self.status_label = QLabel(f"与 {self.friend_name} 通话中...")
         self.status_label.setAlignment(Qt.AlignCenter)
-        
+
         self.end_call_btn = QPushButton("结束通话")
         self.end_call_btn.clicked.connect(self.end_call)
-        
+
         layout.addWidget(self.status_label)
         layout.addWidget(self.end_call_btn)
-        
+
         self.setLayout(layout)
-    
+
     def get_audio_devices(self):
         """获取音频设备"""
         dialog = AudioDeviceSelector(self)
         if dialog.exec_() == QDialog.Accepted:
             return dialog.get_selected_devices()
         return {'input': None, 'output': None}
-    
+
     def start_call(self):
         """开始音频通话"""
         if self.call_active:
             return
-            
+
         logging.debug(f"开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
         self.call_active = True
         self.status_label.setText(f"与 {self.friend_name} 通话中...")
-        
+
         try:
             # 启动音频播放器
             self.audio_player = AudioPlayer(self.audio_devices['output'])
             self.udp_thread.audio_received.connect(self.on_audio_received)
             self.audio_player.start()
             logging.debug("音频播放器已启动")
-            
+
             # 启动音频录制器
             if self.target_addr:  # 确保有目标地址
                 self.audio_recorder = AudioRecorder(
-                    self.udp_thread, 
-                    self.target_addr, 
-                    self.username, 
+                    self.udp_thread,
+                    self.target_addr,
+                    self.username,
                     self.friend_name,
                     self.audio_devices['input']
                 )
@@ -532,7 +544,7 @@ class CallDialog(QDialog):
             logging.error(f"启动通话失败: {e}")
             self.error_occurred = True
             self.end_call()
-    
+
     def on_audio_received(self, audio_data):
         """收到音频数据"""
         if self.audio_player and self.call_active and not self.error_occurred:
@@ -542,12 +554,12 @@ class CallDialog(QDialog):
             except Exception as e:
                 logging.error(f"处理接收到的音频数据失败: {e}")
                 self.error_occurred = True
-    
+
     def end_call(self):
         """结束通话"""
         print("结束通话")
         self.call_active = False
-        
+
         # 停止音频录制和播放
         if self.audio_recorder:
             try:
@@ -555,133 +567,138 @@ class CallDialog(QDialog):
             except Exception as e:
                 print(f"停止音频录制器失败: {e}")
             self.audio_recorder = None
-        
+
         if self.audio_player:
             try:
                 self.audio_player.stop()
             except Exception as e:
                 print(f"停止音频播放器失败: {e}")
             self.audio_player = None
-        
+
         if self.udp_thread:
             try:
                 self.udp_thread.audio_received.disconnect(self.on_audio_received)
             except Exception as e:
                 print(f"断开音频接收信号失败: {e}")
-        
+
         self.call_ended.emit()
         self.close()
-    
+
     def closeEvent(self, event):
         """窗口关闭时结束通话"""
         if self.call_active:
             self.end_call()
         event.accept()
 
+
 class IncomingCallDialog(QDialog):
     """来电对话框"""
     call_accepted = pyqtSignal()
     call_rejected = pyqtSignal()
-    
+
     def __init__(self, parent=None, caller_name=None):
         super().__init__(parent)
         self.caller_name = caller_name
         # 设置窗口为独立窗口，总是在最前，且无法点击其他窗口直到处理通知
         self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         self.setWindowModality(Qt.ApplicationModal)  # 阻止点击其他窗口
-        
+
         logging.debug(f"创建来电对话框，来电者: {caller_name}")
         self.init_ui()
         center_window(self)  # 居中显示
-        
+
         # 播放系统提示音
         QApplication.beep()
         QApplication.beep()  # 播放两次以引起注意
-        
+
         # 额外创建系统通知，防止窗口被遮挡
         try:
-            QMessageBox.information(None, "来电通知", f"收到来自 {caller_name} 的语音通话请求！", 
-                                   QMessageBox.Ok)
+            QMessageBox.information(None, "来电通知", f"收到来自 {caller_name} 的语音通话请求！",
+                                    QMessageBox.Ok)
         except:
             pass
-    
+
     def init_ui(self):
         self.setWindowTitle("【来电提醒】")
         self.setFixedSize(400, 200)
-        
+
         layout = QVBoxLayout()
-        
+
         # 使用更显眼的标题
         title_label = QLabel(f"收到来电!")
         title_label.setStyleSheet("font-size: 18pt; font-weight: bold; color: red;")
         title_label.setAlignment(Qt.AlignCenter)
-        
+
         self.status_label = QLabel(f"{self.caller_name} 正在呼叫你...")
         self.status_label.setStyleSheet("font-size: 14pt;")
         self.status_label.setAlignment(Qt.AlignCenter)
-        
+
         btn_layout = QHBoxLayout()
-        
+
         self.accept_btn = QPushButton("接听")
         self.accept_btn.setStyleSheet("background-color: green; color: white; font-size: 12pt; min-height: 40px;")
         self.accept_btn.clicked.connect(self.accept_call)
-        
+
         self.reject_btn = QPushButton("拒绝")
         self.reject_btn.setStyleSheet("background-color: red; color: white; font-size: 12pt; min-height: 40px;")
         self.reject_btn.clicked.connect(self.reject_call)
-        
+
         btn_layout.addWidget(self.accept_btn)
         btn_layout.addWidget(self.reject_btn)
-        
+
         layout.addWidget(title_label)
         layout.addWidget(self.status_label)
         layout.addSpacing(20)
         layout.addLayout(btn_layout)
-        
+
         self.setLayout(layout)
         logging.debug(f"来电对话框UI初始化完成，来电者: {self.caller_name}")
-        
+
         # 设置定时提醒
         self.reminder_timer = QTimer(self)
         self.reminder_timer.timeout.connect(self.reminder_beep)
         self.reminder_timer.start(3000)  # 每3秒提醒一次
-    
+
     def reminder_beep(self):
         """定期发出提示音"""
         QApplication.beep()
-    
+
     def accept_call(self):
         logging.debug(f"用户点击接听来自 {self.caller_name} 的通话")
         self.reminder_timer.stop()
         self.call_accepted.emit()
         self.close()
-    
+
     def reject_call(self):
         logging.debug(f"用户点击拒绝来自 {self.caller_name} 的通话")
         self.reminder_timer.stop()
         self.call_rejected.emit()
         self.close()
-        
+
     def closeEvent(self, event):
         """窗口关闭时处理"""
         logging.debug(f"来电对话框被关闭")
         self.reminder_timer.stop()
         event.accept()
 
+
 def excepthook(type, value, traceback):
     QMessageBox.critical(None, '未捕获异常', str(value))
     sys.__excepthook__(type, value, traceback)
+
+
 sys.excepthook = excepthook
+
 
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('登录/注册')
-        
+
         # 检查网络配置
         if not check_network_config():
             sys.exit(1)
-            
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.sock.connect((SERVER_HOST, SERVER_PORT))
@@ -775,8 +792,10 @@ class LoginWindow(QWidget):
             QMessageBox.critical(self, '错误', f'登录后主窗口异常: {e}')
             self.show()
 
+
 class EmojiDialog(QWidget):
     emoji_selected = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle('选择表情')
@@ -829,6 +848,7 @@ class EmojiDialog(QWidget):
             except Exception as e:
                 QMessageBox.warning(self, '上传失败', f'无法添加表情: {e}')
 
+
 class MainWindow(QWidget):
     def __init__(self, sock, username):
         super().__init__()
@@ -844,7 +864,7 @@ class MainWindow(QWidget):
         self.anon_mode = False  # 匿名模式
         self.anon_nick = None  # 匿名昵称
         self.selecting_group = False  # 防止群聊选择的重入调用
-        
+
         # 语音通话相关变量
         self.in_call = False
         self.call_target = None
@@ -852,35 +872,35 @@ class MainWindow(QWidget):
         self.incoming_call_dialog = None
         self.udp_thread = None
         self.udp_local_port = None
-        
+
         # 加载表情缓存
         self.emoji_cache = {}
-        
+
         logging.debug(f"创建客户端线程")
         # 创建客户端线程
         self.client_thread = ClientThread(sock)
         self.client_thread.message_received.connect(self.on_message)
         self.client_thread.connection_lost.connect(self.on_connection_lost)
         self.client_thread.start()
-        
+
         # 初始化UDP音频服务
         self.init_udp_audio()
-        
+
         # 预加载表情
         self.preload_emojis()
-        
+
         logging.debug(f"初始化UI")
         self.init_ui()
-        
+
         logging.debug(f"初始刷新好友和群组列表")
         self.initial_refresh()
-        
+
         # 创建处理来电的专用窗口
         self.call_notification_timer = QTimer(self)
         self.call_notification_timer.timeout.connect(self.check_pending_calls)
         self.call_notification_timer.start(1000)  # 每秒检查一次
         self.pending_calls = []  # 存储待处理的来电
-        
+
         logging.debug(f"主窗口初始化完成，用户: {username}, UDP端口: {self.udp_local_port}")
         center_window(self)  # 居中显示窗口
         # 在MainWindow.__init__中添加self.current_bg_index = 0
@@ -890,11 +910,11 @@ class MainWindow(QWidget):
     def init_udp_audio(self):
         """初始化UDP音频通信"""
         logging.debug("开始初始化UDP音频服务")
-        
+
         # 为了避免在同一台计算机上测试时的冲突，使用随机端口而不是基于用户名
         self.udp_local_port = random.randint(40000, 65000)
         logging.debug(f"分配随机UDP端口: {self.udp_local_port}")
-        
+
         # 确保端口不被占用
         port_attempts = 0
         while port_attempts < 20:  # 增加尝试次数
@@ -909,12 +929,12 @@ class MainWindow(QWidget):
                 port_attempts += 1
                 logging.warning(f"UDP端口 {self.udp_local_port} 绑定失败: {e}，尝试下一个端口")
                 self.udp_local_port = random.randint(40000, 65000)  # 使用新的随机端口
-        
+
         if port_attempts >= 20:
             logging.error("无法找到可用的UDP端口")
             QMessageBox.warning(self, '错误', '无法初始化语音通话功能，找不到可用端口')
             return
-        
+
         # 创建UDP音频线程
         try:
             logging.debug(f"创建UDP音频线程，端口: {self.udp_local_port}")
@@ -924,7 +944,7 @@ class MainWindow(QWidget):
         except Exception as e:
             logging.error(f"创建UDP音频线程失败: {e}", exc_info=True)
             QMessageBox.warning(self, '错误', f'初始化语音通话功能失败: {e}')
-        
+
         # 通知服务器我们的UDP端口
         try:
             update_msg = f'UDP_PORT_UPDATE|{self.username}|{self.udp_local_port}'
@@ -932,7 +952,7 @@ class MainWindow(QWidget):
             self.sock.send(update_msg.encode('utf-8'))
         except Exception as e:
             logging.error(f"发送UDP端口更新消息失败: {e}")
-        
+
         logging.debug(f"UDP音频服务初始化完成，端口: {self.udp_local_port}")
 
     def preload_emojis(self):
@@ -941,7 +961,7 @@ class MainWindow(QWidget):
             if not os.path.exists(EMOJI_DIR):
                 print("表情目录不存在")
                 return
-                
+
             print("开始预加载表情...")
             for fname in os.listdir(EMOJI_DIR):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
@@ -1143,11 +1163,11 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{sender}:</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             path = os.path.join(EMOJI_DIR, emoji_id)
-            
+
             # 添加路径检查
             if not os.path.exists(path):
                 print(f"表情文件不存在: {path}")
@@ -1170,7 +1190,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-                
+
         layout.addWidget(name_label)
         layout.addWidget(img_label)
         widget.setLayout(layout)
@@ -1195,7 +1215,7 @@ class MainWindow(QWidget):
             self.emoji_dialog = EmojiDialog()
             self.emoji_dialog.emoji_selected.connect(self.handle_emoji_selected)
         self.emoji_dialog.show()
-        
+
     def handle_emoji_selected(self, emoji_id):
         if self.tab_widget.currentWidget() == self.private_tab:
             self.send_emoji(emoji_id)
@@ -1219,7 +1239,7 @@ class MainWindow(QWidget):
             if self.current_group and str(self.current_group) == group_info:
                 self.selecting_group = False
                 return
-                
+
             self.current_group = group_info
             # 清除未读标记
             if group_info in self.unread_groups:
@@ -1321,7 +1341,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{sender}:</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             # 路径检查和处理
@@ -1348,7 +1368,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-            
+
         if is_self:
             name_label.setStyleSheet('color:blue;')
         layout.addWidget(name_label)
@@ -1368,7 +1388,7 @@ class MainWindow(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         name_label = QLabel(f'<b>{anon_nick}(匿名):</b>')
         img_label = QLabel()
-        
+
         # 尝试从缓存获取表情
         if not self.get_emoji_from_cache(emoji_id, img_label):
             # 路径检查和处理
@@ -1395,7 +1415,7 @@ class MainWindow(QWidget):
                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                 # 强制处理事件以确保显示更新
                 QApplication.processEvents()
-            
+
         if is_self:
             name_label.setStyleSheet('color:blue;')
         layout.addWidget(name_label)
@@ -1414,10 +1434,10 @@ class MainWindow(QWidget):
             logging.debug(f"处理收到的消息: {data}")
             parts = data.split('|')
             cmd = parts[0]
-            
+
             # 调试专用 - 添加打印所有消息类型的日志
             print(f"处理消息类型: {cmd}, 完整消息: {data}")
-            
+
             # 强制下线处理 - 最高优先级
             if cmd == 'FORCE_LOGOUT':
                 reason = parts[1] if len(parts) > 1 else "您的账号在其他地方登录"
@@ -1425,7 +1445,7 @@ class MainWindow(QWidget):
                 QMessageBox.warning(self, "强制下线", reason)
                 self.close()
                 return
-            
+
             # 语音通话相关消息处理 - 提高优先级，移到前面处理
             if cmd == 'CALL_INCOMING':
                 # 收到通话请求
@@ -1437,14 +1457,14 @@ class MainWindow(QWidget):
                     logging.debug(f"当前用户: {self.username}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
                     logging.debug(f"当前窗口状态: visible={self.isVisible()}, active={self.isActiveWindow()}")
-                    
+
                     # 将来电添加到待处理队列，而不是直接处理
                     if caller not in self.pending_calls:
                         self.pending_calls.append(caller)
                         logging.debug(f"添加来电到待处理队列: {caller}")
                         # 立即触发一次检查
                         QTimer.singleShot(100, self.check_pending_calls)
-                    
+
                     logging.debug("CALL_INCOMING已添加到待处理队列")
                     logging.debug("======= CALL_INCOMING详细调试信息结束 =======")
                 except Exception as e:
@@ -1452,27 +1472,27 @@ class MainWindow(QWidget):
                     QMessageBox.warning(self, "通话错误", f"处理来电请求失败: {e}")
                 # 直接返回以避免后续处理干扰
                 return
-                
+
             # 处理其他消息类型
             if cmd == 'PRIVATE_HISTORY':
                 try:
                     if parts[1] == 'error':
                         self.append_text_message('[系统]', f'获取历史记录失败: {parts[2]}')
                         return
-                        
+
                     history = parts[1:]
-                    print(f"接收到私聊历史记录: {len(history)//2}条消息")
-                    
+                    print(f"接收到私聊历史记录: {len(history) // 2}条消息")
+
                     i = 0
                     while i < len(history):
-                        if i+1 >= len(history):
+                        if i + 1 >= len(history):
                             print(f"历史记录数据不完整: {history[i:]}")
                             break
-                            
+
                         sender = history[i]
-                        msg = history[i+1]
+                        msg = history[i + 1]
                         print(f"私聊历史: sender={sender}, msg={msg}")
-                        
+
                         # 显示历史消息
                         if msg.startswith('[EMOJI]'):
                             emoji_id = msg[7:]
@@ -1503,14 +1523,14 @@ class MainWindow(QWidget):
                     if len(parts) < 4:
                         logging.error(f"CALL_ACCEPTED消息格式错误: {data}")
                         return
-                    
+
                     from_user = parts[1]
                     caller_ip = parts[2]
                     caller_port = parts[3]
-                    
+
                     logging.debug(f"收到CALL_ACCEPTED: from={from_user}, ip={caller_ip}, port={caller_port}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
-                    
+
                     if self.in_call and self.call_target == from_user:
                         # 更新通话对话框状态
                         target_addr = (caller_ip, int(caller_port))
@@ -1590,7 +1610,7 @@ class MainWindow(QWidget):
                         name, status = f.split(':')
                         self.friends.append(name)
                         self.friend_status[name] = status
-                        item = QListWidgetItem(f'{name} ({"在线" if status=="online" else "离线"})')
+                        item = QListWidgetItem(f'{name} ({"在线" if status == "online" else "离线"})')
                         if status == 'online':
                             item.setForeground(QColor('green'))
                         else:
@@ -1619,22 +1639,22 @@ class MainWindow(QWidget):
                     if len(parts) < 4:
                         print(f"群聊消息格式错误: {data}")
                         return
-                    
+
                     group_id, from_user, msg = parts[1], parts[2], '|'.join(parts[3:])
                     print(f"接收到群聊消息: group_id={group_id}, from_user={from_user}, msg={msg}")
-                    
+
                     # 统一群组ID格式
                     group_id_str = str(group_id)
                     current_group_str = str(self.current_group) if self.current_group else ""
-                    
+
                     # 收到消息意味着用户在线，更新好友状态
                     if from_user in self.friends:
                         self.update_friend_status(from_user, True)
-                    
+
                     # 不处理自己发送的消息，因为发送时已经显示过了
                     if from_user == self.username:
                         return
-                    
+
                     # 无论当前是否在该群聊界面，都保存并处理消息
                     if current_group_str == group_id_str and self.tab_widget.currentWidget() == self.group_tab:
                         # 用户当前正在查看该群聊，显示消息
@@ -1655,18 +1675,18 @@ class MainWindow(QWidget):
                     if len(parts) < 4:
                         print(f"匿名群聊消息格式错误: {data}")
                         return
-                    
+
                     group_id, anon_nick, msg = parts[1], parts[2], '|'.join(parts[3:])
                     print(f"接收到匿名群聊消息: group_id={group_id}, anon_nick={anon_nick}, msg={msg}")
-                    
+
                     # 统一群组ID格式
                     group_id_str = str(group_id)
                     current_group_str = str(self.current_group) if self.current_group else ""
-                    
+
                     # 不处理自己发送的匿名消息，因为发送时已经显示过了
                     if self.anon_nick and anon_nick == self.anon_nick:
                         return
-                    
+
                     # 无论当前是否在该群聊界面，都保存并处理消息
                     if current_group_str == group_id_str and self.tab_widget.currentWidget() == self.group_tab:
                         # 用户当前正在查看该群聊，显示消息
@@ -1685,17 +1705,17 @@ class MainWindow(QWidget):
                 try:
                     self.group_chat_display.clear()
                     history = parts[1:]
-                    print(f"接收到群聊历史记录: {len(history)//3}条消息")
-                    
+                    print(f"接收到群聊历史记录: {len(history) // 3}条消息")
+
                     i = 0
                     while i < len(history):
-                        if i+2 >= len(history):
+                        if i + 2 >= len(history):
                             print(f"历史记录数据不完整: {history[i:]}")
                             break
-                            
+
                         if history[i] == 'user':
-                            sender = history[i+1]
-                            msg = history[i+2]
+                            sender = history[i + 1]
+                            msg = history[i + 2]
                             print(f"历史记录: user={sender}, msg={msg}")
                             if msg.startswith('[EMOJI]'):
                                 emoji_id = msg[7:]
@@ -1704,8 +1724,8 @@ class MainWindow(QWidget):
                                 self.append_group_message(sender, msg)
                             i += 3
                         elif history[i] == 'anon':
-                            anon_nick = history[i+1]
-                            msg = history[i+2]
+                            anon_nick = history[i + 1]
+                            msg = history[i + 2]
                             print(f"历史记录: anon={anon_nick}, msg={msg}")
                             if msg.startswith('[EMOJI]'):
                                 emoji_id = msg[7:]
@@ -1768,10 +1788,10 @@ class MainWindow(QWidget):
                     if not chunk:
                         break
                     filedata += chunk
-                
+
                 # 确保FILES_DIR存在
                 os.makedirs(FILES_DIR, exist_ok=True)
-                
+
                 # 保存文件到FILES_DIR目录
                 save_path = os.path.join(FILES_DIR, fname)
                 with open(save_path, 'wb') as f:
@@ -1797,7 +1817,7 @@ class MainWindow(QWidget):
         current_items = []
         for i in range(self.group_list.count()):
             current_items.append(self.group_list.item(i).text())
-        
+
         self.group_list.clear()
         for item in current_items:
             group_id = item.split(' ', 1)[0]
@@ -1824,36 +1844,36 @@ class MainWindow(QWidget):
                     self.sock.send(f'CALL_END|{self.username}|{self.call_target}'.encode('utf-8'))
                 except:
                     pass
-                
+
             # 清理通话资源
             if self.call_dialog:
                 self.call_dialog.close()
-                
+
             if self.udp_thread:
                 self.udp_thread.stop()
-                
+
             # 尝试发送登出消息，但不等待响应
             try:
                 self.sock.send('LOGOUT|'.encode('utf-8'))
             except:
                 pass
-                
+
             # 停止客户端线程
             self.client_thread.stop()
-            
+
             # 关闭socket连接
             try:
                 self.sock.close()
             except:
                 pass
-                
+
             # 接受关闭事件
             event.accept()
-            
+
             # 只有在用户主动关闭窗口时才退出程序
             if event.spontaneous():
                 QApplication.quit()
-            
+
         except Exception as e:
             print(f"关闭窗口时出错: {e}")
             event.accept()
@@ -1876,18 +1896,18 @@ class MainWindow(QWidget):
             logging.warning("未选择好友，无法发起通话")
             QMessageBox.warning(self, '提示', '请先选择好友')
             return
-            
+
         if self.in_call:
             logging.warning("已在通话中，无法发起新通话")
             QMessageBox.warning(self, '提示', '你已经在通话中')
             return
-            
+
         # 检查好友是否在线
         if self.current_friend not in self.friend_status or self.friend_status[self.current_friend] != 'online':
             logging.warning(f"好友 {self.current_friend} 不在线")
             QMessageBox.warning(self, '提示', f'{self.current_friend} 当前不在线')
             return
-            
+
         # 发送通话请求到服务器
         try:
             logging.debug(f"发起语音通话请求：{self.username} -> {self.current_friend}")
@@ -1897,7 +1917,7 @@ class MainWindow(QWidget):
             logging.debug(f"已发送CALL_REQUEST消息，本地UDP端口: {self.udp_local_port}")
             self.in_call = True
             self.call_target = self.current_friend
-            
+
             # 创建通话对话框
             self.call_dialog = CallDialog(
                 self,
@@ -1914,7 +1934,7 @@ class MainWindow(QWidget):
             self.call_target = None
             logging.error(f"发起通话请求失败: {e}", exc_info=True)
             QMessageBox.warning(self, '错误', f'发起通话失败: {e}')
-    
+
     def on_call_ended(self):
         """通话结束处理"""
         if self.call_target:
@@ -1923,20 +1943,20 @@ class MainWindow(QWidget):
                 self.sock.send(f'CALL_END|{self.username}|{self.call_target}'.encode('utf-8'))
             except Exception as e:
                 print(f"发送通话结束消息失败: {e}")
-        
+
         self.in_call = False
         self.call_target = None
         self.call_dialog = None
-    
+
     def check_pending_calls(self):
         """定期检查待处理的来电并显示通知"""
         if not self.pending_calls:
             return
-            
+
         # 处理队列中的第一个来电
         caller = self.pending_calls[0]
         logging.debug(f"从待处理队列中处理来电: {caller}")
-        
+
         # 如果已经在通话中，自动拒绝
         if self.in_call:
             logging.debug(f"已在通话中，自动拒绝来电: {caller}")
@@ -1946,7 +1966,7 @@ class MainWindow(QWidget):
                 logging.error(f"发送拒绝通话消息失败: {e}")
             self.pending_calls.remove(caller)
             return
-        
+
         # 如果已经有通知窗口在显示，先关闭它
         if hasattr(self, 'notification_window') and self.notification_window and self.notification_window.isVisible():
             try:
@@ -1954,24 +1974,24 @@ class MainWindow(QWidget):
             except:
                 pass
             self.notification_window = None
-        
+
         # 创建新的通知窗口
         try:
             # 创建独立的通知窗口
             self.notification_window = CallNotificationWindow(caller)
             self.notification_window.accept_signal.connect(lambda c: self.accept_incoming_call(c))
             self.notification_window.reject_signal.connect(lambda c: self.reject_incoming_call(c))
-            
+
             # 确保窗口显示在最前面
             self.notification_window.setWindowState(self.notification_window.windowState() | Qt.WindowActive)
             self.notification_window.show()
             self.notification_window.raise_()
             self.notification_window.activateWindow()
-            
+
             # 播放系统提示音
             QApplication.beep()
             QApplication.beep()  # 播放两次以引起注意
-            
+
             # 从队列中移除
             self.pending_calls.remove(caller)
             logging.debug(f"已显示通知窗口并从队列中移除: {caller}")
@@ -1987,13 +2007,13 @@ class MainWindow(QWidget):
         try:
             self.in_call = True
             self.call_target = caller
-            
+
             # 发送接受通话消息
             accept_msg = f'CALL_ACCEPT|{self.username}|{caller}|{self.udp_local_port}'.encode('utf-8')
             logging.debug(f"准备发送CALL_ACCEPT: {accept_msg}")
             self.sock.send(accept_msg)
             logging.debug(f"已发送CALL_ACCEPT消息，本地UDP端口: {self.udp_local_port}")
-            
+
             # 创建通话对话框 - 这一步是关键
             # 此时我们还不知道对方的UDP地址，但可以先创建对话框
             # 当收到CALL_ACCEPTED消息时会通过create_call_dialog_as_receiver更新
@@ -2007,13 +2027,13 @@ class MainWindow(QWidget):
             self.call_dialog.call_ended.connect(self.on_call_ended)
             self.call_dialog.show()
             logging.debug(f"已创建通话对话框(被叫方)")
-            
+
         except Exception as e:
             self.in_call = False
             self.call_target = None
             logging.error(f"接受通话失败: {e}")
             QMessageBox.warning(self, '错误', f'接受通话失败: {e}')
-    
+
     def reject_incoming_call(self, caller):
         """拒绝来电"""
         try:
@@ -2021,18 +2041,18 @@ class MainWindow(QWidget):
             logging.debug(f"已发送拒绝通话消息: CALL_REJECT|{self.username}|{caller}")
         except Exception as e:
             logging.error(f"拒绝通话失败: {e}")
-        
+
         self.incoming_call_dialog = None
-    
+
     def create_call_dialog_as_receiver(self, caller, caller_ip, caller_port):
         """作为接收方创建通话对话框"""
         if self.call_dialog or not self.in_call:
             return
-            
+
         # 创建UDP目标地址
         target_addr = (caller_ip, int(caller_port))
         logging.debug(f"创建接收方通话对话框，目标地址: {target_addr}")
-        
+
         # 更新现有通话对话框的目标地址
         if self.call_dialog:
             self.call_dialog.target_addr = target_addr
@@ -2068,7 +2088,8 @@ class MainWindow(QWidget):
         self.current_bg_index = (getattr(self, 'current_bg_index', 0) + 1) % len(bg_files)
         bg_path = os.path.join(BG_DIR, bg_files[self.current_bg_index])
         bg_path_url = bg_path.replace("\\", "/")
-        self.setStyleSheet(f'QWidget {{ background-image: url("{bg_path_url}"); background-repeat: no-repeat; background-position: center; }}')
+        self.setStyleSheet(
+            f'QWidget {{ background-image: url("{bg_path_url}"); background-repeat: no-repeat; background-position: center; }}')
 
     def change_resolution(self):
         """弹窗选择分辨率并调整窗口大小"""
@@ -2080,89 +2101,217 @@ class MainWindow(QWidget):
             center_window(self)
 
     class FileTransfer:
-        CHUNK_SIZE = 1024 * 1024  # 1MB per chunk
-        MAX_RETRIES = 3
-        TIMEOUT = 30  # 30 seconds timeout
-        
-        @staticmethod
-        def send_file_chunk(sock, chunk_data, chunk_id, total_chunks):
-            """发送单个文件块"""
-            try:
-                header = f'CHUNK|{chunk_id}|{total_chunks}|{len(chunk_data)}'.encode('utf-8')
-                sock.send(header + b'\n' + chunk_data)
-                return True
-            except Exception as e:
-                logging.error(f"发送文件块失败: {e}")
-                return False
-            
-        @staticmethod
-        def receive_file_chunk(sock, timeout=TIMEOUT):
-            """接收单个文件块"""
-            sock.settimeout(timeout)
-            try:
-                # 接收头部信息
-                header = b''
-                while b'\n' not in header:
-                    chunk = sock.recv(1024)
-                    if not chunk:
-                        raise Exception("连接断开")
-                    header += chunk
-                
-                header, data = header.split(b'\n', 1)
-                header = header.decode('utf-8')
-                parts = header.split('|')
-                
-                if parts[0] != 'CHUNK':
-                    raise Exception("无效的数据块格式")
-                    
-                chunk_id = int(parts[1])
-                total_chunks = int(parts[2])
-                chunk_size = int(parts[3])
-                
-                # 接收剩余数据
-                remaining = chunk_size - len(data)
-                while remaining > 0:
-                    chunk = sock.recv(min(remaining, 8192))
-                    if not chunk:
-                        raise Exception("连接断开")
-                    data += chunk
-                    remaining -= len(chunk)
-                    
-                return chunk_id, total_chunks, data
-                
-            except socket.timeout:
-                raise Exception("接收超时")
-            except Exception as e:
-                raise Exception(f"接收文件块失败: {e}")
-            finally:
-                sock.settimeout(None)
+        """简化的文件传输类，使用专用socket连接"""
 
         @staticmethod
-        def verify_file_integrity(file_path, expected_size):
-            """验证文件完整性"""
+        def upload_file(server_host, server_port, username, to_user, file_path, progress_callback=None):
+            """上传文件到服务器
+
+            Args:
+                server_host: 服务器主机名
+                server_port: 文件传输服务器端口
+                username: 发送者用户名
+                to_user: 接收者用户名
+                file_path: 本地文件路径
+                progress_callback: 进度回调函数，接收参数(percent)
+
+            Returns:
+                (success, message): 成功状态和消息
+            """
             try:
-                if not os.path.exists(file_path):
-                    return False
-                actual_size = os.path.getsize(file_path)
-                return actual_size == expected_size
+                # 创建专用socket
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(30)  # 30秒超时
+                sock.connect((server_host, server_port))
+
+                # 获取文件信息
+                file_size = os.path.getsize(file_path)
+                file_name = os.path.basename(file_path)
+
+                # 发送认证和请求头
+                auth_msg = f'UPLOAD|{username}|{to_user}|{file_name}|{file_size}'
+                sock.send(auth_msg.encode('utf-8'))
+
+                # 等待服务器准备就绪
+                response = sock.recv(1024).decode('utf-8')
+                if not response.startswith('READY'):
+                    if response.startswith('ERROR'):
+                        error_msg = response.split('|', 1)[1] if '|' in response else "Unknown error"
+                        return False, f"服务器错误: {error_msg}"
+                    return False, f"服务器响应错误: {response}"
+
+                # 从响应中获取服务器可能修改过的文件名
+                if '|' in response:
+                    file_name = response.split('|', 1)[1]
+
+                # 开始上传文件
+                sent = 0
+                last_progress = 0
+                with open(file_path, 'rb') as f:
+                    while sent < file_size:
+                        # 读取并发送数据块
+                        chunk = f.read(8192)
+                        if not chunk:
+                            break
+                        sock.sendall(chunk)
+                        sent += len(chunk)
+
+                        # 更新进度
+                        progress = min(100, int(sent * 100 / file_size))
+                        if progress != last_progress:
+                            if progress_callback:
+                                progress_callback(progress)
+                            last_progress = progress
+
+                        # 检查服务器进度更新
+                        if sent % (1024 * 1024) == 0 or sent == file_size:  # 每1MB或完成时
+                            try:
+                                sock.settimeout(2)  # 短超时
+                                prog_update = sock.recv(1024).decode('utf-8')
+                                if prog_update.startswith('PROGRESS'):
+                                    server_progress = int(prog_update.split('|')[1])
+                                    logging.debug(f"服务器确认进度: {server_progress}%")
+                                sock.settimeout(30)  # 恢复长超时
+                            except socket.timeout:
+                                # 超时不中断传输
+                                sock.settimeout(30)
+                            except Exception as e:
+                                logging.warning(f"接收服务器进度更新出错: {e}")
+                                # 继续传输
+
+                # 等待最终确认
+                sock.settimeout(10)
+                final_response = sock.recv(1024).decode('utf-8')
+                if final_response == 'SUCCESS':
+                    return True, f"文件 {file_name} 已成功上传"
+                else:
+                    return False, f"上传失败: {final_response}"
+
+            except socket.timeout:
+                return False, "连接服务器超时"
+            except ConnectionRefusedError:
+                return False, "服务器拒绝连接，请确认服务器正在运行"
             except Exception as e:
-                logging.error(f"验证文件完整性失败: {e}")
-                return False
+                return False, f"上传出错: {str(e)}"
+            finally:
+                try:
+                    sock.close()
+                except:
+                    pass
+
+        @staticmethod
+        def download_file(server_host, server_port, username, from_user, file_name, save_path, progress_callback=None):
+            """从服务器下载文件
+
+            Args:
+                server_host: 服务器主机名
+                server_port: 文件传输服务器端口
+                username: 下载者用户名
+                from_user: 文件所有者用户名
+                file_name: 要下载的文件名
+                save_path: 本地保存路径
+                progress_callback: 进度回调函数，接收参数(percent)
+
+            Returns:
+                (success, message): 成功状态和消息
+            """
+            temp_path = save_path + ".tmp"
+            try:
+                # 创建专用socket
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(30)  # 30秒超时
+                sock.connect((server_host, server_port))
+
+                # 发送认证和请求头
+                auth_msg = f'DOWNLOAD|{username}|{from_user}|{file_name}'
+                sock.send(auth_msg.encode('utf-8'))
+
+                # 等待服务器准备就绪
+                response = sock.recv(1024).decode('utf-8')
+                if not response.startswith('READY'):
+                    if response.startswith('ERROR'):
+                        error_msg = response.split('|', 1)[1] if '|' in response else "Unknown error"
+                        return False, f"服务器错误: {error_msg}"
+                    return False, f"服务器响应错误: {response}"
+
+                # 获取文件大小
+                file_size = int(response.split('|')[1])
+
+                # 开始下载文件
+                received = 0
+                last_progress = 0
+                with open(temp_path, 'wb') as f:
+                    while received < file_size:
+                        # 计算剩余大小并接收数据
+                        chunk_size = min(8192, file_size - received)
+                        chunk = sock.recv(chunk_size)
+
+                        if not chunk:
+                            # 如果连接关闭但已收到接近完整的文件，尝试继续
+                            if received >= file_size * 0.99:  # 如果收到了99%以上
+                                logging.warning(f"连接关闭，但已接收足够数据: {received}/{file_size}")
+                                break
+                            else:
+                                raise Exception("连接过早关闭，文件不完整")
+
+                        f.write(chunk)
+                        received += len(chunk)
+
+                        # 更新进度
+                        progress = min(100, int(received * 100 / file_size))
+                        if progress != last_progress:
+                            if progress_callback:
+                                progress_callback(progress)
+                            last_progress = progress
+
+                        # 定期发送确认
+                        if received % (1024 * 1024) == 0 or received == file_size:  # 每1MB或完成时
+                            try:
+                                sock.send(f'ACK|{progress}'.encode('utf-8'))
+                            except:
+                                # 发送确认失败不中断下载
+                                pass
+
+                # 验证文件大小
+                if os.path.getsize(temp_path) != file_size:
+                    raise Exception(f"文件大小不匹配: 预期{file_size}字节，实际接收{os.path.getsize(temp_path)}字节")
+
+                # 重命名文件
+                if os.path.exists(save_path):
+                    os.remove(save_path)
+                os.rename(temp_path, save_path)
+
+                return True, f"文件已保存到: {save_path}"
+
+            except socket.timeout:
+                return False, "下载超时"
+            except ConnectionRefusedError:
+                return False, "服务器拒绝连接，请确认服务器正在运行"
+            except Exception as e:
+                return False, f"下载出错: {str(e)}"
+            finally:
+                try:
+                    sock.close()
+                except:
+                    pass
+                # 清理临时文件
+                if os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except:
+                        pass
 
     def upload_private_file(self):
         if not self.current_friend:
             QMessageBox.warning(self, '提示', '请先选择好友')
             return
-        
+
         file_path, _ = QFileDialog.getOpenFileName(self, '选择要上传的文件', '', 'All Files (*)')
         if not file_path:
             return
-        
+
+        progress = None
         try:
-            # 获取文件信息
-            file_size = os.path.getsize(file_path)
-            file_name = os.path.basename(file_path)
-            
             # 创建进度对话框
             progress = QProgressDialog("准备上传文件...", "取消", 0, 100, self)
             progress.setWindowTitle("上传进度")
@@ -2170,96 +2319,132 @@ class MainWindow(QWidget):
             progress.setAutoClose(False)
             progress.setAutoReset(False)
             progress.show()
-            
-            # 计算分块数量
-            total_chunks = (file_size + self.FileTransfer.CHUNK_SIZE - 1) // self.FileTransfer.CHUNK_SIZE
-            
-            logging.info(f"开始上传文件: {file_name}, 大小: {file_size}, 块数: {total_chunks}")
-            
-            # 设置socket超时
-            self.sock.settimeout(self.FileTransfer.TIMEOUT)
-            
-            # 发送上传请求
-            self.sock.send(f'FILE_UPLOAD_START|{self.username}|{self.current_friend}|{file_name}|{file_size}|{total_chunks}'.encode('utf-8'))
-            
-            # 等待服务器响应
+
+            # 准备上传请求
+            self.sock.send(
+                f'FILE_UPLOAD_START|{self.username}|{self.current_friend}|{os.path.basename(file_path)}|{os.path.getsize(file_path)}|1'.encode(
+                    'utf-8'))
+
+            # 等待服务器响应 - 应该是重定向到文件传输端口
             response = self.sock.recv(1024).decode('utf-8')
-            if response.startswith('ERROR'):
-                error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
-                raise Exception(f"服务器错误: {error_msg}")
-                
-            if not response.startswith('UPLOAD_READY'):
-                raise Exception(f"服务器响应错误: {response}")
-            
-            # 开始分块上传
-            with open(file_path, 'rb') as f:
-                for chunk_id in range(total_chunks):
-                    if progress.wasCanceled():
-                        self.sock.send('UPLOAD_CANCEL'.encode('utf-8'))
-                        raise Exception("上传已取消")
-                    
-                    # 读取数据块
-                    chunk_data = f.read(self.FileTransfer.CHUNK_SIZE)
-                    
-                    # 发送数据块
-                    retry_count = 0
-                    while retry_count < self.FileTransfer.MAX_RETRIES:
-                        try:
-                            if not self.FileTransfer.send_file_chunk(self.sock, chunk_data, chunk_id, total_chunks):
-                                raise Exception("发送数据块失败")
-                                
-                            # 等待确认
-                            response = self.sock.recv(1024).decode('utf-8')
-                            if response.startswith('CHUNK_OK'):
-                                break
-                            elif response.startswith('CHUNK_RETRY'):
-                                retry_count += 1
-                                logging.warning(f"服务器请求重试第 {retry_count} 次")
-                                time.sleep(1)  # 等待1秒后重试
-                                continue
-                            else:
-                                raise Exception(f"服务器响应错误: {response}")
-                        except socket.timeout:
-                            retry_count += 1
-                            if retry_count >= self.FileTransfer.MAX_RETRIES:
-                                raise Exception("上传超时，请重试")
-                            logging.warning(f"上传超时，重试第 {retry_count} 次")
-                            time.sleep(1)  # 等待1秒后重试
-                            continue
-                        except Exception as e:
-                            retry_count += 1
-                            if retry_count >= self.FileTransfer.MAX_RETRIES:
-                                raise Exception(f"发送数据块失败: {str(e)}")
-                            logging.warning(f"发送数据块出错，重试第 {retry_count} 次: {e}")
-                            time.sleep(1)  # 等待1秒后重试
-                            continue
-                    
-                    # 更新进度
-                    progress.setValue(int((chunk_id + 1) * 100 / total_chunks))
-                    progress.setLabelText(f"正在上传: {file_name}\n"
-                                       f"进度: {chunk_id + 1}/{total_chunks} 块")
+            if not response.startswith('USE_FILE_PORT'):
+                if response.startswith('ERROR'):
+                    error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
+                    raise Exception(f"服务器错误: {error_msg}")
+                else:
+                    raise Exception(f"服务器响应错误: {response}")
+
+            # 解析文件传输端口
+            parts = response.split('|')
+            if len(parts) < 3:
+                raise Exception("无效的重定向响应")
+
+            file_port = int(parts[1])
+            logging.info(f"服务器指示使用专用文件端口: {file_port}")
+
+            # 定义进度回调
+            def update_progress(percent):
+                if progress and not progress.wasCanceled():
+                    progress.setValue(percent)
+                    progress.setLabelText(f"正在上传: {os.path.basename(file_path)}\n进度: {percent}%")
                     QApplication.processEvents()
-            
-            # 发送完成信号
-            self.sock.send('UPLOAD_COMPLETE'.encode('utf-8'))
-            
-            # 等待最终确认
-            response = self.sock.recv(1024).decode('utf-8')
-            if response.startswith('UPLOAD_SUCCESS'):
-                QMessageBox.information(self, '上传成功', f'文件 {file_name} 已上传')
+
+            # 使用专用连接上传文件
+            success, message = self.FileTransfer.upload_file(
+                SERVER_HOST, file_port, self.username, self.current_friend,
+                file_path, update_progress
+            )
+
+            if success:
+                QMessageBox.information(self, '上传成功', message)
                 # 刷新文件列表
                 self.get_private_file_list()
             else:
-                raise Exception("服务器确认上传失败")
-            
+                raise Exception(message)
+
         except Exception as e:
             logging.error(f"文件上传失败: {e}")
             QMessageBox.warning(self, '上传失败', f'文件上传失败: {str(e)}')
+            # 无论如何都尝试刷新文件列表
+            try:
+                self.get_private_file_list()
+            except:
+                pass
         finally:
-            if 'progress' in locals():
+            if progress is not None:
                 progress.close()
-            # 恢复默认超时设置
-            self.sock.settimeout(None)
+
+    def download_private_file(self, item):
+        if not item:
+            return
+
+        fname = item.text()
+        progress = None
+
+        try:
+            # 让用户选择保存位置
+            save_path, _ = QFileDialog.getSaveFileName(
+                self,
+                '选择保存位置',
+                os.path.join(FILES_DIR, fname),
+                'All Files (*)'
+            )
+
+            if not save_path:
+                return
+
+            # 创建进度对话框
+            progress = QProgressDialog("准备下载文件...", "取消", 0, 100, self)
+            progress.setWindowTitle("下载进度")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setAutoClose(False)
+            progress.setAutoReset(False)
+            progress.show()
+
+            # 请求下载文件
+            self.sock.send(f'FILE_DOWNLOAD_START|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
+
+            # 等待服务器响应
+            response = self.sock.recv(1024).decode('utf-8')
+            if not response.startswith('USE_FILE_PORT'):
+                if response.startswith('ERROR'):
+                    error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
+                    raise Exception(f"服务器错误: {error_msg}")
+                else:
+                    raise Exception(f"服务器响应错误: {response}")
+
+            # 解析文件传输端口
+            parts = response.split('|')
+            if len(parts) < 3:
+                raise Exception("无效的重定向响应")
+
+            file_port = int(parts[1])
+            logging.info(f"服务器指示使用专用文件端口: {file_port}")
+
+            # 定义进度回调
+            def update_progress(percent):
+                if progress and not progress.wasCanceled():
+                    progress.setValue(percent)
+                    progress.setLabelText(f"正在下载: {fname}\n进度: {percent}%")
+                    QApplication.processEvents()
+
+            # 使用专用连接下载文件
+            success, message = self.FileTransfer.download_file(
+                SERVER_HOST, file_port, self.username, self.current_friend,
+                fname, save_path, update_progress
+            )
+
+            if success:
+                QMessageBox.information(self, '下载完成', message)
+            else:
+                raise Exception(message)
+
+        except Exception as e:
+            logging.error(f"文件下载失败: {e}")
+            QMessageBox.warning(self, '下载失败', f'下载文件失败: {str(e)}')
+        finally:
+            if progress is not None:
+                progress.close()
 
     def get_private_file_list(self):
         if not self.current_friend:
@@ -2275,123 +2460,13 @@ class MainWindow(QWidget):
         for fname in file_list:
             self.file_list.addItem(fname)
 
-    def download_private_file(self, item):
-        if not item:
-            return
-        
-        fname = item.text()
-        temp_path = None
-        progress = None
-        
-        try:
-            # 让用户选择保存位置
-            save_path, _ = QFileDialog.getSaveFileName(
-                self,
-                '选择保存位置',
-                os.path.join(FILES_DIR, fname),
-                'All Files (*)'
-            )
-            
-            if not save_path:
-                return
-            
-            # 创建进度对话框
-            progress = QProgressDialog("准备下载文件...", "取消", 0, 100, self)
-            progress.setWindowTitle("下载进度")
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setAutoClose(False)
-            progress.setAutoReset(False)
-            progress.show()
-            
-            logging.info(f"开始下载文件: {fname}")
-            
-            # 发送下载请求
-            self.sock.send(f'FILE_DOWNLOAD_START|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
-            
-            # 接收文件信息
-            response = self.sock.recv(1024).decode('utf-8')
-            if response.startswith('ERROR'):
-                error_msg = response.split('|', 1)[1] if '|' in response else "未知错误"
-                raise Exception(f"服务器错误: {error_msg}")
-                
-            if not response.startswith('DOWNLOAD_READY'):
-                raise Exception(f"服务器响应错误: {response}")
-            
-            parts = response.split('|')
-            file_size = int(parts[1])
-            total_chunks = int(parts[2])
-            
-            logging.info(f"文件信息: 大小={file_size}, 块数={total_chunks}")
-            
-            # 创建临时文件
-            temp_path = save_path + '.tmp'
-            with open(temp_path, 'wb') as f:
-                received_chunks = 0
-                
-                while received_chunks < total_chunks:
-                    if progress.wasCanceled():
-                        self.sock.send('DOWNLOAD_CANCEL'.encode('utf-8'))
-                        raise Exception("下载已取消")
-                    
-                    try:
-                        # 接收数据块
-                        chunk_id, chunks_total, chunk_data = self.FileTransfer.receive_file_chunk(self.sock)
-                        
-                        # 写入文件
-                        f.write(chunk_data)
-                        received_chunks += 1
-                        
-                        # 发送确认
-                        self.sock.send(f'CHUNK_OK|{chunk_id}'.encode('utf-8'))
-                        
-                        # 更新进度
-                        progress.setValue(int(received_chunks * 100 / total_chunks))
-                        progress.setLabelText(f"正在下载: {fname}\n"
-                                           f"进度: {received_chunks}/{total_chunks} 块")
-                        QApplication.processEvents()
-                        
-                    except Exception as e:
-                        logging.error(f"接收数据块出错: {e}")
-                        # 请求重传
-                        self.sock.send(f'CHUNK_RETRY|{chunk_id}'.encode('utf-8'))
-                        continue
-            
-            # 发送完成信号
-            self.sock.send('DOWNLOAD_COMPLETE'.encode('utf-8'))
-            
-            # 等待最终确认
-            response = self.sock.recv(1024).decode('utf-8')
-            if response.startswith('DOWNLOAD_SUCCESS'):
-                # 验证文件完整性
-                if self.FileTransfer.verify_file_integrity(temp_path, file_size):
-                    # 重命名文件
-                    if os.path.exists(save_path):
-                        os.remove(save_path)
-                    os.rename(temp_path, save_path)
-                    QMessageBox.information(self, '下载完成', f'文件已保存到: {save_path}')
-                else:
-                    raise Exception("文件完整性验证失败")
-            else:
-                raise Exception(f"服务器确认下载失败: {response}")
-            
-        except Exception as e:
-            logging.error(f"文件下载失败: {e}")
-            QMessageBox.warning(self, '下载失败', f'下载文件失败: {str(e)}')
-        finally:
-            if progress and not progress.wasCanceled():
-                progress.close()
-            if temp_path and os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except:
-                    pass
 
 class CallNotificationWindow(QWidget):
     """独立的通话通知窗口，不会受到主窗口状态的影响"""
-    
+
     accept_signal = pyqtSignal(str)  # 接受通话信号
     reject_signal = pyqtSignal(str)  # 拒绝通话信号
-    
+
     def __init__(self, caller):
         super().__init__(None)  # 没有父窗口，完全独立窗口
         self.caller = caller
@@ -2401,7 +2476,7 @@ class CallNotificationWindow(QWidget):
             Qt.WindowStaysOnTopHint |  # 保持在最前面
             Qt.FramelessWindowHint  # 无边框
         )
-        
+
         # 设置窗口样式
         self.setStyleSheet("""
             QWidget {
@@ -2437,100 +2512,100 @@ class CallNotificationWindow(QWidget):
                 background-color: #c82333;
             }
         """)
-        
+
         self.init_ui()
         self.move_to_corner()
-        
+
         # 播放提示音
         QApplication.beep()
         QApplication.beep()  # 播放两次以引起注意
-        
+
         # 设置定时器自动关闭
         self.auto_close_timer = QTimer(self)
         self.auto_close_timer.timeout.connect(self.on_auto_close)
         self.auto_close_timer.start(30000)  # 30秒后自动关闭
-        
+
         # 设置定时提醒
         self.reminder_timer = QTimer(self)
         self.reminder_timer.timeout.connect(self.reminder_beep)
         self.reminder_timer.start(3000)  # 每3秒提醒一次
-        
+
         # 记录开始时间
         self.start_time = time.time()
-        
+
         # 更新剩余时间的定时器
         self.update_timer = QTimer(self)
         self.update_timer.timeout.connect(self.update_time_left)
         self.update_timer.start(1000)  # 每秒更新一次
-        
+
         # 确保窗口显示在最前面
         self.show()
         self.raise_()
         self.activateWindow()
-        
+
     def init_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(10, 10, 10, 10)  # 设置边距
-        
+
         # 头部标签
         title_label = QLabel(f"📞 来电通知")
         title_label.setStyleSheet("font-size: 16pt; font-weight: bold; color: #FF5555;")
         title_label.setAlignment(Qt.AlignCenter)
-        
+
         # 通话信息
         caller_label = QLabel(f"<b>{self.caller}</b> 正在呼叫你")
         caller_label.setStyleSheet("font-size: 14pt;")
         caller_label.setAlignment(Qt.AlignCenter)
-        
+
         # 剩余时间显示
         self.time_label = QLabel("30秒后自动拒绝")
         self.time_label.setAlignment(Qt.AlignCenter)
-        
+
         # 按钮区域
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(10)  # 设置按钮间距
-        
+
         self.accept_btn = QPushButton("接听")
         self.accept_btn.setObjectName("acceptButton")
         self.accept_btn.setMinimumHeight(40)
         self.accept_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
         self.accept_btn.clicked.connect(self.on_accept)
-        
+
         self.reject_btn = QPushButton("拒绝")
         self.reject_btn.setObjectName("rejectButton")
         self.reject_btn.setMinimumHeight(40)
         self.reject_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
         self.reject_btn.clicked.connect(self.on_reject)
-        
+
         btn_layout.addWidget(self.accept_btn)
         btn_layout.addWidget(self.reject_btn)
-        
+
         # 组装布局
         layout.addWidget(title_label)
         layout.addWidget(caller_label)
         layout.addWidget(self.time_label)
         layout.addLayout(btn_layout)
-        
+
         self.setLayout(layout)
         self.setFixedSize(300, 200)
-        
+
     def move_to_corner(self):
         """将窗口移动到屏幕右下角"""
         screen = QDesktopWidget().screenGeometry()
         widget_size = self.size()
-        self.move(screen.width() - widget_size.width() - 20, 
-                 screen.height() - widget_size.height() - 60)
-                 
+        self.move(screen.width() - widget_size.width() - 20,
+                  screen.height() - widget_size.height() - 60)
+
     def reminder_beep(self):
         """定期发出提示音"""
         QApplication.beep()
-        
+
     def update_time_left(self):
         """更新剩余时间显示"""
         elapsed = time.time() - self.start_time
         remaining = max(0, 30 - int(elapsed))
         self.time_label.setText(f"{remaining}秒后自动拒绝")
-        
+
     def on_accept(self):
         """接受通话"""
         self.auto_close_timer.stop()
@@ -2538,7 +2613,7 @@ class CallNotificationWindow(QWidget):
         self.update_timer.stop()
         self.accept_signal.emit(self.caller)
         self.close()
-        
+
     def on_reject(self):
         """拒绝通话"""
         self.auto_close_timer.stop()
@@ -2546,41 +2621,42 @@ class CallNotificationWindow(QWidget):
         self.update_timer.stop()
         self.reject_signal.emit(self.caller)
         self.close()
-        
+
     def on_auto_close(self):
         """自动关闭并拒绝通话"""
         self.reject_signal.emit(self.caller)
         self.close()
-        
+
     def closeEvent(self, event):
         """关闭窗口时确保定时器停止"""
         self.auto_close_timer.stop()
         self.reminder_timer.stop()
         self.update_timer.stop()
         event.accept()
-        
+
     def mousePressEvent(self, event):
         """允许通过点击窗口任意位置来拖动窗口"""
         if event.button() == Qt.LeftButton:
             self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
             event.accept()
-            
+
     def mouseMoveEvent(self, event):
         """处理窗口拖动"""
         if event.buttons() == Qt.LeftButton:
             self.move(event.globalPos() - self.drag_position)
             event.accept()
 
+
 FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
 os.makedirs(FILES_DIR, exist_ok=True)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    
+
     # 检查网络配置
     if not check_network_config():
         sys.exit(1)
-        
+
     win = LoginWindow()
     win.show()
     sys.exit(app.exec_()) 
