@@ -222,12 +222,33 @@ class UDPAudioThread(QThread):
         super().__init__()
         self.local_port = local_port
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.udp_socket.bind(('0.0.0.0', self.local_port))
+        # 增加socket选项以提高UDP可靠性
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)  # 增大接收缓冲区
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)  # 增大发送缓冲区
+        self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 允许地址重用
+        
+        try:
+            self.udp_socket.bind(('0.0.0.0', self.local_port))
+            logging.debug(f"UDP音频线程绑定到端口: {self.local_port}")
+        except Exception as e:
+            logging.error(f"UDP套接字绑定失败，尝试备用端口: {e}")
+            # 尝试使用备用端口
+            try:
+                backup_port = self.local_port + random.randint(1, 50)
+                self.udp_socket.bind(('0.0.0.0', backup_port))
+                self.local_port = backup_port
+                logging.debug(f"UDP音频线程绑定到备用端口: {self.local_port}")
+            except Exception as e2:
+                logging.error(f"UDP套接字备用端口绑定也失败: {e2}")
+                raise
+        
         self.udp_socket.settimeout(0.5)  # 设置超时以便于停止线程
         self.running = True
         self.error_occurred = False
         self.send_count = 0  # 添加计数器用于统计发送的数据包数量
         self.recv_count = 0  # 添加计数器用于统计接收的数据包数量
+        self.last_error_time = 0  # 最后一次错误的时间戳
+        self.error_count = 0  # 错误计数器
         
         # 创建 Opus 编解码器
         try:
@@ -241,58 +262,99 @@ class UDPAudioThread(QThread):
 
     def run(self):
         logging.debug(f"UDP音频接收线程开始运行，端口: {self.local_port}")
-        while self.running and not self.error_occurred:
+        last_recovery_attempt = 0  # 上次尝试恢复的时间
+        
+        while self.running:
             try:
+                # 如果发生了错误但未严重到需要终止，尝试恢复
+                if self.error_occurred:
+                    current_time = time.time()
+                    # 如果距离上次恢复尝试已经超过5秒，尝试重新初始化
+                    if current_time - last_recovery_attempt > 5:
+                        logging.debug("尝试从错误中恢复UDP接收线程...")
+                        last_recovery_attempt = current_time
+                        self.error_occurred = False
+                        self.error_count = 0
+                        continue
+                
                 data, addr = self.udp_socket.recvfrom(65536)
-                if data and len(data) > 1:
+                if not data or len(data) <= 1:
+                    logging.warning(f"收到无效UDP数据: {len(data) if data else 0} 字节")
+                    continue
+                    
+                try:
+                    # 解析头部
+                    header_len = data[0]
+                    if len(data) <= header_len + 1:
+                        logging.warning(f"数据包头部不完整: 头部长度={header_len}, 数据长度={len(data)}")
+                        continue
+                        
+                    # 提取头部和音频数据
+                    header_bytes = data[1:header_len+1]
+                    encoded_audio = data[header_len + 1:]
+                    
+                    # 尝试解码头部
                     try:
-                        # 解析头部
-                        header_len = data[0]
-                        if len(data) > header_len + 1:
-                            # 提取头部和音频数据
-                            header_bytes = data[1:header_len+1]
-                            encoded_audio = data[header_len + 1:]
+                        header = header_bytes.decode('utf-8')
+                        parts = header.split('|')
+                        if len(parts) != 2:
+                            logging.warning(f"收到无效头部格式: {header}")
+                            continue
                             
+                        sender, receiver = parts
+                        self.recv_count += 1
+                        
+                        # 每收到10个包记录一次日志
+                        if self.recv_count % 10 == 0:
+                            logging.debug(f"收到UDP音频数据: 包 #{self.recv_count}, {len(encoded_audio)} 字节，来自: {addr}, 头部: {header}")
+                        
+                        if not encoded_audio or len(encoded_audio) == 0:
+                            logging.warning("收到空音频数据")
+                            continue
+                            
+                        # 使用Opus解码器解码音频数据
+                        if self.opus_codec:
                             try:
-                                header = header_bytes.decode('utf-8')
-                                parts = header.split('|')
-                                if len(parts) == 2:
-                                    sender, receiver = parts
-                                    self.recv_count += 1
-                                    
-                                    # 每收到10个包记录一次日志
-                                    if self.recv_count % 10 == 0:
-                                        logging.debug(f"收到UDP音频数据: 包 #{self.recv_count}, {len(encoded_audio)} 字节，来自: {addr}, 头部: {header}")
-                                    
-                                    if encoded_audio and len(encoded_audio) > 0:
-                                        # 使用Opus解码器解码音频数据
-                                        if self.opus_codec:
-                                            try:
-                                                # 使用Opus解码器解码数据
-                                                decoded_audio = self.opus_codec.decode(encoded_audio)
-                                                if decoded_audio:
-                                                    self.audio_received.emit(decoded_audio)
-                                                else:
-                                                    logging.warning("音频解码失败，返回空数据")
-                                            except Exception as e:
-                                                logging.error(f"Opus解码错误: {e}")
-                                                # 如果解码失败，尝试直接使用原始数据
-                                                self.audio_received.emit(encoded_audio)
-                                        else:
-                                            # 如果没有Opus编解码器，直接发送原始数据
-                                            self.audio_received.emit(encoded_audio)
+                                # 使用Opus解码器解码数据
+                                decoded_audio = self.opus_codec.decode(encoded_audio)
+                                if decoded_audio:
+                                    self.audio_received.emit(decoded_audio)
                                 else:
-                                    logging.warning(f"收到无效头部格式: {header}")
-                            except UnicodeDecodeError:
-                                logging.error(f"无法解码头部: {header_bytes}")
+                                    logging.warning("音频解码失败，返回空数据")
+                                    # 如果解码失败，尝试直接使用原始数据作为备用
+                                    if len(encoded_audio) > 10:  # 确保数据有效
+                                        self.audio_received.emit(encoded_audio)
+                            except Exception as e:
+                                self.error_count += 1
+                                logging.error(f"Opus解码错误({self.error_count}): {e}")
+                                # 如果解码失败，尝试直接使用原始数据
+                                if len(encoded_audio) > 10:  # 确保数据有效
+                                    self.audio_received.emit(encoded_audio)
                         else:
-                            logging.warning(f"数据包头部不完整: 头部长度={header_len}, 数据长度={len(data)}")
-                    except Exception as e:
-                        logging.error(f"处理UDP数据包错误: {e}")
+                            # 如果没有Opus编解码器，直接发送原始数据
+                            self.audio_received.emit(encoded_audio)
+                    except UnicodeDecodeError:
+                        logging.error(f"无法解码头部: {header_bytes}")
+                except Exception as e:
+                    self.error_count += 1
+                    if self.error_count > 100:  # 如果错误次数过多，标记为发生错误
+                        self.error_occurred = True
+                    logging.error(f"处理UDP数据包错误({self.error_count}): {e}")
             except socket.timeout:
                 continue
             except Exception as e:
-                logging.error(f"UDP接收错误: {e}")
+                self.error_count += 1
+                current_time = time.time()
+                # 记录错误并设置最后错误时间
+                if current_time - self.last_error_time > 5:  # 如果距离上次错误已超过5秒，重置计数
+                    self.error_count = 1
+                self.last_error_time = current_time
+                
+                if self.error_count > 5:  # 如果短时间内错误次数过多
+                    logging.error(f"UDP接收重复错误({self.error_count}): {e}")
+                    self.error_occurred = True
+                else:
+                    logging.warning(f"UDP接收临时错误: {e}")
                 time.sleep(0.1)
 
     def send_audio(self, audio_data, target_addr, sender, receiver):
@@ -302,22 +364,46 @@ class UDPAudioThread(QThread):
                 logging.warning("无效的音频数据")
                 return
                 
-            if not target_addr or target_addr[0] is None or target_addr[1] is None:
-                logging.warning(f"无效的目标地址: {target_addr}")
+            if not target_addr or not isinstance(target_addr, tuple) or len(target_addr) != 2:
+                logging.warning(f"无效的目标地址格式: {target_addr}")
                 return
+                
+            ip, port = target_addr
+            if not ip or not port or port <= 0:
+                logging.warning(f"无效的目标地址内容: IP={ip}, 端口={port}")
+                return
+                
+            # 处理特殊IP地址
+            if ip in ['0.0.0.0', 'localhost', '']:
+                ip = '127.0.0.1'  # 本地测试用127.0.0.1
+                target_addr = (ip, port)
+                logging.debug(f"将目标地址从 {ip} 改为 127.0.0.1:${port}")
                 
             # 使用Opus编码器对音频数据进行编码
             encoded_audio = audio_data
             if self.opus_codec:
                 try:
+                    # 确保音频数据长度正确
+                    expected_length = OPUS_FRAME_SIZE * CHANNELS * 2  # 每个样本2字节 (16位)
+                    if len(audio_data) != expected_length:
+                        # 如果长度不匹配，进行调整
+                        if len(audio_data) < expected_length:
+                            # 数据太短，填充
+                            audio_data = audio_data + b'\x00' * (expected_length - len(audio_data))
+                        else:
+                            # 数据太长，截断
+                            audio_data = audio_data[:expected_length]
+                    
                     # 使用Opus编码器编码数据
                     encoded_data = self.opus_codec.encode(audio_data)
-                    if encoded_data:
+                    if encoded_data and len(encoded_data) > 0:
                         encoded_audio = encoded_data
                         # 每发送100个包记录一次编码效率
                         if self.send_count % 100 == 0:
                             compression_ratio = len(audio_data) / len(encoded_audio) if len(encoded_audio) > 0 else 0
                             logging.debug(f"Opus编码成功: 原始大小={len(audio_data)}字节, 编码后={len(encoded_audio)}字节, 压缩比={compression_ratio:.2f}")
+                    else:
+                        logging.warning("Opus编码返回空数据，使用原始数据")
                 except Exception as e:
                     logging.error(f"Opus编码错误: {e}")
                     # 如果编码失败，继续使用原始数据
@@ -331,16 +417,35 @@ class UDPAudioThread(QThread):
             # 构建完整数据包: [头部长度(1字节)][头部][音频数据]
             packet = bytearray([header_len]) + header_bytes + encoded_audio
             
-            self.udp_socket.sendto(packet, target_addr)
+            # 发送多次以提高可靠性
+            for _ in range(1):  # 可以增加重复发送次数以提高可靠性
+                self.udp_socket.sendto(packet, target_addr)
+            
             self.send_count += 1
             
             # 每发送50个数据包记录一次日志
             if self.send_count % 50 == 0:
                 logging.debug(f"发送UDP音频数据: 包 #{self.send_count}, 原始={len(audio_data)}字节, 发送={len(encoded_audio)}字节, 到: {target_addr}, 头部: {header}")
                 
+        except socket.error as e:
+            # 对于网络错误，进行特殊处理
+            self.error_count += 1
+            current_time = time.time()
+            
+            if current_time - self.last_error_time > 10:  # 如果距离上次错误已超过10秒，重置计数
+                self.error_count = 1
+            self.last_error_time = current_time
+            
+            if self.error_count > 10:  # 如果短时间内错误次数过多
+                logging.error(f"UDP发送网络错误过多({self.error_count}): {e}")
+                self.error_occurred = True
+            else:
+                logging.warning(f"UDP发送临时网络错误: {e}")
         except Exception as e:
             logging.error(f"发送音频数据失败: {e}")
-            self.error_occurred = True
+            self.error_count += 1
+            if self.error_count > 5:  # 如果错误次数过多
+                self.error_occurred = True
 
     def stop(self):
         logging.debug(f"停止UDP音频线程，发送: {self.send_count} 包，接收: {self.recv_count} 包")
@@ -798,16 +903,28 @@ class CallDialog(QDialog):
         
         # 特殊IP地址处理
         ip, port = self.target_addr
-        if ip in ['0.0.0.0', 'localhost', '']:
-            ip = '127.0.0.1'  # 本地测试用127.0.0.1
-            self.target_addr = (ip, port)
-            logging.debug(f"将目标地址从 {ip} 改为 127.0.0.1")
         
-        # 验证目标地址内容
-        if not ip or not port:
-            logging.error(f"目标地址内容无效: {self.target_addr}")
-            QMessageBox.warning(self, "通话失败", "对方网络地址无效，请确保对方在线")
-            self.call_ended.emit()  # 通知主窗口通话结束
+        # 检查是否为局域网或特殊地址
+        special_addresses = ['0.0.0.0', 'localhost', '', '127.0.0.1']
+        if ip in special_addresses or ip.startswith('192.168.') or ip.startswith('10.') or ip.startswith('172.'):
+            # 如果是内网测试，记录但不修改地址
+            logging.debug(f"检测到局域网地址: {ip}:{port}")
+        
+        # 验证端口号是否合法
+        if not isinstance(port, int) or port <= 0 or port > 65535:
+            logging.error(f"目标端口号无效: {port}")
+            QMessageBox.warning(self, "通话失败", "对方端口号无效，请确保对方在线")
+            self.call_ended.emit()
+            self.close()
+            return
+        
+        # 验证IP地址格式是否合法
+        try:
+            socket.inet_aton(ip)  # 验证IP地址格式
+        except socket.error:
+            logging.error(f"目标IP地址格式无效: {ip}")
+            QMessageBox.warning(self, "通话失败", "对方IP地址格式无效，请确保对方在线")
+            self.call_ended.emit()
             self.close()
             return
         
@@ -821,28 +938,53 @@ class CallDialog(QDialog):
         udp_test_success = False
         try:
             test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # 增加UDP可靠性选项
+            test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 65536)
+            test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 65536)
             test_socket.settimeout(3)  # 增加超时时间到3秒
-            test_data = bytes([5]) + b'TEST_CALL'
             
-            # 发送测试数据包到3次，增加成功率
-            for attempt in range(3):
+            # 使用更明确的测试数据，包含双方用户名
+            test_header = f"{self.username}|{self.friend_name}"
+            header_bytes = test_header.encode('utf-8')
+            header_len = len(header_bytes)
+            test_data = bytearray([header_len]) + header_bytes + b'TEST_CALL_DATA'
+            
+            # 发送测试数据包多次，增加成功率
+            for attempt in range(5):  # 增加到5次尝试
                 try:
                     test_socket.sendto(test_data, self.target_addr)
-                    logging.debug(f"发送UDP测试数据包到 {self.target_addr} (尝试 {attempt+1}/3)")
+                    logging.debug(f"发送UDP测试数据包到 {self.target_addr} (尝试 {attempt+1}/5)")
                     
-                    # 尝试接收响应
-                    response, addr = test_socket.recvfrom(1024)
-                    if response and len(response) > 0:
-                        logging.debug(f"收到UDP测试响应: {response} 来自 {addr}")
-                        udp_test_success = True
+                    # 等待短暂时间再接收，防止数据包延迟
+                    time.sleep(0.2)
+                    
+                    # 尝试接收响应，持续尝试多次接收
+                    receive_attempts = 0
+                    while receive_attempts < 3:  # 每次发送后尝试接收3次
+                        try:
+                            response, addr = test_socket.recvfrom(1024)
+                            if response and len(response) > 0:
+                                logging.debug(f"收到UDP测试响应: {response[:20]}... 来自: {addr}")
+                                udp_test_success = True
+                                # 更新对方地址为实际回复地址，解决NAT穿透问题
+                                if addr != self.target_addr:
+                                    logging.info(f"更新目标地址从 {self.target_addr} 到实际回复地址 {addr}")
+                                    self.target_addr = addr
+                                break
+                        except socket.timeout:
+                            logging.warning(f"UDP测试接收尝试超时 (尝试 {receive_attempts+1}/3)")
+                            receive_attempts += 1
+                            continue
+                        except Exception as e:
+                            logging.error(f"UDP接收测试异常: {e}")
+                            break
+                    
+                    if udp_test_success:
                         break
-                except socket.timeout:
-                    logging.warning(f"UDP测试响应超时 (尝试 {attempt+1}/3)")
                 except Exception as e:
-                    logging.error(f"UDP测试异常: {e}")
-                    break
-                    
-                # 等待短暂停再尝试
+                    logging.error(f"UDP发送测试异常: {e}")
+                
+                # 等待短暂时间再重试
                 time.sleep(0.5)
             
             test_socket.close()
@@ -860,11 +1002,29 @@ class CallDialog(QDialog):
             if 'input' not in self.audio_devices or 'output' not in self.audio_devices:
                 raise ValueError("无效的音频设备配置")
             
+            # 检查音频设备值是否有效
+            if self.audio_devices['input'] is None or self.audio_devices['output'] is None:
+                raise ValueError("未选择有效的音频设备")
+            
             # 获取并记录音频设备详情
             p = pyaudio.PyAudio()
             try:
+                # 检查设备索引是否有效
+                device_count = p.get_device_count()
+                if (self.audio_devices['input'] >= device_count or 
+                    self.audio_devices['output'] >= device_count):
+                    raise ValueError(f"音频设备索引超出范围: 输入={self.audio_devices['input']}, 输出={self.audio_devices['output']}, 设备总数={device_count}")
+                
                 input_device_info = p.get_device_info_by_index(self.audio_devices['input'])
                 output_device_info = p.get_device_info_by_index(self.audio_devices['output'])
+                
+                # 确保选择的设备支持所需功能
+                if input_device_info['maxInputChannels'] < CHANNELS:
+                    logging.warning(f"输入设备不支持所需通道数: 需要={CHANNELS}, 支持={input_device_info['maxInputChannels']}")
+                
+                if output_device_info['maxOutputChannels'] < CHANNELS:
+                    logging.warning(f"输出设备不支持所需通道数: 需要={CHANNELS}, 支持={output_device_info['maxOutputChannels']}")
+                
                 logging.debug(f"使用输入设备: {input_device_info['name']}")
                 logging.debug(f"使用输出设备: {output_device_info['name']}")
             except Exception as e:
@@ -873,8 +1033,23 @@ class CallDialog(QDialog):
             finally:
                 p.terminate()
             
+            # 在启动之前再次确认目标地址是否有效
+            if not self.target_addr or not isinstance(self.target_addr, tuple) or len(self.target_addr) != 2:
+                raise ValueError(f"目标地址无效: {self.target_addr}")
+            
+            ip, port = self.target_addr
+            if not ip or not isinstance(port, int) or port <= 0 or port > 65535:
+                raise ValueError(f"目标地址格式无效: IP={ip}, 端口={port}")
+            
             # 启动音频播放器
             self.audio_player = AudioPlayer(self.audio_devices['output'])
+            
+            # 连接信号前先断开可能存在的连接，避免重复连接
+            try:
+                self.udp_thread.audio_received.disconnect(self.on_audio_received)
+            except Exception:
+                pass  # 如果没有连接，会抛出异常，这里忽略
+            
             self.udp_thread.audio_received.connect(self.on_audio_received)
             self.audio_player.start()
             logging.debug("音频播放器启动成功")
@@ -890,8 +1065,20 @@ class CallDialog(QDialog):
             self.audio_recorder.start()
             logging.debug("音频录制器启动成功")
             
+            # 启动心跳检测计时器，定期发送测试包确保连接正常
+            self.heartbeat_timer = QTimer(self)
+            self.heartbeat_timer.timeout.connect(self.send_heartbeat)
+            self.heartbeat_timer.start(5000)  # 每5秒发送一次心跳包
+            
             # 更新状态
             self.status_label.setText(f"与 {self.friend_name} 通话中...")
+            
+            # 创建保持通话按钮（静音/取消静音）
+            self.mute_button = QPushButton("静音")
+            self.mute_button.clicked.connect(self.toggle_mute)
+            self.mute_status = False  # 默认非静音状态
+            layout = self.layout()
+            layout.insertWidget(layout.count()-1, self.mute_button)  # 插入到结束通话按钮之前
             
             # 添加成功通话提示
             QMessageBox.information(self, "通话已建立", f"您已与 {self.friend_name} 建立通话连接\n语音通话已开始")
@@ -902,6 +1089,47 @@ class CallDialog(QDialog):
             self.call_ended.emit()  # 通知主窗口通话结束
             self.close()
 
+    def send_heartbeat(self):
+        """发送心跳包以保持连接活跃"""
+        if not self.call_active or not self.target_addr or not self.udp_thread:
+            return
+            
+        try:
+            # 构建简单的心跳包
+            heartbeat_header = f"{self.username}|{self.friend_name}"
+            header_bytes = heartbeat_header.encode('utf-8')
+            header_len = len(header_bytes)
+            heartbeat_data = bytearray([header_len]) + header_bytes + b'HEARTBEAT'
+            
+            # 创建临时套接字发送心跳包
+            heartbeat_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            heartbeat_socket.settimeout(1.0)
+            heartbeat_socket.sendto(heartbeat_data, self.target_addr)
+            logging.debug(f"发送心跳包到 {self.target_addr}")
+            heartbeat_socket.close()
+        except Exception as e:
+            logging.warning(f"发送心跳包失败: {e}")
+    
+    def toggle_mute(self):
+        """切换麦克风静音状态"""
+        if not self.audio_recorder:
+            return
+            
+        self.mute_status = not self.mute_status
+        
+        if self.mute_status:
+            # 静音：暂停录音
+            if self.audio_recorder.running:
+                self.audio_recorder.running = False
+                self.mute_button.setText("取消静音")
+                logging.debug("麦克风已静音")
+        else:
+            # 取消静音：恢复录音
+            if not self.audio_recorder.running:
+                self.audio_recorder.running = True
+                self.mute_button.setText("静音")
+                logging.debug("麦克风已取消静音")
+    
     def on_audio_received(self, audio_data):
         """收到音频数据"""
         if self.audio_player and self.call_active and not self.error_occurred:
