@@ -39,7 +39,7 @@ logging.basicConfig(
 )
 
 # 服务器配置
-SERVER_HOST = '54.252.240.58'  # 默认本地地址
+SERVER_HOST = '127.0.0.1'  # 默认本地地址
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
@@ -2143,6 +2143,60 @@ class MainWindow(QWidget):
                     self.chat_display.clear()
                 else:
                     QMessageBox.warning(self, '删除好友失败', parts[2])
+            elif cmd == 'CALL_CONNECT_INFO':
+                # 处理服务器发来的通话连接信息（直接发送对方的地址）
+                try:
+                    if len(parts) < 4:
+                        logging.error(f"CALL_CONNECT_INFO消息格式错误: {data}")
+                        return
+                        
+                    caller = parts[1]
+                    caller_ip = parts[2]
+                    caller_port = int(parts[3])
+                    
+                    logging.debug(f"收到通话连接信息: caller={caller}, ip={caller_ip}, port={caller_port}")
+                    
+                    # 检查IP地址和端口号有效性
+                    if caller_ip in ['0.0.0.0', '', 'None', 'null']:
+                        logging.error(f"无效的发起方IP地址: {caller_ip}")
+                        return
+                        
+                    if caller_port <= 0 or caller_port > 65535:
+                        logging.error(f"无效的发起方端口号: {caller_port}")
+                        return
+                    
+                    # 创建通话对话框或更新现有对话框
+                    target_addr = (caller_ip, caller_port)
+                    
+                    if self.call_dialog:
+                        # 更新现有对话框的目标地址
+                        logging.debug(f"更新通话对话框的目标地址为: {target_addr}")
+                        self.call_dialog.target_addr = target_addr
+                    else:
+                        # 创建新的通话对话框
+                        logging.debug(f"创建通话对话框，目标地址: {target_addr}")
+                        self.create_call_dialog_as_receiver(caller, caller_ip, caller_port)
+                except Exception as e:
+                    logging.error(f"处理CALL_CONNECT_INFO失败: {e}", exc_info=True)
+            
+            elif cmd == 'CALL_REQUEST_UDP_UPDATE':
+                # 服务器请求更新UDP端口信息
+                try:
+                    if len(parts) < 2:
+                        logging.error(f"CALL_REQUEST_UDP_UPDATE消息格式错误: {data}")
+                        return
+                        
+                    receiver = parts[1]
+                    logging.debug(f"收到UDP端口更新请求，接收者: {receiver}")
+                    
+                    # 重新发送UDP端口信息
+                    if self.udp_local_port:
+                        logging.debug(f"重新发送UDP端口信息: {self.udp_local_port}")
+                        send_msg = f'UDP_PORT_UPDATE|{self.username}|{self.udp_local_port}'
+                        self.sock.send(send_msg.encode('utf-8'))
+                except Exception as e:
+                    logging.error(f"处理CALL_REQUEST_UDP_UPDATE失败: {e}", exc_info=True)
+            
             elif cmd == 'CALL_ERROR':
                 # 处理通话错误消息
                 error_message = parts[1] if len(parts) > 1 else "未知通话错误"
@@ -2407,28 +2461,41 @@ class MainWindow(QWidget):
         """接受来电"""
         logging.debug(f"接受来电：{caller}")
         try:
+            # 设置通话状态
             self.in_call = True
             self.call_target = caller
+            
+            # 重要：不在这里创建通话对话框，而是等待CALL_CONNECT_INFO消息
+            # 这样可以确保我们有了发起方的地址后才创建对话框
+            
+            # 创建一个等待对话框，显示“正在连接”的消息
+            waiting_dialog = QMessageBox(self)
+            waiting_dialog.setWindowTitle("正在连接")
+            waiting_dialog.setText(f"正在与 {caller} 建立语音通话连接...请稍候")
+            waiting_dialog.setStandardButtons(QMessageBox.NoButton)
+            # 非模态对话框，允许用户继续操作
+            waiting_dialog.setModal(False)
+            waiting_dialog.show()
+            
+            # 使用定时器在短时间后关闭对话框(如果还存在)
+            def close_waiting_dialog():
+                try:
+                    if waiting_dialog and waiting_dialog.isVisible():
+                        waiting_dialog.close()
+                except:
+                    pass
+            
+            QTimer.singleShot(5000, close_waiting_dialog)  # 5秒后自动关闭
 
             # 发送接受通话消息
             accept_msg = f'CALL_ACCEPT|{self.username}|{caller}|{self.udp_local_port}'.encode('utf-8')
             logging.debug(f"准备发送CALL_ACCEPT: {accept_msg}")
             self.sock.send(accept_msg)
             logging.debug(f"已发送CALL_ACCEPT消息，本地UDP端口: {self.udp_local_port}")
-
-            # 创建通话对话框 - 这一步是关键
-            # 此时我们还不知道对方的UDP地址，但可以先创建对话框
-            # 当收到CALL_ACCEPTED消息时会通过create_call_dialog_as_receiver更新
-            self.call_dialog = CallDialog(
-                self,
-                caller,
-                is_caller=False,  # 作为接收方
-                udp_thread=self.udp_thread,
-                username=self.username
-            )
-            self.call_dialog.call_ended.connect(self.on_call_ended)
-            self.call_dialog.show()
-            logging.debug(f"已创建通话对话框(被叫方)")
+            
+            # 通话对话框将在收到CALL_CONNECT_INFO消息时创建
+            logging.debug(f"等待服务器发送发起方的地址信息...")
+            # 注意：不在这里创建对话框，而是等待CALL_CONNECT_INFO
 
         except Exception as e:
             self.in_call = False

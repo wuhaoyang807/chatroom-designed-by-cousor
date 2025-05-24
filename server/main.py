@@ -417,13 +417,27 @@ def handle_client(conn, addr):
                             print(f"  错误: {to_user} 不是 {from_user} 的好友")
                         send_msg(conn, f'ERROR|You are not friends with {to_user}.')
                     else:
-                        client_ip = addr[0]
-                        client_udp_port = int(udp_port)
-                        print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
+                        try:
+                            client_ip = addr[0]
+                            client_udp_port = int(udp_port)
+                            print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
 
-                        # 保存发起者的UDP地址
-                        with lock:
-                            udp_addresses[from_user] = (client_ip, client_udp_port)
+                            # 保存发起者的UDP地址
+                            with lock:
+                                # 验证IP和端口
+                                if client_ip in ['0.0.0.0', 'localhost', '127.0.0.1']:
+                                    # 这是一个本地测试 - 使用客户端的真实外部IP
+                                    client_ip = addr[0]
+                                
+                                if client_udp_port <= 0 or client_udp_port > 65535:
+                                    raise ValueError(f"无效的UDP端口: {client_udp_port}")
+                                
+                                udp_addresses[from_user] = (client_ip, client_udp_port)
+                                print(f"更新发起者UDP地址: {from_user} -> {client_ip}:{client_udp_port}")
+                        except Exception as e:
+                            print(f"处理UDP地址错误: {e}")
+                            send_msg(conn, f'CALL_RESPONSE|ERROR|{to_user}|处理通话请求出错: {e}')
+                            return
 
                             # 检查对方是否在线
                             if to_user in clients:
@@ -488,6 +502,7 @@ def handle_client(conn, addr):
                     try:
                         if len(parts) < 4:
                             print(f"CALL_ACCEPT消息格式错误: {data}")
+                            send_msg(conn, f'CALL_ERROR|通话请求格式错误')
                             return
 
                         _, from_user, to_user, udp_port = parts
@@ -497,23 +512,53 @@ def handle_client(conn, addr):
                             print(f"  客户端IP: {addr[0]}, UDP端口: {udp_port}")
                             print(f"  当前在线用户: {list(clients.keys())}")
                             print(f"  to_user在clients中: {to_user in clients}")
+                            print(f"  当前 UDP 地址表: {udp_addresses}")
 
-                        client_ip = addr[0]
-                        client_udp_port = int(udp_port)
+                        # 验证参数
+                        try:
+                            client_ip = addr[0]
+                            client_udp_port = int(udp_port)
+                            if client_udp_port <= 0 or client_udp_port > 65535:
+                                raise ValueError(f"无效的UDP端口: {client_udp_port}")
+                        except ValueError as e:
+                            print(f"解析UDP端口错误: {e}")
+                            send_msg(conn, f'CALL_ERROR|无效的UDP端口号，请检查网络设置')
+                            return
+                            
                         print(f"接受语音通话: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
 
                         with lock:
+                            # 验证双方都在线
+                            if to_user not in clients:
+                                print(f"发起方 {to_user} 不在线")
+                                send_msg(conn, f'CALL_ERROR|发起方不在线，通话已取消')
+                                return
+                                
                             # 保存接受者的UDP地址
                             udp_addresses[from_user] = (client_ip, client_udp_port)
+                            print(f"更新接收者UDP地址: {from_user} -> {client_ip}:{client_udp_port}")
                             
                             # 确认发起者的UDP地址存在
-                            if to_user not in udp_addresses or None in udp_addresses.get(to_user, (None, None)):
-                                print(f"警告: 发起者 {to_user} 的UDP地址不完整或不存在: {udp_addresses.get(to_user)}")
-                                # 向接收方发送错误消息
-                                send_msg(conn, f'CALL_ERROR|无法获取发起方的网络地址，请稍后重试')
+                            if to_user not in udp_addresses:
+                                print(f"警告: 发起者 {to_user} 的UDP地址不存在")
+                                # 尝试从客户端获取新的UDP端口信息
+                                send_msg(clients[to_user], f'CALL_REQUEST_UDP_UPDATE|{from_user}')
+                                time.sleep(1)  # 等待端口更新
+                                
+                                # 再次检查
+                                if to_user not in udp_addresses or None in udp_addresses.get(to_user, (None, None)):
+                                    print(f"错误: 仍然无法获取发起者 {to_user} 的UDP地址")
+                                    send_msg(conn, f'CALL_ERROR|无法获取发起方的网络地址，请稍后重试')
+                                    return
+                                
+                            # 验证发起者地址完整性
+                            caller_ip, caller_port = udp_addresses[to_user]
+                            if caller_ip is None or caller_port is None:
+                                print(f"错误: 发起者 {to_user} 的UDP地址不完整: {udp_addresses[to_user]}")
+                                send_msg(conn, f'CALL_ERROR|发起方的网络地址不完整，请稍后重试')
                                 return
-                            else:
-                                print(f"确认发起者 {to_user} 的UDP地址: {udp_addresses[to_user]}")
+                                
+                            print(f"确认发起者 {to_user} 的UDP地址: {udp_addresses[to_user]}")
 
                             # 记录通话状态
                             active_calls[from_user] = (to_user, (client_ip, client_udp_port))
@@ -522,16 +567,31 @@ def handle_client(conn, addr):
                             # 转发通话已接受消息给发起者
                             if to_user in clients:
                                 try:
+                                    # 构建接收方的UDP信息，包含完整地址
                                     to_user_udp_info = f"{client_ip}|{client_udp_port}"
+                                    
+                                    # 发送磁連接消息给接收方，确认发起方地址可用
+                                    caller_ip, caller_port = udp_addresses[to_user]
+                                    receiver_confirm_msg = f'CALL_CONNECT_INFO|{to_user}|{caller_ip}|{caller_port}'
+                                    send_msg(conn, receiver_confirm_msg)
+                                    print(f"向接收方 {from_user} 发送发起方地址信息: {caller_ip}:{caller_port}")
+                                    
+                                    # 等待或收到确认后，向发起方发送接收方的地址
+                                    time.sleep(0.5)  # 等待接收方收到发起方地址并确认
 
                                     # 多次发送确保可靠性
+                                    success_sent = False
                                     for i in range(3):
                                         accept_msg = f'CALL_ACCEPTED|{from_user}|{to_user_udp_info}'
                                         send_msg(clients[to_user], accept_msg)
                                         if DEBUG_CALL:
                                             print(f"  第{i + 1}次发送CALL_ACCEPTED给 {to_user}")
                                             print(f"  消息内容: {accept_msg}")
+                                        success_sent = True
                                         time.sleep(0.5)
+                                        
+                                    if not success_sent:
+                                        raise Exception("发送CALL_ACCEPTED消息失败")
                                         
                                     # 验证通话建立
                                     print(f"通话建立: {from_user} <-> {to_user}")
@@ -541,9 +601,24 @@ def handle_client(conn, addr):
                                 except Exception as e:
                                     if DEBUG_CALL:
                                         print(f"  发送CALL_ACCEPTED失败: {e}")
-                                    del clients[to_user]  # 清理无效连接
-                            elif DEBUG_CALL:
+                                    # 向接收方发送错误
+                                    send_msg(conn, f'CALL_ERROR|通知发起方失败: {e}')
+                                    # 移除无效的连接或通话状态
+                                    if to_user in clients:
+                                        try:
+                                            clients[to_user].close()
+                                        except:
+                                            pass
+                                        del clients[to_user]
+                                    # 清理通话状态
+                                    if from_user in active_calls:
+                                        del active_calls[from_user]
+                                    if to_user in active_calls:
+                                        del active_calls[to_user]
+                            else:
+                                # 发起方不在线，发送错误给接收方
                                 print(f"  错误: {to_user} 不在线，无法发送CALL_ACCEPTED")
+                                send_msg(conn, f'CALL_ERROR|发起方已下线，通话已取消')
 
                         if DEBUG_CALL:
                             print("===== CALL ACCEPT DEBUG END =====")
