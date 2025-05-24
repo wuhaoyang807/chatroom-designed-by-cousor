@@ -439,62 +439,62 @@ def handle_client(conn, addr):
                             send_msg(conn, f'CALL_RESPONSE|ERROR|{to_user}|处理通话请求出错: {e}')
                             return
 
-                            # 检查对方是否在线
-                            if to_user in clients:
-                                to_user_conn = clients[to_user]
-                                # 验证连接是否有效
-                                try:
-                                    # 简单测试连接是否有效
-                                    error_test = to_user_conn.fileno()
-                                    if error_test < 0:
-                                        raise Exception("Invalid socket descriptor")
+                        # 检查对方是否在线
+                        if to_user in clients:
+                            to_user_conn = clients[to_user]
+                            # 验证连接是否有效
+                            try:
+                                # 简单测试连接是否有效
+                                error_test = to_user_conn.fileno()
+                                if error_test < 0:
+                                    raise Exception("Invalid socket descriptor")
 
-                                    # 检查对方是否已经在通话中
-                                    if to_user in active_calls:
-                                        if DEBUG_CALL:
-                                            print(f"  目标用户 {to_user} 已在通话中")
-                                        send_msg(conn, f'CALL_RESPONSE|BUSY|{to_user}')
-                                    else:
-                                        # 将通话请求转发给对方
-                                        try:
-                                            if DEBUG_CALL:
-                                                print(f"  发送CALL_INCOMING到 {to_user}")
-                                                print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
-
-                                            # 使用多次发送和确认，增加可靠性
-                                            for i in range(3):  # 发送3次确保收到
-                                                # 发送通话请求消息
-                                                send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
-
-                                                if DEBUG_CALL:
-                                                    print(
-                                                        f"  第{i + 1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
-
-                                                # 短暂延迟确保接收方有时间处理
-                                                time.sleep(0.5)
-
-                                            # 发送确认到发起方
-                                            send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
-
-                                            # 通知发起方对方已经收到通话请求
-                                            if DEBUG_CALL:
-                                                print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
-                                        except Exception as e:
-                                            if DEBUG_CALL:
-                                                print(f"  发送CALL_INCOMING失败: {e}")
-                                            # 从客户端列表中移除无效连接
-                                            del clients[to_user]
-                                            send_msg(conn, f'CALL_RESPONSE|ERROR|{to_user}|{str(e)}')
-                                except Exception as e:
+                                # 检查对方是否已经在通话中
+                                if to_user in active_calls:
                                     if DEBUG_CALL:
-                                        print(f"  连接错误: {e}")
-                                    # 连接无效，从客户端列表中移除
-                                    del clients[to_user]
-                                    send_msg(conn, f'CALL_RESPONSE|OFFLINE|{to_user}')
-                            else:
+                                        print(f"  目标用户 {to_user} 已在通话中")
+                                    send_msg(conn, f'CALL_RESPONSE|BUSY|{to_user}')
+                                else:
+                                    # 将通话请求转发给对方
+                                    try:
+                                        if DEBUG_CALL:
+                                            print(f"  发送CALL_INCOMING到 {to_user}")
+                                            print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
+
+                                        # 使用多次发送和确认，增加可靠性
+                                        for i in range(3):  # 发送3次确保收到
+                                            # 发送通话请求消息
+                                            send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
+
+                                            if DEBUG_CALL:
+                                                print(
+                                                    f"  第{i + 1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
+
+                                            # 短暂延迟确保接收方有时间处理
+                                            time.sleep(0.5)
+
+                                        # 发送确认到发起方
+                                        send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
+
+                                        # 通知发起方对方已经收到通话请求
+                                        if DEBUG_CALL:
+                                            print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
+                                    except Exception as e:
+                                        if DEBUG_CALL:
+                                            print(f"  发送CALL_INCOMING失败: {e}")
+                                        # 从客户端列表中移除无效连接
+                                        del clients[to_user]
+                                        send_msg(conn, f'CALL_RESPONSE|ERROR|{to_user}|{str(e)}')
+                            except Exception as e:
                                 if DEBUG_CALL:
-                                    print(f"  目标用户 {to_user} 不在线")
+                                    print(f"  连接错误: {e}")
+                                # 连接无效，从客户端列表中移除
+                                del clients[to_user]
                                 send_msg(conn, f'CALL_RESPONSE|OFFLINE|{to_user}')
+                        else:
+                            if DEBUG_CALL:
+                                print(f"  目标用户 {to_user} 不在线")
+                            send_msg(conn, f'CALL_RESPONSE|OFFLINE|{to_user}')
                     if DEBUG_CALL:
                         print("===== CALL REQUEST DEBUG END =====")
                 elif cmd == 'CALL_ACCEPT':
