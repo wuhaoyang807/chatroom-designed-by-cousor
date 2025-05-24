@@ -39,7 +39,7 @@ logging.basicConfig(
 )
 
 # 服务器配置
-SERVER_HOST = '127.0.0.1'  # 默认本地地址
+SERVER_HOST = '54.252.240.58'  # 默认本地地址
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
@@ -2143,6 +2143,17 @@ class MainWindow(QWidget):
                     self.chat_display.clear()
                 else:
                     QMessageBox.warning(self, '删除好友失败', parts[2])
+            elif cmd == 'CALL_ERROR':
+                # 处理通话错误消息
+                error_message = parts[1] if len(parts) > 1 else "未知通话错误"
+                logging.error(f"收到通话错误: {error_message}")
+                QMessageBox.warning(self, "通话错误", error_message)
+                
+                # 重置通话状态
+                if self.call_dialog:
+                    self.call_dialog.close()
+                self.in_call = False
+                self.call_target = None
             elif cmd == 'ERROR':
                 self.append_text_message('[错误]', parts[1])
             elif cmd == 'FRIEND_ONLINE':

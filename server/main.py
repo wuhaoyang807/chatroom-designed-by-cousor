@@ -509,12 +509,15 @@ def handle_client(conn, addr):
                             # 确认发起者的UDP地址存在
                             if to_user not in udp_addresses or None in udp_addresses.get(to_user, (None, None)):
                                 print(f"警告: 发起者 {to_user} 的UDP地址不完整或不存在: {udp_addresses.get(to_user)}")
+                                # 向接收方发送错误消息
+                                send_msg(conn, f'CALL_ERROR|无法获取发起方的网络地址，请稍后重试')
+                                return
                             else:
                                 print(f"确认发起者 {to_user} 的UDP地址: {udp_addresses[to_user]}")
 
                             # 记录通话状态
                             active_calls[from_user] = (to_user, (client_ip, client_udp_port))
-                            active_calls[to_user] = (from_user, udp_addresses.get(to_user, (None, None)))
+                            active_calls[to_user] = (from_user, udp_addresses[to_user])
 
                             # 转发通话已接受消息给发起者
                             if to_user in clients:
