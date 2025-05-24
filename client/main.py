@@ -21,6 +21,8 @@ import threading
 import tkinter.messagebox
 import os
 import hashlib
+import opuslib  # 添加Opus编解码库
+import numpy as np  # 添加numpy用于音频处理
 
 # 配置日志
 log_dir = os.path.join(os.path.dirname(__file__), 'logs')
@@ -51,10 +53,16 @@ FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
 os.makedirs(FILES_DIR, exist_ok=True)
 
 # 音频配置
-CHUNK = 1024
+CHUNK = 960  # Opus处理帧大小，使用Opus推荐值
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 16000
+RATE = 48000  # Opus推荐采样率
+
+# Opus编解码器配置
+OPUS_FRAME_SIZE = CHUNK  # 每帧样本数
+OPUS_SAMPLE_RATE = RATE
+OPUS_BITRATE = 32000  # 比特率，质量和带宽的平衡
+OPUS_APPLICATION = opuslib.APPLICATION_VOIP  # 为语音通话优化
 
 
 # 添加一个全局函数来确保窗口显示在屏幕中央
@@ -97,6 +105,63 @@ def check_network_config():
         logging.error(f"网络配置检查失败: {e}")
         QMessageBox.critical(None, '网络错误', f'网络配置检查失败: {e}')
         return False
+
+
+# Opus编解码器类
+class OpusCodec:
+    """处理Opus音频编解码的类"""
+    def __init__(self, sample_rate=OPUS_SAMPLE_RATE, channels=CHANNELS, application=OPUS_APPLICATION):
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.application = application
+        self.encoder = None
+        self.decoder = None
+        self.frame_size = OPUS_FRAME_SIZE
+        self.init_codec()
+        logging.debug(f"Opus编解码器初始化: 采样率={sample_rate}, 通道数={channels}")
+    
+    def init_codec(self):
+        try:
+            # 初始化编码器
+            self.encoder = opuslib.Encoder(self.sample_rate, self.channels, self.application)
+            self.encoder.bitrate = OPUS_BITRATE
+            
+            # 初始化解码器
+            self.decoder = opuslib.Decoder(self.sample_rate, self.channels)
+            logging.debug("Opus编解码器初始化成功")
+        except Exception as e:
+            logging.error(f"Opus编解码器初始化失败: {e}")
+            raise
+    
+    def encode(self, pcm_data):
+        """将PCM音频数据编码为Opus格式"""
+        try:
+            # 确保输入数据是正确的长度
+            if len(pcm_data) != self.frame_size * self.channels * 2:  # 2字节每样本 (16位)
+                logging.warning(f"PCM数据长度不匹配: 实际={len(pcm_data)}, 期望={self.frame_size * self.channels * 2}")
+                # 如果需要，进行长度调整
+                if len(pcm_data) < self.frame_size * self.channels * 2:
+                    # 如果数据太少，用零填充
+                    pcm_data = pcm_data + b'\x00' * (self.frame_size * self.channels * 2 - len(pcm_data))
+                else:
+                    # 如果数据太多，截断
+                    pcm_data = pcm_data[:self.frame_size * self.channels * 2]
+            
+            # 调用Opus编码器
+            encoded_data = self.encoder.encode(pcm_data, self.frame_size)
+            return encoded_data
+        except Exception as e:
+            logging.error(f"Opus编码错误: {e}")
+            return None
+    
+    def decode(self, opus_data):
+        """将Opus格式音频数据解码为PCM"""
+        try:
+            decoded_data = self.decoder.decode(opus_data, self.frame_size)
+            return decoded_data
+        except Exception as e:
+            logging.error(f"Opus解码错误: {e}")
+            return None
 
 
 class ClientThread(QThread):
@@ -161,9 +226,21 @@ class UDPAudioThread(QThread):
         self.udp_socket.settimeout(0.5)  # 设置超时以便于停止线程
         self.running = True
         self.error_occurred = False
+        self.send_count = 0  # 添加计数器用于统计发送的数据包数量
+        self.recv_count = 0  # 添加计数器用于统计接收的数据包数量
+        
+        # 创建 Opus 编解码器
+        try:
+            self.opus_codec = OpusCodec()
+            logging.debug("Opus编解码器创建成功")
+        except Exception as e:
+            logging.error(f"Opus编解码器创建失败: {e}")
+            self.opus_codec = None
+            
         logging.debug(f"UDP音频线程绑定到端口: {self.local_port}")
 
     def run(self):
+        logging.debug(f"UDP音频接收线程开始运行，端口: {self.local_port}")
         while self.running and not self.error_occurred:
             try:
                 data, addr = self.udp_socket.recvfrom(65536)
@@ -172,111 +249,108 @@ class UDPAudioThread(QThread):
                         # 解析头部
                         header_len = data[0]
                         if len(data) > header_len + 1:
-                            # 提取音频数据（跳过头部）
-                            audio_data = data[header_len + 1:]
-                            if audio_data and len(audio_data) > 0:
-                                logging.debug(f"收到UDP音频数据: {len(audio_data)} 字节，来自: {addr}")
-                                self.audio_received.emit(audio_data)
+                            # 提取头部和音频数据
+                            header_bytes = data[1:header_len+1]
+                            encoded_audio = data[header_len + 1:]
+                            
+                            try:
+                                header = header_bytes.decode('utf-8')
+                                parts = header.split('|')
+                                if len(parts) == 2:
+                                    sender, receiver = parts
+                                    self.recv_count += 1
+                                    
+                                    # 每收到10个包记录一次日志
+                                    if self.recv_count % 10 == 0:
+                                        logging.debug(f"收到UDP音频数据: 包 #{self.recv_count}, {len(encoded_audio)} 字节，来自: {addr}, 头部: {header}")
+                                    
+                                    if encoded_audio and len(encoded_audio) > 0:
+                                        # 使用Opus解码器解码音频数据
+                                        if self.opus_codec:
+                                            try:
+                                                # 使用Opus解码器解码数据
+                                                decoded_audio = self.opus_codec.decode(encoded_audio)
+                                                if decoded_audio:
+                                                    self.audio_received.emit(decoded_audio)
+                                                else:
+                                                    logging.warning("音频解码失败，返回空数据")
+                                            except Exception as e:
+                                                logging.error(f"Opus解码错误: {e}")
+                                                # 如果解码失败，尝试直接使用原始数据
+                                                self.audio_received.emit(encoded_audio)
+                                        else:
+                                            # 如果没有Opus编解码器，直接发送原始数据
+                                            self.audio_received.emit(encoded_audio)
+                                else:
+                                    logging.warning(f"收到无效头部格式: {header}")
+                            except UnicodeDecodeError:
+                                logging.error(f"无法解码头部: {header_bytes}")
+                        else:
+                            logging.warning(f"数据包头部不完整: 头部长度={header_len}, 数据长度={len(data)}")
                     except Exception as e:
                         logging.error(f"处理UDP数据包错误: {e}")
-                        self.error_occurred = True
             except socket.timeout:
                 continue
             except Exception as e:
                 logging.error(f"UDP接收错误: {e}")
-                self.error_occurred = True
                 time.sleep(0.1)
 
     def send_audio(self, audio_data, target_addr, sender, receiver):
         try:
-            if not audio_data or not target_addr or len(audio_data) == 0:
-                logging.warning("无效的音频数据或目标地址")
+            # 验证参数
+            if not audio_data or len(audio_data) == 0:
+                logging.warning("无效的音频数据")
                 return
-
-            # 创建头部：发送者|接收者
+                
+            if not target_addr or target_addr[0] is None or target_addr[1] is None:
+                logging.warning(f"无效的目标地址: {target_addr}")
+                return
+                
+            # 使用Opus编码器对音频数据进行编码
+            encoded_audio = audio_data
+            if self.opus_codec:
+                try:
+                    # 使用Opus编码器编码数据
+                    encoded_data = self.opus_codec.encode(audio_data)
+                    if encoded_data:
+                        encoded_audio = encoded_data
+                        # 每发送100个包记录一次编码效率
+                        if self.send_count % 100 == 0:
+                            compression_ratio = len(audio_data) / len(encoded_audio) if len(encoded_audio) > 0 else 0
+                            logging.debug(f"Opus编码成功: 原始大小={len(audio_data)}字节, 编码后={len(encoded_audio)}字节, 压缩比={compression_ratio:.2f}")
+                except Exception as e:
+                    logging.error(f"Opus编码错误: {e}")
+                    # 如果编码失败，继续使用原始数据
+                    encoded_audio = audio_data
+            
+            # 构建头部: sender|receiver
             header = f"{sender}|{receiver}"
             header_bytes = header.encode('utf-8')
             header_len = len(header_bytes)
-
-            # 创建完整的数据包：头部长度(1字节) + 头部 + 音频数据
-            packet = bytearray([header_len]) + header_bytes + audio_data
-
-            # 发送数据
+            
+            # 构建完整数据包: [头部长度(1字节)][头部][音频数据]
+            packet = bytearray([header_len]) + header_bytes + encoded_audio
+            
             self.udp_socket.sendto(packet, target_addr)
-            logging.debug(f"发送UDP音频数据: {len(audio_data)} 字节，到: {target_addr}")
+            self.send_count += 1
+            
+            # 每发送50个数据包记录一次日志
+            if self.send_count % 50 == 0:
+                logging.debug(f"发送UDP音频数据: 包 #{self.send_count}, 原始={len(audio_data)}字节, 发送={len(encoded_audio)}字节, 到: {target_addr}, 头部: {header}")
+                
         except Exception as e:
-            logging.error(f"UDP发送错误: {e}")
+            logging.error(f"发送音频数据失败: {e}")
             self.error_occurred = True
 
     def stop(self):
+        logging.debug(f"停止UDP音频线程，发送: {self.send_count} 包，接收: {self.recv_count} 包")
         self.running = False
-        self.quit()
-        self.wait()
         try:
             self.udp_socket.close()
         except Exception as e:
-            print(f"关闭UDP socket错误: {e}")
-
-
-class AudioDeviceSelector(QDialog):
-    """音频设备选择对话框"""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("选择音频设备")
-        self.setFixedSize(400, 300)
-
-        self.audio = pyaudio.PyAudio()
-        self.init_ui()
-
-    def init_ui(self):
-        layout = QVBoxLayout()
-
-        # 输入设备选择
-        input_layout = QVBoxLayout()
-        input_layout.addWidget(QLabel("选择输入设备:"))
-        self.input_combo = QComboBox()
-        self.populate_input_devices()
-        input_layout.addWidget(self.input_combo)
-
-        # 输出设备选择
-        output_layout = QVBoxLayout()
-        output_layout.addWidget(QLabel("选择输出设备:"))
-        self.output_combo = QComboBox()
-        self.populate_output_devices()
-        output_layout.addWidget(self.output_combo)
-
-        # 确定按钮
-        self.ok_button = QPushButton("确定")
-        self.ok_button.clicked.connect(self.accept)
-
-        layout.addLayout(input_layout)
-        layout.addLayout(output_layout)
-        layout.addWidget(self.ok_button)
-
-        self.setLayout(layout)
-
-    def populate_input_devices(self):
-        for i in range(self.audio.get_device_count()):
-            device_info = self.audio.get_device_info_by_index(i)
-            if device_info['maxInputChannels'] > 0:  # 只显示有输入功能的设备
-                self.input_combo.addItem(device_info['name'], i)
-
-    def populate_output_devices(self):
-        for i in range(self.audio.get_device_count()):
-            device_info = self.audio.get_device_info_by_index(i)
-            if device_info['maxOutputChannels'] > 0:  # 只显示有输出功能的设备
-                self.output_combo.addItem(device_info['name'], i)
-
-    def get_selected_devices(self):
-        return {
-            'input': self.input_combo.currentData(),
-            'output': self.output_combo.currentData()
-        }
-
-    def closeEvent(self, event):
-        self.audio.terminate()
-        event.accept()
+            logging.error(f"关闭UDP套接字错误: {e}")
+        self.quit()
+        self.wait()
 
 
 class AudioRecorder(QThread):
@@ -305,7 +379,7 @@ class AudioRecorder(QThread):
             logging.debug(f"使用输入设备: {device_info['name']}")
             logging.debug(f"设备信息: {device_info}")
 
-            # 打开音频流
+            # 打开音频流，使用更大的缓冲区以减少丢包
             self.stream = self.audio.open(
                 format=FORMAT,
                 channels=CHANNELS,
@@ -320,22 +394,38 @@ class AudioRecorder(QThread):
             # 启动流
             self.stream.start_stream()
             logging.debug("开始录音...")
+            
+            # 记录包计数
+            packet_count = 0
 
             # 持续录制和发送音频
             while self.running and not self.error_occurred:
                 if self.stream and self.stream.is_active():
                     try:
+                        # 使用exception_on_overflow=False避免因缓冲区溢出而丢失数据
                         audio_data = self.stream.read(CHUNK, exception_on_overflow=False)
                         if audio_data and len(audio_data) > 0:
-                            logging.debug(f"录制到音频数据: {len(audio_data)} 字节")
+                            packet_count += 1
+                            # 每录制50个包记录一次日志
+                            if packet_count % 50 == 0:
+                                logging.debug(f"录制到音频数据: 包 #{packet_count}, {len(audio_data)} 字节")
                             self.udp_thread.send_audio(audio_data, self.target_addr, self.sender, self.receiver)
+                        else:
+                            logging.warning(f"录制到空音频数据")
                     except Exception as e:
                         logging.error(f"录音错误: {e}")
-                        self.error_occurred = True
+                        # 不要立即将error_occurred设为True，尝试恢复
                         time.sleep(0.1)
                 else:
-                    logging.warning("音频流未激活")
-                    time.sleep(0.1)
+                    logging.warning("音频流未激活，尝试重新启动...")
+                    try:
+                        if self.stream:
+                            if not self.stream.is_active():
+                                self.stream.start_stream()
+                                logging.debug("已重新启动音频流")
+                    except Exception as e:
+                        logging.error(f"重启音频流失败: {e}")
+                    time.sleep(0.5)
         except Exception as e:
             logging.error(f"录音初始化错误: {e}")
             self.error_occurred = True
@@ -389,7 +479,7 @@ class AudioPlayer(QThread):
             logging.debug(f"使用输出设备: {device_info['name']}")
             logging.debug(f"设备信息: {device_info}")
 
-            # 打开音频流
+            # 打开音频流，使用较小的缓冲区以减少延迟
             self.stream = self.audio.open(
                 format=FORMAT,
                 channels=CHANNELS,
@@ -398,27 +488,52 @@ class AudioPlayer(QThread):
                 frames_per_buffer=CHUNK,
                 output_device_index=self.output_device_index,
                 stream_callback=None,
-                start=True  # 改为True，确保流立即启动
+                start=True  # 确保流立即启动
             )
 
             logging.debug("开始音频播放...")
+            
+            # 记录播放的包数量
+            played_count = 0
+            empty_queue_count = 0
 
             # 持续从队列中获取和播放音频
             while self.running and not self.error_occurred:
-                if self.audio_queue and self.stream and self.stream.is_active():
+                if self.stream and self.stream.is_active():
                     try:
+                        audio_data = None
                         with self.queue_lock:
                             if self.audio_queue:
                                 audio_data = self.audio_queue.pop(0)
-                                if audio_data and len(audio_data) > 0:
-                                    logging.debug(f"播放音频数据: {len(audio_data)} 字节")
-                                    self.stream.write(audio_data)
+                                empty_queue_count = 0  # 重置空队列计数
+                            else:
+                                empty_queue_count += 1
+                                if empty_queue_count % 100 == 0 and empty_queue_count > 0:
+                                    logging.debug(f"音频队列持续为空 {empty_queue_count} 次")
+                        
+                        if audio_data and len(audio_data) > 0:
+                            played_count += 1
+                            # 每播放50个包记录一次日志
+                            if played_count % 50 == 0:
+                                logging.debug(f"播放音频数据: 包 #{played_count}, {len(audio_data)} 字节")
+                            self.stream.write(audio_data)
+                        else:
+                            # 队列为空时短暂休眠，减少CPU使用
+                            time.sleep(0.01)
                     except Exception as e:
                         logging.error(f"播放错误: {e}")
-                        self.error_occurred = True
-                        time.sleep(0.01)
+                        # 尝试恢复而不是立即将error_occurred设为True
+                        time.sleep(0.05)
                 else:
-                    time.sleep(0.01)
+                    logging.warning("音频播放流未激活，尝试重新启动...")
+                    try:
+                        if self.stream:
+                            if not self.stream.is_active():
+                                self.stream.start_stream()
+                                logging.debug("已重新启动音频播放流")
+                    except Exception as e:
+                        logging.error(f"重启音频播放流失败: {e}")
+                    time.sleep(0.5)
         except Exception as e:
             logging.error(f"播放初始化错误: {e}")
             self.error_occurred = True
@@ -429,10 +544,32 @@ class AudioPlayer(QThread):
         if not audio_data or len(audio_data) == 0:
             return
 
+        # 检查音频数据长度是否符合预期
+        expected_length = OPUS_FRAME_SIZE * CHANNELS * 2  # 每个样本2字节 (16位)
+        if len(audio_data) != expected_length:
+            logging.debug(f"音频数据长度不匹配: 实际={len(audio_data)}, 期望={expected_length}")
+            # 如果数据太长或太短，进行调整
+            if len(audio_data) < expected_length:
+                # 数据太短，用静音(零)填充
+                audio_data = audio_data + b'\x00' * (expected_length - len(audio_data))
+            else:
+                # 数据太长，截断多余部分
+                audio_data = audio_data[:expected_length]
+
         with self.queue_lock:
-            if len(self.audio_queue) > 10:  # 限制队列大小，防止延迟过大
-                self.audio_queue = self.audio_queue[5:]  # 丢弃一些旧的数据
+            # 限制队列大小以减少延迟，但确保有足够的音频数据以保持流畅
+            if len(self.audio_queue) > 30:  # 增加队列容量，以处理网络抖动
+                # 如果队列过长，丢弃较早的数据以减少延迟
+                excess = len(self.audio_queue) - 20  # 保留至少20个包
+                self.audio_queue = self.audio_queue[excess:]  # 丢弃过多的包
+                logging.debug(f"音频队列过长，丢弃 {excess} 个包")
+            
+            # 添加新的音频数据到队列
             self.audio_queue.append(audio_data)
+            # 记录每50次队列状态
+            if len(self.audio_queue) % 50 == 0:
+                logging.debug(f"音频队列当前状态: 长度={len(self.audio_queue)}")
+
 
     def stop_playback(self):
         if self.stream:
@@ -455,6 +592,131 @@ class AudioPlayer(QThread):
                 print(f"终止音频设备错误: {e}")
         self.quit()
         self.wait()
+
+
+class AudioDeviceSelector(QDialog):
+    """音频设备选择对话框"""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("选择音频设备")
+        self.setFixedSize(400, 200)
+        
+        # 设置为模态对话框，阻止其他窗口操作
+        self.setWindowModality(Qt.ApplicationModal)
+        
+        # 设置窗口置顶
+        self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        
+        # 初始化音频设备列表
+        self.input_devices = {}
+        self.output_devices = {}
+        self.selected_input = None
+        self.selected_output = None
+        
+        self.init_ui()
+        self.load_audio_devices()
+        center_window(self)  # 居中显示
+    
+    def init_ui(self):
+        """初始化UI"""
+        layout = QVBoxLayout()
+        
+        # 输入设备选择
+        input_label = QLabel("输入设备 (麦克风):")
+        self.input_combo = QComboBox()
+        self.input_combo.setMinimumWidth(300)
+        
+        # 输出设备选择
+        output_label = QLabel("输出设备 (扬声器):")
+        self.output_combo = QComboBox()
+        self.output_combo.setMinimumWidth(300)
+        
+        # 确认和取消按钮
+        button_layout = QHBoxLayout()
+        self.ok_button = QPushButton("确认")
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button = QPushButton("取消")
+        self.cancel_button.clicked.connect(self.reject)
+        
+        button_layout.addWidget(self.ok_button)
+        button_layout.addWidget(self.cancel_button)
+        
+        layout.addWidget(input_label)
+        layout.addWidget(self.input_combo)
+        layout.addWidget(output_label)
+        layout.addWidget(self.output_combo)
+        layout.addLayout(button_layout)
+        
+        self.setLayout(layout)
+    
+    def load_audio_devices(self):
+        """加载系统音频设备"""
+        try:
+            p = pyaudio.PyAudio()
+            
+            # 获取默认设备索引
+            default_input = p.get_default_input_device_info()["index"]
+            default_output = p.get_default_output_device_info()["index"]
+            
+            # 遍历所有设备
+            for i in range(p.get_device_count()):
+                device_info = p.get_device_info_by_index(i)
+                device_name = device_info["name"]
+                
+                # 添加输入设备
+                if device_info["maxInputChannels"] > 0:
+                    self.input_devices[i] = device_name
+                    self.input_combo.addItem(device_name)
+                    # 如果是默认设备，设置为当前选择
+                    if i == default_input:
+                        self.input_combo.setCurrentText(device_name)
+                        self.selected_input = i
+                
+                # 添加输出设备
+                if device_info["maxOutputChannels"] > 0:
+                    self.output_devices[i] = device_name
+                    self.output_combo.addItem(device_name)
+                    # 如果是默认设备，设置为当前选择
+                    if i == default_output:
+                        self.output_combo.setCurrentText(device_name)
+                        self.selected_output = i
+            
+            p.terminate()
+            
+            # 连接信号
+            self.input_combo.currentTextChanged.connect(self.on_input_changed)
+            self.output_combo.currentTextChanged.connect(self.on_output_changed)
+            
+            # 如果没有设备，禁用确认按钮
+            if not self.input_devices or not self.output_devices:
+                self.ok_button.setEnabled(False)
+                QMessageBox.warning(self, "设备错误", "未检测到可用的音频设备，请检查系统设置")
+        
+        except Exception as e:
+            logging.error(f"加载音频设备失败: {e}")
+            QMessageBox.critical(self, "设备错误", f"加载音频设备失败: {e}")
+            self.ok_button.setEnabled(False)
+    
+    def on_input_changed(self, device_name):
+        """输入设备变更处理"""
+        for idx, name in self.input_devices.items():
+            if name == device_name:
+                self.selected_input = idx
+                break
+    
+    def on_output_changed(self, device_name):
+        """输出设备变更处理"""
+        for idx, name in self.output_devices.items():
+            if name == device_name:
+                self.selected_output = idx
+                break
+    
+    def get_selected_devices(self):
+        """获取选择的设备索引"""
+        return {
+            'input': self.selected_input,
+            'output': self.selected_output
+        }
 
 
 class CallDialog(QDialog):
@@ -513,53 +775,153 @@ class CallDialog(QDialog):
     def start_call(self):
         """开始音频通话"""
         if self.call_active:
+            logging.debug("通话已经处于活动状态，忽略再次启动请求")
             return
-
-        logging.debug(f"开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
+        
+        logging.debug(f"开始通话准备工作: is_caller={self.is_caller}, target_addr={self.target_addr}")
+        
+        # 检查目标地址
+        if not self.target_addr:
+            logging.error("没有目标地址，无法启动通话")
+            QMessageBox.warning(self, "通话失败", "无法获取对方的网络地址，请稍后重试")
+            self.call_ended.emit()  # 通知主窗口通话结束
+            self.close()
+            return
+        
+        # 验证目标地址格式
+        if not isinstance(self.target_addr, tuple) or len(self.target_addr) != 2:
+            logging.error(f"目标地址格式错误: {self.target_addr}")
+            QMessageBox.warning(self, "通话失败", "对方网络地址格式错误，请重新尝试")
+            self.call_ended.emit()  # 通知主窗口通话结束
+            self.close()
+            return
+        
+        # 特殊IP地址处理
+        ip, port = self.target_addr
+        if ip in ['0.0.0.0', 'localhost', '']:
+            ip = '127.0.0.1'  # 本地测试用127.0.0.1
+            self.target_addr = (ip, port)
+            logging.debug(f"将目标地址从 {ip} 改为 127.0.0.1")
+        
+        # 验证目标地址内容
+        if not ip or not port:
+            logging.error(f"目标地址内容无效: {self.target_addr}")
+            QMessageBox.warning(self, "通话失败", "对方网络地址无效，请确保对方在线")
+            self.call_ended.emit()  # 通知主窗口通话结束
+            self.close()
+            return
+        
+        logging.debug(f"准备开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
+        
+        # 设置通话状态并更新UI
         self.call_active = True
-        self.status_label.setText(f"与 {self.friend_name} 通话中...")
-
+        self.status_label.setText(f"正在连接到 {self.friend_name}...")
+        
+        # 尝试发送测试UDP包并等待响应
+        udp_test_success = False
         try:
+            test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            test_socket.settimeout(3)  # 增加超时时间到3秒
+            test_data = bytes([5]) + b'TEST_CALL'
+            
+            # 发送测试数据包到3次，增加成功率
+            for attempt in range(3):
+                try:
+                    test_socket.sendto(test_data, self.target_addr)
+                    logging.debug(f"发送UDP测试数据包到 {self.target_addr} (尝试 {attempt+1}/3)")
+                    
+                    # 尝试接收响应
+                    response, addr = test_socket.recvfrom(1024)
+                    if response and len(response) > 0:
+                        logging.debug(f"收到UDP测试响应: {response} 来自 {addr}")
+                        udp_test_success = True
+                        break
+                except socket.timeout:
+                    logging.warning(f"UDP测试响应超时 (尝试 {attempt+1}/3)")
+                except Exception as e:
+                    logging.error(f"UDP测试异常: {e}")
+                    break
+                    
+                # 等待短暂停再尝试
+                time.sleep(0.5)
+            
+            test_socket.close()
+        except Exception as e:
+            logging.error(f"UDP连接测试创建失败: {e}")
+        
+        # 如果UDP测试失败，显示警告但仍然继续尝试
+        if not udp_test_success:
+            logging.warning("UDP连接测试失败，但将继续尝试建立通话")
+            # 显示警告但不中止通话过程
+            QMessageBox.warning(self, "通话警告", "与对方的UDP连接测试失败\n通话可能会有音质问题或连接不稳定的情况")
+        
+        try:
+            # 验证音频设备
+            if 'input' not in self.audio_devices or 'output' not in self.audio_devices:
+                raise ValueError("无效的音频设备配置")
+            
+            # 获取并记录音频设备详情
+            p = pyaudio.PyAudio()
+            try:
+                input_device_info = p.get_device_info_by_index(self.audio_devices['input'])
+                output_device_info = p.get_device_info_by_index(self.audio_devices['output'])
+                logging.debug(f"使用输入设备: {input_device_info['name']}")
+                logging.debug(f"使用输出设备: {output_device_info['name']}")
+            except Exception as e:
+                logging.error(f"获取设备信息失败: {e}")
+                raise ValueError(f"无法获取音频设备信息: {e}")
+            finally:
+                p.terminate()
+            
             # 启动音频播放器
             self.audio_player = AudioPlayer(self.audio_devices['output'])
             self.udp_thread.audio_received.connect(self.on_audio_received)
             self.audio_player.start()
-            logging.debug("音频播放器已启动")
-
+            logging.debug("音频播放器启动成功")
+            
             # 启动音频录制器
-            if self.target_addr:  # 确保有目标地址
-                self.audio_recorder = AudioRecorder(
-                    self.udp_thread,
-                    self.target_addr,
-                    self.username,
-                    self.friend_name,
-                    self.audio_devices['input']
-                )
-                self.audio_recorder.start()
-                logging.debug("音频录制器已启动")
-            else:
-                logging.warning("没有目标地址，无法启动音频录制器")
-                self.error_occurred = True
+            self.audio_recorder = AudioRecorder(
+                self.udp_thread,
+                self.target_addr,
+                self.username,
+                self.friend_name,
+                self.audio_devices['input']
+            )
+            self.audio_recorder.start()
+            logging.debug("音频录制器启动成功")
+            
+            # 更新状态
+            self.status_label.setText(f"与 {self.friend_name} 通话中...")
+            
+            # 添加成功通话提示
+            QMessageBox.information(self, "通话已建立", f"您已与 {self.friend_name} 建立通话连接\n语音通话已开始")
         except Exception as e:
-            logging.error(f"启动通话失败: {e}")
+            logging.error(f"启动通话失败: {e}", exc_info=True)
             self.error_occurred = True
-            self.end_call()
+            QMessageBox.critical(self, "通话错误", f"启动通话失败: {e}")
+            self.call_ended.emit()  # 通知主窗口通话结束
+            self.close()
 
     def on_audio_received(self, audio_data):
         """收到音频数据"""
         if self.audio_player and self.call_active and not self.error_occurred:
             try:
-                logging.debug(f"收到音频数据: {len(audio_data)} 字节")
-                self.audio_player.add_audio(audio_data)
+                # 减少日志频率，避免日志文件过大
+                # logging.debug(f"收到音频数据: {len(audio_data)} 字节")
+                if audio_data and len(audio_data) > 0:
+                    self.audio_player.add_audio(audio_data)
+                else:
+                    logging.warning(f"收到空音频数据")
             except Exception as e:
                 logging.error(f"处理接收到的音频数据失败: {e}")
                 self.error_occurred = True
 
     def end_call(self):
         """结束通话"""
-        print("结束通话")
+        if not self.call_active:
+            return
+            
         self.call_active = False
-
         # 停止音频录制和播放
         if self.audio_recorder:
             try:
@@ -567,27 +929,22 @@ class CallDialog(QDialog):
             except Exception as e:
                 print(f"停止音频录制器失败: {e}")
             self.audio_recorder = None
-
         if self.audio_player:
             try:
                 self.audio_player.stop()
             except Exception as e:
                 print(f"停止音频播放器失败: {e}")
             self.audio_player = None
-
         if self.udp_thread:
             try:
                 self.udp_thread.audio_received.disconnect(self.on_audio_received)
             except Exception as e:
                 print(f"断开音频接收信号失败: {e}")
-
         self.call_ended.emit()
-        self.close()
+        # 不再主动 self.close()，由主窗口控制
 
     def closeEvent(self, event):
-        """窗口关闭时结束通话"""
-        if self.call_active:
-            self.end_call()
+        self.end_call()
         event.accept()
 
 
@@ -908,42 +1265,31 @@ class MainWindow(QWidget):
         self.private_files = []  # 当前私聊文件列表
 
     def init_udp_audio(self):
-        """初始化UDP音频通信"""
-        logging.debug("开始初始化UDP音频服务")
-
-        # 为了避免在同一台计算机上测试时的冲突，使用随机端口而不是基于用户名
-        self.udp_local_port = random.randint(40000, 65000)
-        logging.debug(f"分配随机UDP端口: {self.udp_local_port}")
-
-        # 确保端口不被占用
-        port_attempts = 0
-        while port_attempts < 20:  # 增加尝试次数
-            try:
-                logging.debug(f"尝试绑定UDP端口: {self.udp_local_port}")
-                test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                test_socket.bind(('0.0.0.0', self.udp_local_port))
-                test_socket.close()
-                logging.debug(f"UDP端口绑定成功: {self.udp_local_port}")
-                break
-            except Exception as e:
-                port_attempts += 1
-                logging.warning(f"UDP端口 {self.udp_local_port} 绑定失败: {e}，尝试下一个端口")
-                self.udp_local_port = random.randint(40000, 65000)  # 使用新的随机端口
-
-        if port_attempts >= 20:
-            logging.error("无法找到可用的UDP端口")
-            QMessageBox.warning(self, '错误', '无法初始化语音通话功能，找不到可用端口')
-            return
-
-        # 创建UDP音频线程
+        # 分配本地UDP端口并初始化线程
         try:
-            logging.debug(f"创建UDP音频线程，端口: {self.udp_local_port}")
+            # 尝试找到一个可用的端口
+            self.udp_local_port = random.randint(UDP_PORT_BASE, UDP_PORT_BASE + 1000)
+            max_attempts = 10
+            for attempt in range(max_attempts):
+                try:
+                    # 创建临时套接字测试端口是否可用
+                    test_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    test_socket.bind(('0.0.0.0', self.udp_local_port))
+                    test_socket.close()
+                    logging.debug(f"找到可用UDP端口: {self.udp_local_port}")
+                    break
+                except OSError:
+                    self.udp_local_port = random.randint(UDP_PORT_BASE, UDP_PORT_BASE + 1000)
+                    if attempt == max_attempts - 1:
+                        raise Exception(f"无法找到可用的UDP端口")
+            
+            # 使用找到的可用端口初始化UDP线程
             self.udp_thread = UDPAudioThread(self.udp_local_port)
             self.udp_thread.start()
-            logging.debug("UDP音频线程启动成功")
+            logging.debug(f"UDP音频线程已启动，端口: {self.udp_local_port}")
         except Exception as e:
-            logging.error(f"创建UDP音频线程失败: {e}", exc_info=True)
-            QMessageBox.warning(self, '错误', f'初始化语音通话功能失败: {e}')
+            logging.error(f"初始化UDP音频失败: {e}")
+            QMessageBox.critical(self, "错误", f"无法初始化音频功能: {e}")
 
         # 通知服务器我们的UDP端口
         try:
@@ -1522,36 +1868,81 @@ class MainWindow(QWidget):
                 try:
                     if len(parts) < 4:
                         logging.error(f"CALL_ACCEPTED消息格式错误: {data}")
+                        QMessageBox.warning(self, "通话错误", "通话连接信息格式错误，请重新尝试")
+                        self.in_call = False
+                        self.call_target = None
                         return
-
+                    
                     from_user = parts[1]
                     caller_ip = parts[2]
                     caller_port = parts[3]
-
                     logging.debug(f"收到CALL_ACCEPTED: from={from_user}, ip={caller_ip}, port={caller_port}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
-
-                    if self.in_call and self.call_target == from_user:
-                        # 更新通话对话框状态
-                        target_addr = (caller_ip, int(caller_port))
-                        logging.debug(f"收到对方UDP地址: {target_addr}")
-
-                        if self.call_dialog:
-                            # 如果已经创建了通话对话框（作为主叫方），则更新地址并开始通话
-                            logging.debug("更新主叫方通话对话框并开始通话")
-                            self.call_dialog.target_addr = target_addr
-                            self.call_dialog.start_call()
-                            # 更新状态标签
-                            self.call_dialog.status_label.setText(f"与 {from_user} 通话中...")
-                        else:
-                            # 如果还没有创建通话对话框（可能是作为被叫方），则创建
-                            logging.debug("为被叫方创建通话对话框")
-                            self.create_call_dialog_as_receiver(from_user, caller_ip, caller_port)
+                    
+                    # 验证通话状态
+                    if not self.in_call:
+                        logging.warning(f"收到来自 {from_user} 的CALL_ACCEPTED，但当前没有活动通话")
+                        return
+                        
+                    if self.call_target != from_user:
+                        logging.warning(f"收到来自 {from_user} 的CALL_ACCEPTED，但当前通话目标是 {self.call_target}")
+                        return
+                    
+                    # 处理IP地址和端口
+                    # 处理特殊IP地址情况
+                    if caller_ip in ['0.0.0.0', 'localhost', '']:
+                        # 如果是本地测试，使用127.0.0.1
+                        caller_ip = '127.0.0.1'
+                        logging.debug(f"将目标地址从 {caller_ip} 改为 127.0.0.1")
+                    
+                    # 确保端口是有效的整数
+                    try:
+                        caller_port = int(caller_port)
+                        if caller_port <= 0 or caller_port > 65535:
+                            raise ValueError(f"无效的端口号: {caller_port}")
+                    except ValueError as e:
+                        logging.error(f"端口号格式错误: {e}")
+                        QMessageBox.warning(self, "通话错误", f"端口号格式错误: {e}")
+                        self.in_call = False
+                        self.call_target = None
+                        return
+                    
+                    # 设置目标地址
+                    target_addr = (caller_ip, caller_port)
+                    logging.debug(f"设置通话目标地址: {target_addr}")
+                    
+                    # 处理通话窗口
+                    if self.call_dialog:
+                        # 将地址信息更新到通话窗口
+                        self.call_dialog.target_addr = target_addr
+                        logging.debug(f"已更新通话窗口的目标地址为: {target_addr}")
+                        
+                        # 启动通话
+                        self.call_dialog.start_call()
+                        self.call_dialog.status_label.setText(f"与 {from_user} 通话中...")
+                        logging.debug("已启动通话并更新状态")
+                        
+                        # 显示成功通知
+                        QMessageBox.information(self, "通话已连接", f"与 {from_user} 的通话已成功建立")
                     else:
-                        logging.warning(f"收到CALL_ACCEPTED但不匹配当前通话状态: {from_user}")
+                        logging.warning("收到CALL_ACCEPTED但未找到通话窗口，正在创建新窗口")
+                        # 如果没有窗口，创建一个新的
+                        self.call_dialog = CallDialog(
+                            self,
+                            from_user,
+                            is_caller=True,
+                            udp_thread=self.udp_thread,
+                            target_addr=target_addr,
+                            username=self.username
+                        )
+                        self.call_dialog.call_ended.connect(self.on_call_ended)
+                        self.call_dialog.show()
+                        self.call_dialog.start_call()
                 except Exception as e:
                     logging.error(f"处理通话接受消息出错: {e}", exc_info=True)
                     QMessageBox.warning(self, "通话错误", f"处理通话接受消息失败: {e}")
+                    self.in_call = False
+                    self.call_target = None
                 return
             elif cmd == 'CALL_REJECTED':
                 # 对方拒绝通话
@@ -2046,20 +2437,13 @@ class MainWindow(QWidget):
 
     def create_call_dialog_as_receiver(self, caller, caller_ip, caller_port):
         """作为接收方创建通话对话框"""
-        if self.call_dialog or not self.in_call:
-            return
-
-        # 创建UDP目标地址
         target_addr = (caller_ip, int(caller_port))
-        logging.debug(f"创建接收方通话对话框，目标地址: {target_addr}")
-
-        # 更新现有通话对话框的目标地址
+        logging.debug(f"创建/更新接收方通话对话框，目标地址: {target_addr}")
         if self.call_dialog:
             self.call_dialog.target_addr = target_addr
             self.call_dialog.start_call()
             logging.debug(f"已更新接收方通话对话框的目标地址并开始通话")
         else:
-            # 创建新的通话对话框
             self.call_dialog = CallDialog(
                 self,
                 caller,

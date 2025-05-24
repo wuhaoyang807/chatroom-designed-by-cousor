@@ -190,13 +190,20 @@ def handle_udp_audio():
             data, addr = udp_socket.recvfrom(65536)  # 更大的缓冲区用于音频
             # 解析头部以确定目标用户
             if len(data) < 2:  # 确保数据至少包含2字节头部
+                print(f"收到无效UDP数据包(长度<2): {len(data)}字节, 来自: {addr}")
                 continue
 
             header_len = data[0]  # 第一个字节表示头部长度
             if len(data) < header_len + 1:
+                print(f"收到无效UDP数据包(头部不完整): {len(data)}字节, 头部长度: {header_len}, 来自: {addr}")
                 continue
 
             header = data[1:header_len + 1].decode('utf-8')
+            audio_data = data[header_len + 1:]
+            
+            # 添加额外调试信息
+            print(f"收到UDP音频数据: {len(data)}字节, 音频数据: {len(audio_data)}字节, 来自: {addr}, 头部: {header}")
+            
             # 头部格式：发送者|接收者
             try:
                 sender, receiver = header.split('|')
@@ -204,10 +211,19 @@ def handle_udp_audio():
                 # 检查接收者是否在线和是否处于通话中
                 with lock:
                     if receiver in active_calls and active_calls[receiver][0] == sender and receiver in udp_addresses:
-                        # 转发音频数据到接收者
-                        udp_socket.sendto(data, udp_addresses[receiver])
+                        target_addr = udp_addresses[receiver]
+                        # 额外检查目标地址有效性
+                        if target_addr[0] is None or target_addr[1] is None:
+                            print(f"接收者 {receiver} 的UDP地址无效: {target_addr}")
+                            continue
+                        
+                        print(f"转发音频数据到 {receiver}: {target_addr}, 数据大小: {len(data)}字节")
+                        udp_socket.sendto(data, target_addr)
+                    else:
+                        print(f"无法转发音频数据: receiver={receiver}, 在active_calls中={receiver in active_calls}, "
+                              f"通话对象={active_calls.get(receiver)}, 有UDP地址={receiver in udp_addresses}")
             except Exception as e:
-                print(f"处理UDP音频数据出错: {e}")
+                print(f"处理UDP音频数据出错: {e}, 头部: {header}")
         except Exception as e:
             print(f"UDP音频处理异常: {e}")
 
@@ -489,6 +505,12 @@ def handle_client(conn, addr):
                         with lock:
                             # 保存接受者的UDP地址
                             udp_addresses[from_user] = (client_ip, client_udp_port)
+                            
+                            # 确认发起者的UDP地址存在
+                            if to_user not in udp_addresses or None in udp_addresses.get(to_user, (None, None)):
+                                print(f"警告: 发起者 {to_user} 的UDP地址不完整或不存在: {udp_addresses.get(to_user)}")
+                            else:
+                                print(f"确认发起者 {to_user} 的UDP地址: {udp_addresses[to_user]}")
 
                             # 记录通话状态
                             active_calls[from_user] = (to_user, (client_ip, client_udp_port))
@@ -507,6 +529,12 @@ def handle_client(conn, addr):
                                             print(f"  第{i + 1}次发送CALL_ACCEPTED给 {to_user}")
                                             print(f"  消息内容: {accept_msg}")
                                         time.sleep(0.5)
+                                        
+                                    # 验证通话建立
+                                    print(f"通话建立: {from_user} <-> {to_user}")
+                                    print(f"  {from_user} 的UDP地址: {udp_addresses.get(from_user)}")
+                                    print(f"  {to_user} 的UDP地址: {udp_addresses.get(to_user)}")
+                                    print(f"  Active calls: {active_calls}")
                                 except Exception as e:
                                     if DEBUG_CALL:
                                         print(f"  发送CALL_ACCEPTED失败: {e}")
