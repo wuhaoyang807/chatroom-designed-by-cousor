@@ -1,0 +1,28 @@
+2025-05-25 19:46:39,616 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-25 19:46:39,618 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-25 19:46:39,618 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-25 19:46:39,630 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-25 19:46:45,293 [DEBUG] 初始化主窗口: 用户=why
+2025-05-25 19:46:45,293 [DEBUG] 创建客户端线程
+2025-05-25 19:46:45,294 [DEBUG] 客户端线程初始化
+2025-05-25 19:46:45,294 [DEBUG] 开始初始化UDP音频服务
+2025-05-25 19:46:45,294 [DEBUG] 分配随机UDP端口: 53316
+2025-05-25 19:46:45,294 [DEBUG] 客户端线程开始运行
+2025-05-25 19:46:45,295 [DEBUG] 尝试绑定UDP端口: 53316
+2025-05-25 19:46:45,305 [DEBUG] UDP端口绑定成功: 53316
+2025-05-25 19:46:45,305 [DEBUG] 创建UDP音频线程，端口: 53316
+2025-05-25 19:46:45,305 [DEBUG] UDP音频线程绑定到端口: 53316
+2025-05-25 19:46:45,305 [DEBUG] UDP音频线程启动成功
+2025-05-25 19:46:45,306 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|53316
+2025-05-25 19:46:45,306 [DEBUG] UDP音频服务初始化完成，端口: 53316
+2025-05-25 19:46:45,323 [DEBUG] 初始化UI
+2025-05-25 19:46:45,327 [DEBUG] 初始刷新好友和群组列表
+2025-05-25 19:46:45,327 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 53316
+2025-05-25 19:46:45,372 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online|gty:offline
+2025-05-25 19:46:45,372 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-25 19:46:46,407 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why|[EMOJI]image_emoticon19.png
+2025-05-25 19:46:46,499 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png|facepalm.png|main.py
+2025-05-25 19:46:53,845 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-25 19:47:08,330 [DEBUG] 停止客户端线程
+2025-05-25 19:47:08,331 [WARNING] 服务器连接断开
+2025-05-25 19:47:08,332 [DEBUG] 客户端线程结束

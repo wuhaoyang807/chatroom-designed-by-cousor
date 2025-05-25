@@ -1,0 +1,59 @@
+2025-05-24 20:51:53,724 - ERROR - 网络检查失败: [WinError 10061] 由于目标计算机积极拒绝，无法连接。
+2025-05-24 20:53:01,635 - DEBUG - UDP音频线程开始监听端口 59422
+2025-05-24 20:53:02,135 - DEBUG - UDP音频端口: 59422
+2025-05-24 20:53:03,354 - DEBUG - 处理收到的消息: FRIEND_LIST|why_1:online|gty:offline
+2025-05-24 20:53:09,136 - DEBUG - 请求私聊历史: why <-> why_1
+2025-05-24 20:53:09,352 - DEBUG - 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 20:53:09,352 - DEBUG - 收到私聊历史: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 20:53:09,402 - DEBUG - 加载了 32 条历史消息
+2025-05-24 20:53:11,578 - ERROR - UDP接收错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 20:53:11,578 - ERROR - 客户端线程错误: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。
+2025-05-24 21:03:53,645 - DEBUG - UDP音频线程开始监听端口 56790
+2025-05-24 21:03:54,145 - DEBUG - UDP音频端口: 56790
+2025-05-24 21:03:55,382 - DEBUG - 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-24 21:03:55,582 - DEBUG - 处理收到的消息: ERROR|Unknown command.
+2025-05-24 21:03:56,679 - DEBUG - 请求私聊历史: why <-> why_1
+2025-05-24 21:03:56,883 - DEBUG - 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:03:56,884 - DEBUG - 收到私聊历史: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:03:57,039 - DEBUG - 加载了 32 条历史消息
+2025-05-24 21:05:25,242 - DEBUG - 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-24 21:05:38,754 - DEBUG - 请求私聊历史: why <-> gty
+2025-05-24 21:05:38,965 - DEBUG - 处理收到的消息: PRIVATE_HISTORY
+2025-05-24 21:05:38,965 - DEBUG - 收到私聊历史: PRIVATE_HISTORY
+2025-05-24 21:05:39,269 - DEBUG - 请求私聊历史: why <-> why_1
+2025-05-24 21:05:39,468 - DEBUG - 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:05:39,468 - DEBUG - 收到私聊历史: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:05:39,663 - DEBUG - 加载了 32 条历史消息
+2025-05-24 21:05:48,399 - ERROR - UDP接收错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 21:05:48,400 - ERROR - 客户端线程错误: [WinError 10053] 你的主机中的软件中止了一个已建立的连接。
+2025-05-24 21:06:01,593 - DEBUG - UDP音频线程开始监听端口 53018
+2025-05-24 21:06:02,094 - DEBUG - UDP音频端口: 53018
+2025-05-24 21:06:03,295 - DEBUG - 处理收到的消息: FRIEND_LIST|why_1:online|gty:offline
+2025-05-24 21:06:03,487 - DEBUG - 处理收到的消息: ERROR|Unknown command.
+2025-05-24 21:06:03,975 - DEBUG - 请求私聊历史: why <-> why_1
+2025-05-24 21:06:04,172 - DEBUG - 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:06:04,172 - DEBUG - 收到私聊历史: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why_1|[EMOJI]gif4.gif|why|[EMOJI]image_emoticon31.png
+2025-05-24 21:06:04,324 - DEBUG - 加载了 32 条历史消息
+2025-05-24 21:06:12,505 - DEBUG - 处理收到的消息: MSG|why_1|1
+2025-05-24 21:06:14,767 - DEBUG - 处理收到的消息: CALL_INCOMING|why_1
+2025-05-24 21:06:14,767 - DEBUG - 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-24 21:06:14,767 - DEBUG - 来电者: why_1
+2025-05-24 21:06:14,767 - DEBUG - 添加来电到待处理队列: why_1
+2025-05-24 21:06:14,868 - DEBUG - 处理来电: why_1
+2025-05-24 21:06:17,280 - DEBUG - 接受来电: why_1
+2025-05-24 21:06:19,361 - DEBUG - 等待目标地址...
+2025-05-24 21:06:27,408 - DEBUG - 结束通话
+2025-05-24 21:06:27,408 - ERROR - 断开音频接收信号失败: 'method' object is not connected
+2025-05-24 21:06:27,409 - DEBUG - 通话结束处理
+2025-05-24 21:06:35,131 - DEBUG - 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-24 21:06:35,132 - DEBUG - 服务器确认正在向 why_1 发送通话请求
+2025-05-24 21:06:37,425 - DEBUG - 等待目标地址...
+2025-05-24 21:06:38,703 - DEBUG - 处理收到的消息: CALL_ACCEPTED|why_1|210.30.192.180|55674
+2025-05-24 21:06:38,703 - DEBUG - 收到CALL_ACCEPTED: from=why_1, ip=210.30.192.180, port=55674
+2025-05-24 21:06:38,703 - DEBUG - 收到对方UDP地址: ('210.30.192.180', 55674)
+2025-05-24 21:06:38,704 - DEBUG - 更新主叫方通话对话框并开始通话
+2025-05-24 21:06:38,704 - DEBUG - 更新目标地址: ('210.30.192.180', 55674)
+2025-05-24 21:06:38,704 - DEBUG - 开始通话: is_caller=True, target_addr=('210.30.192.180', 55674)
+2025-05-24 21:06:38,704 - DEBUG - 音频播放器已启动
+2025-05-24 21:06:38,704 - DEBUG - 音频录制器已启动
+2025-05-24 21:06:38,786 - DEBUG - 音频播放开始
