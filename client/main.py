@@ -56,8 +56,10 @@ class AudioCompressor:
                 # 轻度压缩：保持原始质量
                 return audio_data
             elif compression_level == 2:
-                # 中度压缩：降低音量动态范围
-                return audioop.mul(audio_data, 2, 0.8)  # 降低音量到80%
+                # 中度压缩：降低音量动态范围，并添加简单的回声抑制
+                # 降低音量以减少反馈
+                reduced_volume = audioop.mul(audio_data, 2, 0.6)  # 降低音量到60%
+                return reduced_volume
             elif compression_level == 3:
                 # 高度压缩：降低位深度
                 # 将16位音频转换为8位再转回16位
@@ -92,15 +94,39 @@ class AudioCompressor:
             
             # 对于大多数压缩级别，解压缩就是恢复音量
             if compression_level == 2:
-                return audioop.mul(audio_data, 2, 1.25)  # 恢复音量
+                # 恢复音量，但保持在合理范围内以避免反馈
+                return audioop.mul(audio_data, 2, 1.1)  # 恢复音量到110%
             else:
                 return audio_data
         except Exception as e:
             logging.error(f"音频解压缩失败: {e}")
             return audio_data
 
+    @staticmethod
+    def apply_echo_suppression(audio_data):
+        """
+        简单的回声抑制：检测音频强度，如果太高则降低音量
+        """
+        try:
+            if not audio_data or len(audio_data) == 0:
+                return audio_data
+            
+            # 计算音频的RMS（均方根）值来判断音量
+            rms = audioop.rms(audio_data, 2)
+            
+            # 如果音量过高（可能是反馈），则大幅降低音量
+            if rms > 8000:  # 阈值可以调整
+                return audioop.mul(audio_data, 2, 0.3)  # 降低到30%
+            elif rms > 5000:
+                return audioop.mul(audio_data, 2, 0.6)  # 降低到60%
+            else:
+                return audio_data
+        except Exception as e:
+            logging.error(f"回声抑制失败: {e}")
+            return audio_data
+
 # 服务器配置
-SERVER_HOST = '127.0.0.1'  # 默认本地地址
+SERVER_HOST = '127.0.0.1'  # 默认本地地址why
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
@@ -345,10 +371,13 @@ class AudioDeviceSelector(QDialog):
 
         # 按钮区域
         button_layout = QHBoxLayout()
+        self.test_btn = QPushButton("测试设备")
+        self.test_btn.clicked.connect(self.test_devices)
         self.ok_button = QPushButton("确定")
         self.cancel_button = QPushButton("取消")
         self.ok_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.test_btn)
         button_layout.addWidget(self.ok_button)
         button_layout.addWidget(self.cancel_button)
 
@@ -410,6 +439,81 @@ class AudioDeviceSelector(QDialog):
     def closeEvent(self, event):
         self.audio.terminate()
         event.accept()
+
+    def test_devices(self):
+        """测试选中的音频设备"""
+        try:
+            input_device = self.input_combo.currentData()
+            output_device = self.output_combo.currentData()
+            
+            if input_device is None or output_device is None:
+                QMessageBox.warning(self, "设备选择错误", "请先选择输入和输出设备")
+                return
+            
+            # 显示测试对话框
+            test_dialog = QMessageBox(self)
+            test_dialog.setWindowTitle("设备测试")
+            test_dialog.setText("正在测试音频设备...\n请对着麦克风说话，您应该能听到自己的声音")
+            test_dialog.setStandardButtons(QMessageBox.Cancel)
+            test_dialog.setModal(False)
+            test_dialog.show()
+            
+            # 创建测试音频流
+            test_stream_in = None
+            test_stream_out = None
+            
+            try:
+                # 打开输入流
+                test_stream_in = self.audio.open(
+                    format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    input_device_index=input_device,
+                    frames_per_buffer=CHUNK
+                )
+                
+                # 打开输出流
+                test_stream_out = self.audio.open(
+                    format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    output=True,
+                    output_device_index=output_device,
+                    frames_per_buffer=CHUNK
+                )
+                
+                # 测试3秒钟
+                for i in range(int(3 * RATE / CHUNK)):
+                    if test_dialog.result() == QMessageBox.Cancel:
+                        break
+                    
+                    # 读取音频数据
+                    data = test_stream_in.read(CHUNK, exception_on_overflow=False)
+                    # 降低音量以避免反馈
+                    reduced_data = audioop.mul(data, 2, 0.3)
+                    # 播放音频数据
+                    test_stream_out.write(reduced_data)
+                    
+                    QApplication.processEvents()
+                
+                test_dialog.close()
+                QMessageBox.information(self, "测试完成", "音频设备测试完成！\n如果您听到了自己的声音，说明设备工作正常。")
+                
+            except Exception as e:
+                test_dialog.close()
+                QMessageBox.warning(self, "测试失败", f"音频设备测试失败: {e}")
+            finally:
+                # 清理测试流
+                if test_stream_in:
+                    test_stream_in.stop_stream()
+                    test_stream_in.close()
+                if test_stream_out:
+                    test_stream_out.stop_stream()
+                    test_stream_out.close()
+                    
+        except Exception as e:
+            QMessageBox.warning(self, "测试错误", f"无法测试音频设备: {e}")
 
 
 class AudioRecorder(QThread):
@@ -475,8 +579,10 @@ class AudioRecorder(QThread):
                             
                             # 验证目标地址
                             if self.target_addr and len(self.target_addr) == 2:
+                                # 应用回声抑制
+                                echo_suppressed = AudioCompressor.apply_echo_suppression(audio_data)
                                 # 应用音频压缩
-                                compressed_audio = AudioCompressor.compress_audio(audio_data, compression_level=2)
+                                compressed_audio = AudioCompressor.compress_audio(echo_suppressed, compression_level=2)
                                 self.udp_thread.send_audio(compressed_audio, self.target_addr, self.sender, self.receiver)
                             else:
                                 logging.warning(f"无效的目标地址: {self.target_addr}")
@@ -663,7 +769,7 @@ class CallDialog(QDialog):
     def init_ui(self):
         """初始化UI界面"""
         self.setWindowTitle("语音通话")
-        self.setFixedSize(350, 200)
+        self.setFixedSize(350, 250)
 
         layout = QVBoxLayout()
 
@@ -676,15 +782,36 @@ class CallDialog(QDialog):
         self.connection_label.setAlignment(Qt.AlignCenter)
         self.connection_label.setStyleSheet("color: orange;")
 
+        # 添加通话时长显示
+        self.duration_label = QLabel("通话时长: 00:00")
+        self.duration_label.setAlignment(Qt.AlignCenter)
+        self.duration_label.setStyleSheet("color: gray; font-size: 10pt;")
+
+        # 添加音频质量指示器
+        self.quality_label = QLabel("音频质量: 检测中...")
+        self.quality_label.setAlignment(Qt.AlignCenter)
+        self.quality_label.setStyleSheet("color: gray; font-size: 10pt;")
+
         self.end_call_btn = QPushButton("结束通话")
         self.end_call_btn.setStyleSheet("background-color: red; color: white; font-size: 12pt; padding: 10px;")
         self.end_call_btn.clicked.connect(self.end_call)
 
         layout.addWidget(self.status_label)
         layout.addWidget(self.connection_label)
+        layout.addWidget(self.duration_label)
+        layout.addWidget(self.quality_label)
         layout.addWidget(self.end_call_btn)
 
         self.setLayout(layout)
+
+        # 初始化计时器
+        self.call_start_time = None
+        self.duration_timer = QTimer(self)
+        self.duration_timer.timeout.connect(self.update_duration)
+        
+        # 音频质量统计
+        self.audio_packets_received = 0
+        self.last_quality_check = time.time()
 
     def get_audio_devices(self):
         """获取音频设备"""
@@ -721,6 +848,9 @@ class CallDialog(QDialog):
 
         logging.debug(f"开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
         self.call_active = True
+        self.call_start_time = time.time()
+        self.duration_timer.start(1000)  # 每秒更新一次时长
+        
         self.status_label.setText(f"与 {self.friend_name} 通话中...")
         self.connection_label.setText("正在建立连接...")
 
@@ -761,16 +891,44 @@ class CallDialog(QDialog):
             self.connection_label.setStyleSheet("color: red;")
             QMessageBox.critical(self, "通话错误", f"启动通话失败: {e}")
 
+    def update_duration(self):
+        """更新通话时长显示"""
+        if self.call_start_time and self.call_active:
+            duration = int(time.time() - self.call_start_time)
+            minutes = duration // 60
+            seconds = duration % 60
+            self.duration_label.setText(f"通话时长: {minutes:02d}:{seconds:02d}")
+
     def on_audio_received(self, audio_data):
         """收到音频数据"""
         if self.audio_player and self.call_active and not self.error_occurred:
             try:
                 if audio_data and len(audio_data) > 0:
                     self.audio_player.add_audio(audio_data)
+                    
                     # 更新连接状态
                     if self.connection_label.text() != "通话已连接":
                         self.connection_label.setText("通话已连接")
                         self.connection_label.setStyleSheet("color: green;")
+                    
+                    # 更新音频质量统计
+                    self.audio_packets_received += 1
+                    current_time = time.time()
+                    if current_time - self.last_quality_check >= 5:  # 每5秒更新一次质量指示
+                        packets_per_second = self.audio_packets_received / 5
+                        if packets_per_second > 30:
+                            self.quality_label.setText("音频质量: 优秀")
+                            self.quality_label.setStyleSheet("color: green; font-size: 10pt;")
+                        elif packets_per_second > 20:
+                            self.quality_label.setText("音频质量: 良好")
+                            self.quality_label.setStyleSheet("color: orange; font-size: 10pt;")
+                        else:
+                            self.quality_label.setText("音频质量: 较差")
+                            self.quality_label.setStyleSheet("color: red; font-size: 10pt;")
+                        
+                        self.audio_packets_received = 0
+                        self.last_quality_check = current_time
+                        
             except Exception as e:
                 logging.error(f"处理接收到的音频数据失败: {e}")
                 self.error_occurred = True
@@ -792,6 +950,7 @@ class CallDialog(QDialog):
             
         logging.debug("结束通话")
         self.call_active = False
+        self.duration_timer.stop()
 
         # 停止音频录制和播放
         if self.audio_recorder:
@@ -1802,11 +1961,13 @@ class MainWindow(QWidget):
                         target_addr = (caller_ip, int(caller_port))
                         logging.debug(f"接收方获得发起方UDP地址: {target_addr}")
 
-                        if self.call_dialog:
+                        if self.call_dialog and self.call_dialog.isVisible():
                             # 更新现有对话框的目标地址并开始通话
+                            logging.debug("更新现有通话对话框的目标地址")
                             self.call_dialog.update_target_addr(target_addr)
                         else:
-                            # 创建新的通话对话框
+                            # 只有在没有对话框时才创建新的
+                            logging.debug("创建新的通话对话框")
                             self.call_dialog = CallDialog(
                                 self,
                                 caller,
@@ -2207,16 +2368,30 @@ class MainWindow(QWidget):
 
     def on_call_ended(self):
         """通话结束处理"""
+        logging.debug("通话结束处理开始")
+        
         if self.call_target:
             try:
                 # 发送通话结束消息
                 self.sock.send(f'CALL_END|{self.username}|{self.call_target}'.encode('utf-8'))
+                logging.debug(f"已发送通话结束消息: {self.call_target}")
             except Exception as e:
                 print(f"发送通话结束消息失败: {e}")
 
+        # 重置通话状态
         self.in_call = False
         self.call_target = None
-        self.call_dialog = None
+        
+        # 清理通话对话框
+        if self.call_dialog:
+            try:
+                if self.call_dialog.isVisible():
+                    self.call_dialog.close()
+            except Exception as e:
+                logging.error(f"关闭通话对话框失败: {e}")
+            self.call_dialog = None
+        
+        logging.debug("通话结束处理完成")
 
     def check_pending_calls(self):
         """定期检查待处理的来电并显示通知"""
@@ -2275,6 +2450,11 @@ class MainWindow(QWidget):
         """接受来电"""
         logging.debug(f"接受来电：{caller}")
         try:
+            # 检查是否已经在通话中，避免重复创建
+            if self.in_call:
+                logging.warning(f"已在通话中，忽略来电: {caller}")
+                return
+            
             self.in_call = True
             self.call_target = caller
 
@@ -2283,6 +2463,12 @@ class MainWindow(QWidget):
             logging.debug(f"准备发送CALL_ACCEPT: {accept_msg}")
             self.sock.send(accept_msg)
             logging.debug(f"已发送CALL_ACCEPT消息，本地UDP端口: {self.udp_local_port}")
+
+            # 检查是否已经有通话对话框，避免重复创建
+            if self.call_dialog and self.call_dialog.isVisible():
+                logging.debug("通话对话框已存在，更新状态")
+                self.call_dialog.status_label.setText(f"正在连接到 {caller}...")
+                return
 
             # 创建通话对话框，但不立即开始通话（等待CALL_CONNECT_INFO）
             self.call_dialog = CallDialog(
