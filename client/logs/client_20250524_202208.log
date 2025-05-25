@@ -1,0 +1,43 @@
+2025-05-24 20:22:08,594 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-24 20:22:08,791 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-24 20:22:08,792 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-24 20:22:08,986 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-24 20:22:20,686 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 20:22:20,686 [DEBUG] 创建客户端线程
+2025-05-24 20:22:20,686 [DEBUG] 客户端线程初始化
+2025-05-24 20:22:20,687 [DEBUG] 开始初始化UDP音频服务
+2025-05-24 20:22:20,687 [DEBUG] 分配随机UDP端口: 53017
+2025-05-24 20:22:20,687 [DEBUG] 客户端线程开始运行
+2025-05-24 20:22:20,687 [DEBUG] 尝试绑定UDP端口: 53017
+2025-05-24 20:22:20,689 [DEBUG] UDP端口绑定成功: 53017
+2025-05-24 20:22:20,689 [DEBUG] 创建UDP音频线程，端口: 53017
+2025-05-24 20:22:20,689 [DEBUG] UDP音频线程绑定到端口: 53017
+2025-05-24 20:22:20,689 [DEBUG] UDP音频线程启动成功
+2025-05-24 20:22:20,689 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|53017
+2025-05-24 20:22:20,690 [DEBUG] UDP音频服务初始化完成，端口: 53017
+2025-05-24 20:22:20,707 [DEBUG] 初始化UI
+2025-05-24 20:22:20,713 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 20:22:20,714 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 53017
+2025-05-24 20:22:21,132 [DEBUG] 处理收到的消息: FRIEND_LIST|
+2025-05-24 20:22:22,405 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online|gty:offline
+2025-05-24 20:22:27,294 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why_1|1|why|2|why_1|1|why|[EMOJI]smirk.png|why_1|1|why|2|why|[EMOJI]smirk.png
+2025-05-24 20:22:30,490 [DEBUG] 处理收到的消息: EMOJI|why_1|gif4.gif
+2025-05-24 20:22:35,608 [DEBUG] 尝试发起语音通话
+2025-05-24 20:22:35,608 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-24 20:22:35,608 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|53017
+2025-05-24 20:22:35,608 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 53017
+2025-05-24 20:22:35,620 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-24 20:22:47,014 [DEBUG] 结束通话
+2025-05-24 20:22:47,015 [ERROR] 断开音频接收信号失败: 'method' object is not connected
+2025-05-24 20:23:12,742 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why_1|1|why|2|why_1|1|why|[EMOJI]smirk.png|why_1|1|why|2|why|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif
+2025-05-24 20:23:13,604 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why_1|1|why|2|why_1|1|why|[EMOJI]smirk.png|why_1|1|why|2|why|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif
+2025-05-24 20:23:16,208 [DEBUG] 尝试发起语音通话
+2025-05-24 20:23:16,208 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-24 20:23:16,208 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|53017
+2025-05-24 20:23:16,208 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 53017
+2025-05-24 20:23:16,220 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-24 20:23:19,069 [DEBUG] 结束通话
+2025-05-24 20:23:19,069 [ERROR] 断开音频接收信号失败: 'method' object is not connected
+2025-05-24 20:23:26,968 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-24 20:32:41,103 [WARNING] 服务器连接断开
+2025-05-24 20:32:41,103 [DEBUG] 客户端线程结束

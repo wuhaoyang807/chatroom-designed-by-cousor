@@ -1,0 +1,62 @@
+2025-05-16 23:13:41,119 [DEBUG] 初始化主窗口: 用户=why
+2025-05-16 23:13:41,120 [DEBUG] 创建客户端线程
+2025-05-16 23:13:41,121 [DEBUG] 客户端线程初始化
+2025-05-16 23:13:41,122 [DEBUG] 开始初始化UDP音频服务
+2025-05-16 23:13:41,122 [DEBUG] 计算得到初始UDP端口: 40011
+2025-05-16 23:13:41,122 [DEBUG] 客户端线程开始运行
+2025-05-16 23:13:41,123 [DEBUG] 尝试绑定UDP端口: 40011
+2025-05-16 23:13:41,124 [DEBUG] UDP端口绑定成功: 40011
+2025-05-16 23:13:41,125 [DEBUG] 创建UDP音频线程，端口: 40011
+2025-05-16 23:13:41,126 [DEBUG] UDP音频线程启动成功
+2025-05-16 23:13:41,126 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40011
+2025-05-16 23:13:41,136 [DEBUG] UDP音频服务初始化完成，端口: 40011
+2025-05-16 23:13:41,229 [DEBUG] 初始化UI
+2025-05-16 23:13:41,232 [DEBUG] 初始刷新好友和群组列表
+2025-05-16 23:13:41,233 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40011
+2025-05-16 23:13:41,259 [DEBUG] 接收到完整消息: FRIEND_LIST|why_1:offlineGROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:13:41,302 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offlineGROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:14:00,094 [DEBUG] 接收到完整消息: FRIEND_ONLINE|why_1
+2025-05-16 23:14:00,097 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-16 23:14:05,952 [DEBUG] 接收到完整消息: FRIEND_LIST|why_1:online
+2025-05-16 23:14:05,952 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online
+2025-05-16 23:14:11,271 [DEBUG] 接收到完整消息: JOIN_GROUP_RESULT|OK|Joined group.|1
+2025-05-16 23:14:11,286 [DEBUG] 处理收到的消息: JOIN_GROUP_RESULT|OK|Joined group.|1
+2025-05-16 23:14:12,581 [DEBUG] 接收到完整消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:14:12,595 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:14:23,235 [DEBUG] 接收到完整消息: GROUP_MEMBERS|why_1|why
+2025-05-16 23:14:23,236 [DEBUG] 接收到完整消息: GROUP_HISTORY|user|why_1|1||user|why_1|2||user|why_1|3||user|why|1||user|why|2||user|why_1|1||user|why_1|2||anon|无名氏|匿名消息||anon|无名氏|啊||user|why_1|啊||user|why|[EMOJI]smart.png||user|why|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why_1|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why_1|1|
+2025-05-16 23:14:23,245 [DEBUG] 处理收到的消息: GROUP_MEMBERS|why_1|why
+2025-05-16 23:14:23,245 [DEBUG] 处理收到的消息: GROUP_HISTORY|user|why_1|1||user|why_1|2||user|why_1|3||user|why|1||user|why|2||user|why_1|1||user|why_1|2||anon|无名氏|匿名消息||anon|无名氏|啊||user|why_1|啊||user|why|[EMOJI]smart.png||user|why|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why_1|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why_1|1|
+2025-05-16 23:14:25,004 [DEBUG] 接收到完整消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:14:25,005 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:14:27,745 [DEBUG] 接收到完整消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:14:27,746 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:14:33,803 [DEBUG] 尝试发起语音通话
+2025-05-16 23:14:33,803 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-16 23:14:33,804 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|40011
+2025-05-16 23:14:33,804 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 40011
+2025-05-16 23:14:33,831 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-16 23:14:54,513 [DEBUG] 接收到完整消息: EMOJI|why_1|smirk.png
+2025-05-16 23:14:54,514 [DEBUG] 处理收到的消息: EMOJI|why_1|smirk.png
+2025-05-16 23:15:01,581 [DEBUG] 接收到完整消息: EMOJI|why_1|gif4.gif
+2025-05-16 23:15:01,581 [DEBUG] 处理收到的消息: EMOJI|why_1|gif4.gif
+2025-05-16 23:15:02,221 [DEBUG] 接收到完整消息: EMOJI|why_1|gif4.gif
+2025-05-16 23:15:02,222 [DEBUG] 处理收到的消息: EMOJI|why_1|gif4.gif
+2025-05-16 23:15:11,463 [DEBUG] 接收到完整消息: FRIEND_LIST|why_1:online
+2025-05-16 23:15:11,464 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online
+2025-05-16 23:15:13,210 [DEBUG] 接收到完整消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:15:13,213 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:15:14,180 [DEBUG] 接收到完整消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:15:14,183 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:15:15,324 [DEBUG] 接收到完整消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:15:15,326 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif
+2025-05-16 23:16:03,272 [DEBUG] 接收到完整消息: FRIEND_OFFLINE|why_1
+2025-05-16 23:16:03,274 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-16 23:16:21,074 [DEBUG] 接收到完整消息: FRIEND_ONLINE|why_1
+2025-05-16 23:16:21,078 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-16 23:16:23,718 [DEBUG] 接收到完整消息: FRIEND_OFFLINE|why_1
+2025-05-16 23:16:23,720 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-16 23:16:43,820 [DEBUG] 停止客户端线程
+2025-05-16 23:16:43,822 [WARNING] 服务器连接断开
+2025-05-16 23:16:43,822 [DEBUG] 客户端线程结束
+2025-05-16 23:16:45,393 [DEBUG] 停止客户端线程

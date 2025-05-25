@@ -1,0 +1,38 @@
+2025-05-24 13:35:59,620 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 13:35:59,621 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 13:35:59,623 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 13:35:59,624 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 13:36:06,314 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 13:36:06,314 [DEBUG] 创建客户端线程
+2025-05-24 13:36:06,314 [DEBUG] 客户端线程初始化
+2025-05-24 13:36:06,315 [DEBUG] 开始初始化UDP音频服务
+2025-05-24 13:36:06,315 [DEBUG] 分配随机UDP端口: 52677
+2025-05-24 13:36:06,315 [DEBUG] 尝试绑定UDP端口: 52677
+2025-05-24 13:36:06,315 [DEBUG] 客户端线程开始运行
+2025-05-24 13:36:06,326 [DEBUG] UDP端口绑定成功: 52677
+2025-05-24 13:36:06,326 [DEBUG] 创建UDP音频线程，端口: 52677
+2025-05-24 13:36:06,326 [DEBUG] UDP音频线程绑定到端口: 52677
+2025-05-24 13:36:06,326 [DEBUG] UDP音频线程启动成功
+2025-05-24 13:36:06,327 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|52677
+2025-05-24 13:36:06,327 [DEBUG] UDP音频服务初始化完成，端口: 52677
+2025-05-24 13:36:06,363 [DEBUG] 初始化UI
+2025-05-24 13:36:06,374 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 13:36:06,375 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 52677
+2025-05-24 13:36:06,451 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-24 13:36:06,452 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-24 13:36:33,854 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-24 13:36:37,360 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif
+2025-05-24 13:36:37,443 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 13:36:43,249 [DEBUG] 处理收到的消息: CREATE_GROUP_RESULT|OK|Group created.|5
+2025-05-24 13:36:44,074 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-24 13:36:54,266 [DEBUG] 处理收到的消息: GROUP_MSG|5|why_1|1
+2025-05-24 13:36:54,268 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-24 13:36:55,470 [DEBUG] 处理收到的消息: GROUP_MEMBERS|why|why_1
+2025-05-24 13:36:55,470 [DEBUG] 处理收到的消息: GROUP_HISTORY|user|why_1|1
+2025-05-24 13:36:58,376 [DEBUG] 处理收到的消息: GROUP_MSG|5|why|[EMOJI]gif4.gif
+2025-05-24 13:37:04,913 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif
+2025-05-24 13:37:04,935 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 13:37:19,415 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-24 13:37:20,397 [DEBUG] 停止客户端线程
+2025-05-24 13:37:20,399 [WARNING] 服务器连接断开
+2025-05-24 13:37:20,399 [DEBUG] 客户端线程结束

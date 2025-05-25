@@ -1,0 +1,160 @@
+2025-05-17 15:37:51,168 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 15:37:51,169 [DEBUG] 创建客户端线程
+2025-05-17 15:37:51,169 [DEBUG] 客户端线程初始化
+2025-05-17 15:37:51,169 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 15:37:51,169 [DEBUG] 分配随机UDP端口: 56010
+2025-05-17 15:37:51,169 [DEBUG] 客户端线程开始运行
+2025-05-17 15:37:51,170 [DEBUG] 尝试绑定UDP端口: 56010
+2025-05-17 15:37:51,170 [DEBUG] UDP端口绑定成功: 56010
+2025-05-17 15:37:51,170 [DEBUG] 创建UDP音频线程，端口: 56010
+2025-05-17 15:37:51,171 [DEBUG] UDP音频线程启动成功
+2025-05-17 15:37:51,171 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|56010
+2025-05-17 15:37:51,181 [DEBUG] UDP音频服务初始化完成，端口: 56010
+2025-05-17 15:37:51,199 [DEBUG] 初始化UI
+2025-05-17 15:37:51,202 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 15:37:51,202 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 56010
+2025-05-17 15:37:51,250 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 15:37:51,251 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 15:38:10,902 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 15:38:13,715 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通
+2025-05-17 15:38:13,765 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 15:38:16,222 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:16,223 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:16,223 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:16,223 [DEBUG] 来电者: why_1
+2025-05-17 15:38:16,223 [DEBUG] 当前用户: why
+2025-05-17 15:38:16,223 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:16,223 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:16,223 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:16,223 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:16,223 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:16,324 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:16,350 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:16,723 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:16,723 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:16,723 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:16,723 [DEBUG] 来电者: why_1
+2025-05-17 15:38:16,723 [DEBUG] 当前用户: why
+2025-05-17 15:38:16,723 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:16,723 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:16,724 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:16,724 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:16,724 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:16,824 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:16,833 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:17,224 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:17,225 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:17,225 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:17,226 [DEBUG] 来电者: why_1
+2025-05-17 15:38:17,226 [DEBUG] 当前用户: why
+2025-05-17 15:38:17,226 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:17,226 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:17,227 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:17,227 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:17,227 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:17,327 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:17,340 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:28,688 [DEBUG] 尝试发起语音通话
+2025-05-17 15:38:28,689 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 15:38:28,689 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|56010
+2025-05-17 15:38:28,689 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 56010
+2025-05-17 15:38:28,698 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 15:38:30,192 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 15:38:30,193 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 15:38:30,193 [DEBUG] 处理收到的消息: CALL_REJECTED|why_1
+2025-05-17 15:38:41,144 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:41,144 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:41,144 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:41,144 [DEBUG] 来电者: why_1
+2025-05-17 15:38:41,145 [DEBUG] 当前用户: why
+2025-05-17 15:38:41,145 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:41,145 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:41,145 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:41,145 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:41,145 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:41,196 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:41,208 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:41,644 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:41,644 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:41,644 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:41,644 [DEBUG] 来电者: why_1
+2025-05-17 15:38:41,644 [DEBUG] 当前用户: why
+2025-05-17 15:38:41,644 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:41,644 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:41,644 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:41,644 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:41,644 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:41,745 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:41,752 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:42,145 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:42,145 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:42,145 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:42,145 [DEBUG] 来电者: why_1
+2025-05-17 15:38:42,145 [DEBUG] 当前用户: why
+2025-05-17 15:38:42,145 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:42,145 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:42,145 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:42,145 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:42,145 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:42,195 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:42,204 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:46,036 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通
+2025-05-17 15:38:46,082 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 15:38:50,229 [DEBUG] 处理收到的消息: GROUP_MEMBERS|why_1|why
+2025-05-17 15:38:50,229 [DEBUG] 处理收到的消息: GROUP_HISTORY|user|why_1|1||user|why_1|2||user|why_1|3||user|why|1||user|why|2||user|why_1|1||user|why_1|2||anon|无名氏|匿名消息||anon|无名氏|啊||user|why_1|啊||user|why|[EMOJI]smart.png||user|why|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why_1|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why_1|1||user|why_1|1|user|why|2
+2025-05-17 15:38:55,429 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:55,430 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:55,430 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:55,430 [DEBUG] 来电者: why_1
+2025-05-17 15:38:55,430 [DEBUG] 当前用户: why
+2025-05-17 15:38:55,430 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:55,430 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:55,430 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:55,431 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:55,431 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:55,531 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:55,547 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:55,930 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:55,930 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:55,930 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:55,930 [DEBUG] 来电者: why_1
+2025-05-17 15:38:55,930 [DEBUG] 当前用户: why
+2025-05-17 15:38:55,930 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:55,931 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:55,931 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:55,931 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:55,931 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:56,032 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:56,042 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:38:56,431 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 15:38:56,431 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 15:38:56,431 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 15:38:56,431 [DEBUG] 来电者: why_1
+2025-05-17 15:38:56,432 [DEBUG] 当前用户: why
+2025-05-17 15:38:56,432 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 15:38:56,432 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 15:38:56,432 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 15:38:56,432 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 15:38:56,432 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 15:38:56,533 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 15:38:56,540 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 15:39:01,120 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通
+2025-05-17 15:39:01,167 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 15:39:03,004 [DEBUG] 尝试发起语音通话
+2025-05-17 15:39:03,005 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 15:39:03,005 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|56010
+2025-05-17 15:39:03,005 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 56010
+2025-05-17 15:39:03,013 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 15:39:04,509 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 15:39:04,510 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 15:39:12,472 [DEBUG] 尝试发起语音通话
+2025-05-17 15:39:12,472 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 15:39:12,472 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|56010
+2025-05-17 15:39:12,472 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 56010
+2025-05-17 15:39:12,479 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 15:39:13,975 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 15:39:13,975 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 15:41:02,586 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-17 15:41:05,872 [DEBUG] 停止客户端线程
+2025-05-17 15:41:05,873 [WARNING] 服务器连接断开
+2025-05-17 15:41:05,873 [DEBUG] 客户端线程结束

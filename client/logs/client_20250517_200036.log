@@ -1,0 +1,44 @@
+2025-05-17 20:00:44,938 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 20:00:44,938 [DEBUG] 创建客户端线程
+2025-05-17 20:00:44,938 [DEBUG] 客户端线程初始化
+2025-05-17 20:00:44,938 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 20:00:44,939 [DEBUG] 分配随机UDP端口: 57437
+2025-05-17 20:00:44,939 [DEBUG] 客户端线程开始运行
+2025-05-17 20:00:44,939 [DEBUG] 尝试绑定UDP端口: 57437
+2025-05-17 20:00:44,939 [DEBUG] UDP端口绑定成功: 57437
+2025-05-17 20:00:44,940 [DEBUG] 创建UDP音频线程，端口: 57437
+2025-05-17 20:00:44,940 [DEBUG] UDP音频线程启动成功
+2025-05-17 20:00:44,940 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|57437
+2025-05-17 20:00:44,950 [DEBUG] UDP音频服务初始化完成，端口: 57437
+2025-05-17 20:00:44,966 [DEBUG] 初始化UI
+2025-05-17 20:00:44,970 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 20:00:44,970 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 57437
+2025-05-17 20:00:45,023 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:online
+2025-05-17 20:00:45,024 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 20:00:46,654 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|gty|1|why|2
+2025-05-17 20:00:46,658 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 20:00:48,814 [DEBUG] 尝试发起语音通话
+2025-05-17 20:00:48,815 [DEBUG] 发起语音通话请求：why -> gty
+2025-05-17 20:00:48,815 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|gty|57437
+2025-05-17 20:00:48,816 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 57437
+2025-05-17 20:00:48,824 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 20:00:50,321 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|gty
+2025-05-17 20:00:50,321 [DEBUG] 服务器确认正在向 gty 发送通话请求
+2025-05-17 20:00:52,422 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|57294
+2025-05-17 20:00:52,423 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1328, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 20:00:52,923 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|57294
+2025-05-17 20:00:52,924 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1328, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 20:00:53,424 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|57294
+2025-05-17 20:00:53,425 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1328, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)

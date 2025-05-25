@@ -1,0 +1,24 @@
+2025-05-17 11:29:43,587 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-17 11:29:43,588 [DEBUG] 创建客户端线程
+2025-05-17 11:29:43,589 [DEBUG] 客户端线程初始化
+2025-05-17 11:29:43,589 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 11:29:43,589 [DEBUG] 客户端线程开始运行
+2025-05-17 11:29:43,590 [DEBUG] 分配随机UDP端口: 41260
+2025-05-17 11:29:43,595 [DEBUG] 尝试绑定UDP端口: 41260
+2025-05-17 11:29:43,598 [DEBUG] UDP端口绑定成功: 41260
+2025-05-17 11:29:43,600 [DEBUG] 创建UDP音频线程，端口: 41260
+2025-05-17 11:29:43,604 [DEBUG] UDP音频线程启动成功
+2025-05-17 11:29:43,605 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|41260
+2025-05-17 11:29:43,615 [DEBUG] UDP音频服务初始化完成，端口: 41260
+2025-05-17 11:29:43,638 [DEBUG] 初始化UI
+2025-05-17 11:29:43,640 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 11:29:43,641 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 41260
+2025-05-17 11:29:43,675 [DEBUG] 处理收到的消息: FRIEND_LIST|why:online
+2025-05-17 11:29:43,677 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 11:30:34,629 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif
+2025-05-17 11:30:34,657 [DEBUG] 处理收到的消息: FILE_LIST|main1.py
+2025-05-17 11:31:39,185 [DEBUG] 处理收到的消息: FILE_LIST|2022级通信工程专业学生绩点及排名公示-截至2025年3月17日.pdf|main1.py
+2025-05-17 11:40:53,277 [DEBUG] 停止客户端线程
+2025-05-17 11:40:53,278 [WARNING] 服务器连接断开
+2025-05-17 11:40:53,279 [DEBUG] 客户端线程结束
+2025-05-17 11:40:54,241 [DEBUG] 停止客户端线程

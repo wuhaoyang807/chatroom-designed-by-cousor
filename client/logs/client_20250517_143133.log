@@ -1,0 +1,36 @@
+2025-05-17 14:31:39,059 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 14:31:39,059 [DEBUG] 创建客户端线程
+2025-05-17 14:31:39,059 [DEBUG] 客户端线程初始化
+2025-05-17 14:31:39,059 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 14:31:39,059 [DEBUG] 分配随机UDP端口: 47485
+2025-05-17 14:31:39,059 [DEBUG] 尝试绑定UDP端口: 47485
+2025-05-17 14:31:39,059 [DEBUG] 客户端线程开始运行
+2025-05-17 14:31:39,060 [DEBUG] UDP端口绑定成功: 47485
+2025-05-17 14:31:39,060 [DEBUG] 创建UDP音频线程，端口: 47485
+2025-05-17 14:31:39,060 [DEBUG] UDP音频线程启动成功
+2025-05-17 14:31:39,060 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|47485
+2025-05-17 14:31:39,071 [DEBUG] UDP音频服务初始化完成，端口: 47485
+2025-05-17 14:31:39,089 [DEBUG] 初始化UI
+2025-05-17 14:31:39,092 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 14:31:39,093 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 47485
+2025-05-17 14:31:39,145 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 14:31:39,145 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 14:31:43,394 [DEBUG] 处理收到的消息: GROUP_MEMBERS|why_1|why
+2025-05-17 14:31:43,394 [DEBUG] 处理收到的消息: GROUP_HISTORY|user|why_1|1||user|why_1|2||user|why_1|3||user|why|1||user|why|2||user|why_1|1||user|why_1|2||anon|无名氏|匿名消息||anon|无名氏|啊||user|why_1|啊||user|why|[EMOJI]smart.png||user|why|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why_1|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why_1|1|
+2025-05-17 14:31:44,309 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 14:31:44,327 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 14:31:45,827 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 14:31:45,870 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 14:32:15,138 [DEBUG] 处理收到的消息: FILE_DATA|下载测试.txt|56
+2025-05-17 14:32:25,138 [ERROR] 处理消息时出错: timed out, 消息内容: FILE_DATA|下载测试.txt|56
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1905, in download_private_file
+    chunk = self.sock.recv(4096)
+socket.timeout: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1511, in on_message
+    chunk = self.sock.recv(min(4096, filesize - len(filedata)))
+socket.timeout: timed out

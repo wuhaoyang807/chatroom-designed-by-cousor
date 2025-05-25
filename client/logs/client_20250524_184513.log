@@ -1,0 +1,61 @@
+2025-05-24 18:45:13,958 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-24 18:45:14,155 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-24 18:45:14,156 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-24 18:45:14,356 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-24 18:45:25,111 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-24 18:45:25,112 [DEBUG] 创建客户端线程
+2025-05-24 18:45:25,112 [DEBUG] 客户端线程初始化
+2025-05-24 18:45:25,112 [DEBUG] 找到可用UDP端口: 40359
+2025-05-24 18:45:25,113 [DEBUG] 客户端线程开始运行
+2025-05-24 18:45:25,113 [DEBUG] UDP音频线程绑定到端口: 40359
+2025-05-24 18:45:25,124 [DEBUG] Opus编解码器初始化成功
+2025-05-24 18:45:25,124 [DEBUG] Opus编解码器初始化: 采样率=48000, 通道数=1
+2025-05-24 18:45:25,124 [DEBUG] Opus编解码器创建成功
+2025-05-24 18:45:25,124 [DEBUG] UDP音频线程绑定到端口: 40359
+2025-05-24 18:45:25,124 [DEBUG] UDP音频线程已启动，端口: 40359
+2025-05-24 18:45:25,125 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|40359
+2025-05-24 18:45:25,125 [DEBUG] UDP音频接收线程开始运行，端口: 40359
+2025-05-24 18:45:25,125 [DEBUG] UDP音频服务初始化完成，端口: 40359
+2025-05-24 18:45:25,142 [DEBUG] 初始化UI
+2025-05-24 18:45:25,146 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 18:45:25,146 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 40359
+2025-05-24 18:45:25,574 [DEBUG] 处理收到的消息: FRIEND_LIST|
+2025-05-24 18:45:27,396 [DEBUG] 处理收到的消息: FRIEND_LIST|why:offline
+2025-05-24 18:45:28,282 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why_1|1|why|2
+2025-05-24 18:45:28,478 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-24 18:45:31,672 [DEBUG] 处理收到的消息: FRIEND_LIST|why:offline
+2025-05-24 18:45:33,021 [DEBUG] 处理收到的消息: FRIEND_LIST|why:offline
+2025-05-24 18:45:33,874 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why_1|1|why|2
+2025-05-24 18:45:34,070 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-24 18:45:40,912 [DEBUG] 处理收到的消息: ERROR|User why not online.
+2025-05-24 18:45:50,962 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why
+2025-05-24 18:46:04,284 [DEBUG] 处理收到的消息: FORCE_LOGOUT|另一个客户端登录了您的账号
+2025-05-24 18:46:04,284 [WARNING] 账号被强制下线: 另一个客户端登录了您的账号
+2025-05-24 18:46:05,910 [DEBUG] 停止UDP音频线程，发送: 0 包，接收: 0 包
+2025-05-24 18:46:05,911 [WARNING] UDP接收临时错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 18:46:06,012 [DEBUG] 停止客户端线程
+2025-05-24 18:46:06,209 [WARNING] 服务器连接断开
+2025-05-24 18:46:06,210 [DEBUG] 客户端线程结束
+2025-05-24 18:46:07,186 [DEBUG] 停止UDP音频线程，发送: 0 包，接收: 0 包
+2025-05-24 18:46:07,187 [DEBUG] 停止客户端线程
+2025-05-24 18:46:07,187 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-24 18:46:07,385 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-24 18:46:14,157 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 18:46:14,158 [DEBUG] 创建客户端线程
+2025-05-24 18:46:14,158 [DEBUG] 客户端线程初始化
+2025-05-24 18:46:14,158 [DEBUG] 找到可用UDP端口: 40330
+2025-05-24 18:46:14,158 [DEBUG] 客户端线程开始运行
+2025-05-24 18:46:14,159 [DEBUG] UDP音频线程绑定到端口: 40330
+2025-05-24 18:46:14,159 [DEBUG] Opus编解码器初始化成功
+2025-05-24 18:46:14,159 [DEBUG] Opus编解码器初始化: 采样率=48000, 通道数=1
+2025-05-24 18:46:14,159 [DEBUG] Opus编解码器创建成功
+2025-05-24 18:46:14,159 [DEBUG] UDP音频线程绑定到端口: 40330
+2025-05-24 18:46:14,159 [DEBUG] UDP音频线程已启动，端口: 40330
+2025-05-24 18:46:14,160 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40330
+2025-05-24 18:46:14,160 [DEBUG] UDP音频接收线程开始运行，端口: 40330
+2025-05-24 18:46:14,160 [DEBUG] UDP音频服务初始化完成，端口: 40330
+2025-05-24 18:46:14,162 [DEBUG] 初始化UI
+2025-05-24 18:46:14,165 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 18:46:14,165 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40330
+2025-05-24 18:46:14,598 [DEBUG] 处理收到的消息: FRIEND_LIST|
+2025-05-24 18:46:15,109 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline

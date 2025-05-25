@@ -1,0 +1,61 @@
+2025-05-17 14:40:05,956 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 14:40:05,957 [DEBUG] 创建客户端线程
+2025-05-17 14:40:05,957 [DEBUG] 客户端线程初始化
+2025-05-17 14:40:05,957 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 14:40:05,957 [DEBUG] 分配随机UDP端口: 55621
+2025-05-17 14:40:05,957 [DEBUG] 客户端线程开始运行
+2025-05-17 14:40:05,957 [DEBUG] 尝试绑定UDP端口: 55621
+2025-05-17 14:40:05,958 [DEBUG] UDP端口绑定成功: 55621
+2025-05-17 14:40:05,958 [DEBUG] 创建UDP音频线程，端口: 55621
+2025-05-17 14:40:05,958 [DEBUG] UDP音频线程启动成功
+2025-05-17 14:40:05,959 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|55621
+2025-05-17 14:40:05,969 [DEBUG] UDP音频服务初始化完成，端口: 55621
+2025-05-17 14:40:05,982 [DEBUG] 初始化UI
+2025-05-17 14:40:05,984 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 14:40:05,984 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 55621
+2025-05-17 14:40:06,018 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online
+2025-05-17 14:40:06,018 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 14:40:08,496 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 14:40:08,540 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 14:40:14,518 [DEBUG] 处理收到的消息: MSG|why_1|诶呀
+2025-05-17 14:40:22,628 [DEBUG] 处理收到的消息: MSG|why_1|弄得差不多了
+2025-05-17 14:41:00,798 [DEBUG] 尝试发起语音通话
+2025-05-17 14:41:00,798 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 14:41:00,798 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|55621
+2025-05-17 14:41:00,799 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 55621
+2025-05-17 14:41:00,812 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 14:41:02,301 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 14:41:02,302 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 14:41:08,624 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 14:41:08,624 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 14:41:08,624 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 14:41:08,625 [DEBUG] 来电者: why_1
+2025-05-17 14:41:08,625 [DEBUG] 当前用户: why
+2025-05-17 14:41:08,625 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-17 14:41:08,625 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 14:41:08,625 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 14:41:08,626 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 14:41:08,626 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 14:41:09,124 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 14:41:09,125 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 14:41:09,125 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 14:41:09,126 [DEBUG] 来电者: why_1
+2025-05-17 14:41:09,126 [DEBUG] 当前用户: why
+2025-05-17 14:41:09,126 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-17 14:41:09,127 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 14:41:09,127 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 14:41:09,127 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 14:41:09,625 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 14:41:09,625 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 14:41:09,625 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 14:41:09,626 [DEBUG] 来电者: why_1
+2025-05-17 14:41:09,626 [DEBUG] 当前用户: why
+2025-05-17 14:41:09,626 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-17 14:41:09,626 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 14:41:09,626 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 14:41:09,626 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 14:41:12,979 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 14:41:13,004 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-17 14:41:26,047 [DEBUG] 停止客户端线程
+2025-05-17 14:41:26,048 [WARNING] 服务器连接断开
+2025-05-17 14:41:26,049 [DEBUG] 客户端线程结束

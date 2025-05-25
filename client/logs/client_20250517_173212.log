@@ -1,0 +1,93 @@
+2025-05-17 17:32:18,882 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 17:32:18,883 [DEBUG] 创建客户端线程
+2025-05-17 17:32:18,886 [DEBUG] 客户端线程初始化
+2025-05-17 17:32:18,887 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 17:32:18,888 [DEBUG] 客户端线程开始运行
+2025-05-17 17:32:18,889 [DEBUG] 分配随机UDP端口: 44782
+2025-05-17 17:32:18,899 [DEBUG] 尝试绑定UDP端口: 44782
+2025-05-17 17:32:18,902 [DEBUG] UDP端口绑定成功: 44782
+2025-05-17 17:32:18,915 [DEBUG] 创建UDP音频线程，端口: 44782
+2025-05-17 17:32:18,934 [DEBUG] UDP音频线程启动成功
+2025-05-17 17:32:18,942 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|44782
+2025-05-17 17:32:18,955 [DEBUG] UDP音频服务初始化完成，端口: 44782
+2025-05-17 17:32:19,006 [DEBUG] 初始化UI
+2025-05-17 17:32:19,019 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 17:32:19,020 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 44782
+2025-05-17 17:32:19,190 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 17:32:19,194 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 17:32:37,377 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 17:32:41,468 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1
+2025-05-17 17:32:41,686 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:32:43,327 [DEBUG] 尝试发起语音通话
+2025-05-17 17:32:43,328 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 17:32:43,333 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|44782
+2025-05-17 17:32:43,335 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 44782
+2025-05-17 17:32:43,366 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 17:32:44,840 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 17:32:44,845 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 17:33:03,832 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1
+2025-05-17 17:33:03,976 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:33:05,552 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:33:05,555 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:33:05,562 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:33:05,562 [DEBUG] 来电者: why_1
+2025-05-17 17:33:05,573 [DEBUG] 当前用户: why
+2025-05-17 17:33:05,584 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:33:05,586 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:33:05,592 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:33:05,593 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:33:05,593 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:33:05,694 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:33:05,741 [ERROR] 创建通知窗口失败: 'CallNotificationWindow' object has no attribute 'flash_window'
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1734, in check_pending_calls
+    self.notification_window = CallNotificationWindow(caller)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2240, in __init__
+    self.flash_timer.timeout.connect(self.flash_window)
+                                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'CallNotificationWindow' object has no attribute 'flash_window'
+2025-05-17 17:33:06,051 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:33:06,054 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:33:06,055 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:33:06,055 [DEBUG] 来电者: why_1
+2025-05-17 17:33:06,056 [DEBUG] 当前用户: why
+2025-05-17 17:33:06,061 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:33:06,061 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:33:06,064 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:33:06,068 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:33:06,068 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:33:06,168 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:33:06,192 [ERROR] 创建通知窗口失败: 'CallNotificationWindow' object has no attribute 'flash_window'
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1734, in check_pending_calls
+    self.notification_window = CallNotificationWindow(caller)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2240, in __init__
+    self.flash_timer.timeout.connect(self.flash_window)
+                                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'CallNotificationWindow' object has no attribute 'flash_window'
+2025-05-17 17:33:06,552 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:33:06,554 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:33:06,557 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:33:06,558 [DEBUG] 来电者: why_1
+2025-05-17 17:33:06,559 [DEBUG] 当前用户: why
+2025-05-17 17:33:06,560 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:33:06,560 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:33:06,561 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:33:06,561 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:33:06,562 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:33:06,662 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:33:06,687 [ERROR] 创建通知窗口失败: 'CallNotificationWindow' object has no attribute 'flash_window'
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1734, in check_pending_calls
+    self.notification_window = CallNotificationWindow(caller)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2240, in __init__
+    self.flash_timer.timeout.connect(self.flash_window)
+                                     ^^^^^^^^^^^^^^^^^
+AttributeError: 'CallNotificationWindow' object has no attribute 'flash_window'
+2025-05-17 17:34:33,040 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-17 17:34:35,114 [DEBUG] 停止客户端线程
+2025-05-17 17:34:35,115 [WARNING] 服务器连接断开
+2025-05-17 17:34:35,118 [DEBUG] 客户端线程结束

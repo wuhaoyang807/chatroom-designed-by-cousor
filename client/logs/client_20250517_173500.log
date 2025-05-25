@@ -1,0 +1,60 @@
+2025-05-17 17:35:08,070 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-17 17:35:08,071 [DEBUG] 创建客户端线程
+2025-05-17 17:35:08,073 [DEBUG] 客户端线程初始化
+2025-05-17 17:35:08,074 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 17:35:08,076 [DEBUG] 分配随机UDP端口: 57538
+2025-05-17 17:35:08,076 [DEBUG] 客户端线程开始运行
+2025-05-17 17:35:08,077 [DEBUG] 尝试绑定UDP端口: 57538
+2025-05-17 17:35:08,079 [DEBUG] UDP端口绑定成功: 57538
+2025-05-17 17:35:08,080 [DEBUG] 创建UDP音频线程，端口: 57538
+2025-05-17 17:35:08,083 [DEBUG] UDP音频线程启动成功
+2025-05-17 17:35:08,084 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|57538
+2025-05-17 17:35:08,086 [DEBUG] UDP音频服务初始化完成，端口: 57538
+2025-05-17 17:35:08,112 [DEBUG] 初始化UI
+2025-05-17 17:35:08,117 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 17:35:08,119 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 57538
+2025-05-17 17:35:08,183 [DEBUG] 处理收到的消息: FRIEND_LIST|why:online
+2025-05-17 17:35:08,186 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 17:35:11,144 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1
+2025-05-17 17:35:11,308 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:35:15,176 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-17 17:35:15,180 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:35:15,186 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-17 17:35:15,190 [DEBUG] 来电者: why
+2025-05-17 17:35:15,194 [DEBUG] 当前用户: why_1
+2025-05-17 17:35:15,202 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:35:15,210 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:35:15,215 [DEBUG] 添加来电到待处理队列: why
+2025-05-17 17:35:15,219 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:35:15,231 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:35:15,320 [DEBUG] 从待处理队列中处理来电: why
+2025-05-17 17:35:15,397 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-17 17:35:15,675 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-17 17:35:15,680 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:35:15,682 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-17 17:35:15,682 [DEBUG] 来电者: why
+2025-05-17 17:35:15,684 [DEBUG] 当前用户: why_1
+2025-05-17 17:35:15,686 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:35:15,687 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:35:15,690 [DEBUG] 添加来电到待处理队列: why
+2025-05-17 17:35:15,691 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:35:15,692 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:35:15,791 [DEBUG] 从待处理队列中处理来电: why
+2025-05-17 17:35:15,844 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-17 17:35:16,175 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-17 17:35:16,180 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:35:16,183 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-17 17:35:16,184 [DEBUG] 来电者: why
+2025-05-17 17:35:16,186 [DEBUG] 当前用户: why_1
+2025-05-17 17:35:16,188 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:35:16,193 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:35:16,194 [DEBUG] 添加来电到待处理队列: why
+2025-05-17 17:35:16,195 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:35:16,196 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:35:16,295 [DEBUG] 从待处理队列中处理来电: why
+2025-05-17 17:35:16,347 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-17 17:35:23,510 [DEBUG] 接受来电：why
+2025-05-17 17:35:23,511 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why_1|why|57538'
+2025-05-17 17:35:23,514 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 57538
+2025-05-17 17:35:23,686 [DEBUG] 已创建通话对话框(被叫方)
+2025-05-17 17:35:32,923 [DEBUG] 处理收到的消息: CALL_ENDED|why

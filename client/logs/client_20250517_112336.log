@@ -1,0 +1,28 @@
+2025-05-17 11:23:44,412 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 11:23:44,413 [DEBUG] 创建客户端线程
+2025-05-17 11:23:44,413 [DEBUG] 客户端线程初始化
+2025-05-17 11:23:44,413 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 11:23:44,413 [DEBUG] 分配随机UDP端口: 62913
+2025-05-17 11:23:44,413 [DEBUG] 客户端线程开始运行
+2025-05-17 11:23:44,414 [DEBUG] 尝试绑定UDP端口: 62913
+2025-05-17 11:23:44,414 [DEBUG] UDP端口绑定成功: 62913
+2025-05-17 11:23:44,414 [DEBUG] 创建UDP音频线程，端口: 62913
+2025-05-17 11:23:44,415 [DEBUG] UDP音频线程启动成功
+2025-05-17 11:23:44,415 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|62913
+2025-05-17 11:23:44,416 [DEBUG] UDP音频服务初始化完成，端口: 62913
+2025-05-17 11:23:44,436 [DEBUG] 初始化UI
+2025-05-17 11:23:44,439 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 11:23:44,439 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 62913
+2025-05-17 11:23:44,491 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 11:23:44,492 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 11:23:59,897 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 11:24:03,794 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif
+2025-05-17 11:24:03,836 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 11:25:41,740 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif
+2025-05-17 11:25:41,780 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 11:25:48,276 [DEBUG] 处理收到的消息: FILE_LIST|main1.py
+2025-05-17 11:26:05,527 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-17 11:26:06,045 [DEBUG] 停止客户端线程
+2025-05-17 11:26:06,045 [WARNING] 服务器连接断开
+2025-05-17 11:26:06,045 [DEBUG] 客户端线程结束
+2025-05-17 11:26:08,965 [DEBUG] 停止客户端线程

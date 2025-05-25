@@ -1,0 +1,26 @@
+2025-05-17 13:52:56,700 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 13:52:56,700 [DEBUG] 创建客户端线程
+2025-05-17 13:52:56,700 [DEBUG] 客户端线程初始化
+2025-05-17 13:52:56,701 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 13:52:56,701 [DEBUG] 分配随机UDP端口: 63961
+2025-05-17 13:52:56,701 [DEBUG] 客户端线程开始运行
+2025-05-17 13:52:56,701 [DEBUG] 尝试绑定UDP端口: 63961
+2025-05-17 13:52:56,702 [DEBUG] UDP端口绑定成功: 63961
+2025-05-17 13:52:56,702 [DEBUG] 创建UDP音频线程，端口: 63961
+2025-05-17 13:52:56,702 [DEBUG] UDP音频线程启动成功
+2025-05-17 13:52:56,702 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|63961
+2025-05-17 13:52:56,712 [DEBUG] UDP音频服务初始化完成，端口: 63961
+2025-05-17 13:52:56,730 [DEBUG] 初始化UI
+2025-05-17 13:52:56,734 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 13:52:56,734 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 63961
+2025-05-17 13:52:56,782 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 13:52:56,782 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 13:52:58,672 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 13:52:58,711 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 13:53:00,095 [DEBUG] 处理收到的消息: GROUP_MEMBERS|why_1|why
+2025-05-17 13:53:00,095 [DEBUG] 处理收到的消息: GROUP_HISTORY|user|why_1|1||user|why_1|2||user|why_1|3||user|why|1||user|why|2||user|why_1|1||user|why_1|2||anon|无名氏|匿名消息||anon|无名氏|啊||user|why_1|啊||user|why|[EMOJI]smart.png||user|why|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why_1|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why|[EMOJI]smirk.png||user|why_1|[EMOJI]gif3.gif||user|why|[EMOJI]smart.png||user|why|[EMOJI]smirk.png||user|why_1|1|
+2025-05-17 13:53:01,157 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 13:53:01,175 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 13:53:08,510 [ERROR] 接收消息出错: [WinError 10035] 无法立即完成一个非阻止性套接字操作。
+2025-05-17 13:53:08,513 [DEBUG] 客户端线程结束
+2025-05-17 13:53:10,218 [DEBUG] 停止客户端线程

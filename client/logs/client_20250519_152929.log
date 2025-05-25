@@ -1,0 +1,31 @@
+2025-05-19 15:29:29,810 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-19 15:29:29,812 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-19 15:29:29,815 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-19 15:29:29,827 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-19 15:29:35,523 [DEBUG] 初始化主窗口: 用户=why
+2025-05-19 15:29:35,523 [DEBUG] 创建客户端线程
+2025-05-19 15:29:35,524 [DEBUG] 客户端线程初始化
+2025-05-19 15:29:35,524 [DEBUG] 开始初始化UDP音频服务
+2025-05-19 15:29:35,524 [DEBUG] 分配随机UDP端口: 53100
+2025-05-19 15:29:35,525 [DEBUG] 客户端线程开始运行
+2025-05-19 15:29:35,525 [DEBUG] 尝试绑定UDP端口: 53100
+2025-05-19 15:29:35,525 [DEBUG] UDP端口绑定成功: 53100
+2025-05-19 15:29:35,525 [DEBUG] 创建UDP音频线程，端口: 53100
+2025-05-19 15:29:35,526 [DEBUG] UDP音频线程绑定到端口: 53100
+2025-05-19 15:29:35,526 [DEBUG] UDP音频线程启动成功
+2025-05-19 15:29:35,526 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|53100
+2025-05-19 15:29:35,526 [DEBUG] UDP音频服务初始化完成，端口: 53100
+2025-05-19 15:29:35,570 [DEBUG] 初始化UI
+2025-05-19 15:29:35,582 [DEBUG] 初始刷新好友和群组列表
+2025-05-19 15:29:35,583 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 53100
+2025-05-19 15:29:35,653 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-19 15:29:35,654 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-19 15:29:37,790 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1
+2025-05-19 15:29:37,885 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-19 15:29:49,369 [INFO] 服务器指示使用专用文件端口: 12347
+2025-05-19 15:29:49,394 [DEBUG] 服务器确认进度: 100%
+2025-05-19 15:29:50,588 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-19 15:29:58,816 [INFO] 服务器指示使用专用文件端口: 12347
+2025-05-19 15:30:06,556 [DEBUG] 停止客户端线程
+2025-05-19 15:30:06,557 [WARNING] 服务器连接断开
+2025-05-19 15:30:06,557 [DEBUG] 客户端线程结束

@@ -1,0 +1,70 @@
+2025-05-24 15:40:01,890 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 15:40:01,893 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 15:40:01,894 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 15:40:01,907 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 15:40:08,837 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 15:40:08,837 [DEBUG] 创建客户端线程
+2025-05-24 15:40:08,837 [DEBUG] 客户端线程初始化
+2025-05-24 15:40:08,838 [DEBUG] 找到可用UDP端口: 40712
+2025-05-24 15:40:08,838 [DEBUG] 客户端线程开始运行
+2025-05-24 15:40:08,838 [DEBUG] Opus编解码器初始化成功
+2025-05-24 15:40:08,839 [DEBUG] Opus编解码器初始化: 采样率=48000, 通道数=1
+2025-05-24 15:40:08,849 [DEBUG] Opus编解码器创建成功
+2025-05-24 15:40:08,849 [DEBUG] UDP音频线程绑定到端口: 40712
+2025-05-24 15:40:08,849 [DEBUG] UDP音频线程已启动，端口: 40712
+2025-05-24 15:40:08,849 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40712
+2025-05-24 15:40:08,849 [DEBUG] UDP音频接收线程开始运行，端口: 40712
+2025-05-24 15:40:08,850 [DEBUG] UDP音频服务初始化完成，端口: 40712
+2025-05-24 15:40:08,868 [DEBUG] 初始化UI
+2025-05-24 15:40:08,871 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 15:40:08,872 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40712
+2025-05-24 15:40:08,928 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-24 15:40:08,928 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-24 15:40:18,908 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-24 15:40:23,337 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1
+2025-05-24 15:40:23,409 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 15:40:25,013 [DEBUG] 尝试发起语音通话
+2025-05-24 15:40:25,014 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-24 15:40:25,014 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|40712
+2025-05-24 15:40:25,014 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 40712
+2025-05-24 15:40:26,516 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-24 15:40:26,517 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-24 15:40:26,995 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-24 15:40:28,416 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40345
+2025-05-24 15:40:28,416 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40345
+2025-05-24 15:40:28,416 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-24 15:40:28,416 [DEBUG] 设置通话目标地址: ('127.0.0.1', 40345)
+2025-05-24 15:40:28,416 [DEBUG] 已更新通话窗口的目标地址为: ('127.0.0.1', 40345)
+2025-05-24 15:40:28,416 [DEBUG] 开始通话准备工作: is_caller=True, target_addr=('127.0.0.1', 40345)
+2025-05-24 15:40:28,417 [DEBUG] 准备开始通话: is_caller=True, target_addr=('127.0.0.1', 40345)
+2025-05-24 15:40:28,417 [DEBUG] 发送UDP测试数据包到 ('127.0.0.1', 40345) (尝试 1/3)
+2025-05-24 15:40:31,418 [WARNING] UDP测试响应超时 (尝试 1/3)
+2025-05-24 15:40:31,919 [DEBUG] 发送UDP测试数据包到 ('127.0.0.1', 40345) (尝试 2/3)
+2025-05-24 15:40:34,921 [WARNING] UDP测试响应超时 (尝试 2/3)
+2025-05-24 15:40:35,422 [DEBUG] 发送UDP测试数据包到 ('127.0.0.1', 40345) (尝试 3/3)
+2025-05-24 15:40:38,422 [WARNING] UDP测试响应超时 (尝试 3/3)
+2025-05-24 15:40:38,923 [WARNING] UDP连接测试失败，但将继续尝试建立通话
+2025-05-24 15:40:38,952 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40345
+2025-05-24 15:40:38,952 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40345
+2025-05-24 15:40:38,952 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-24 15:40:38,952 [DEBUG] 设置通话目标地址: ('127.0.0.1', 40345)
+2025-05-24 15:40:38,952 [DEBUG] 已更新通话窗口的目标地址为: ('127.0.0.1', 40345)
+2025-05-24 15:40:38,952 [DEBUG] 通话已经处于活动状态，忽略再次启动请求
+2025-05-24 15:40:38,953 [DEBUG] 已启动通话并更新状态
+2025-05-24 15:40:38,963 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40345
+2025-05-24 15:40:38,963 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40345
+2025-05-24 15:40:38,963 [DEBUG] 当前通话状态: in_call=True, call_target=why_1
+2025-05-24 15:40:38,963 [DEBUG] 设置通话目标地址: ('127.0.0.1', 40345)
+2025-05-24 15:40:38,964 [DEBUG] 已更新通话窗口的目标地址为: ('127.0.0.1', 40345)
+2025-05-24 15:40:38,964 [DEBUG] 通话已经处于活动状态，忽略再次启动请求
+2025-05-24 15:40:38,964 [DEBUG] 已启动通话并更新状态
+2025-05-24 15:43:24,701 [DEBUG] 使用输出设备: 扬声器 (Realtek(R) Audio)
+2025-05-24 15:43:24,701 [DEBUG] 初始化音频播放器: output_device_index=3
+2025-05-24 15:43:24,701 [DEBUG] 音频播放器启动成功
+2025-05-24 15:43:24,701 [DEBUG] 初始化音频录制器: input_device_index=1
+2025-05-24 15:43:24,701 [DEBUG] 音频录制器启动成功
+2025-05-24 15:43:24,768 [DEBUG] 使用输出设备: 扬声器 (Realtek(R) Audio)
+2025-05-24 15:43:24,768 [DEBUG] 设备信息: {'index': 3, 'structVersion': 2, 'name': '扬声器 (Realtek(R) Audio)', 'hostApi': 0, 'maxInputChannels': 0, 'maxOutputChannels': 2, 'defaultLowInputLatency': 0.09, 'defaultLowOutputLatency': 0.09, 'defaultHighInputLatency': 0.18, 'defaultHighOutputLatency': 0.18, 'defaultSampleRate': 44100.0}
+2025-05-24 15:43:24,823 [DEBUG] 开始录音...
+2025-05-24 15:43:24,834 [DEBUG] 开始音频播放...
+2025-05-24 15:43:24,859 [DEBUG] Opus编码成功: 原始大小=1920字节, 编码后=47字节, 压缩比=40.85

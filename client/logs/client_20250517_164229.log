@@ -1,0 +1,22 @@
+2025-05-17 16:42:37,924 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 16:42:37,925 [DEBUG] 创建客户端线程
+2025-05-17 16:42:37,926 [DEBUG] 客户端线程初始化
+2025-05-17 16:42:37,927 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 16:42:37,927 [DEBUG] 客户端线程开始运行
+2025-05-17 16:42:37,928 [DEBUG] 分配随机UDP端口: 53852
+2025-05-17 16:42:37,928 [DEBUG] 尝试绑定UDP端口: 53852
+2025-05-17 16:42:37,929 [DEBUG] UDP端口绑定成功: 53852
+2025-05-17 16:42:37,929 [DEBUG] 创建UDP音频线程，端口: 53852
+2025-05-17 16:42:37,930 [DEBUG] UDP音频线程启动成功
+2025-05-17 16:42:37,931 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|53852
+2025-05-17 16:42:37,940 [DEBUG] UDP音频服务初始化完成，端口: 53852
+2025-05-17 16:42:37,994 [DEBUG] 初始化UI
+2025-05-17 16:42:38,001 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 16:42:38,001 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 53852
+2025-05-17 16:42:38,098 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 16:42:38,099 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 16:42:39,871 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通
+2025-05-17 16:42:39,896 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|cxk.png|readme.md|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png|下载测试.txt
+2025-05-17 16:43:35,500 [DEBUG] 停止客户端线程
+2025-05-17 16:43:35,501 [WARNING] 服务器连接断开
+2025-05-17 16:43:35,502 [DEBUG] 客户端线程结束

@@ -1,0 +1,72 @@
+2025-05-24 15:35:11,225 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 15:35:11,227 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 15:35:11,228 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 15:35:11,228 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 15:35:18,207 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-24 15:35:18,207 [DEBUG] 创建客户端线程
+2025-05-24 15:35:18,207 [DEBUG] 客户端线程初始化
+2025-05-24 15:35:18,208 [DEBUG] 找到可用UDP端口: 40165
+2025-05-24 15:35:18,208 [DEBUG] 客户端线程开始运行
+2025-05-24 15:35:18,208 [DEBUG] Opus编解码器初始化成功
+2025-05-24 15:35:18,218 [DEBUG] Opus编解码器初始化: 采样率=48000, 通道数=1
+2025-05-24 15:35:18,218 [DEBUG] Opus编解码器创建成功
+2025-05-24 15:35:18,218 [DEBUG] UDP音频线程绑定到端口: 40165
+2025-05-24 15:35:18,218 [DEBUG] UDP音频线程已启动，端口: 40165
+2025-05-24 15:35:18,218 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|40165
+2025-05-24 15:35:18,219 [DEBUG] UDP音频接收线程开始运行，端口: 40165
+2025-05-24 15:35:18,219 [DEBUG] UDP音频服务初始化完成，端口: 40165
+2025-05-24 15:35:18,236 [DEBUG] 初始化UI
+2025-05-24 15:35:18,239 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 15:35:18,239 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 40165
+2025-05-24 15:35:18,299 [DEBUG] 处理收到的消息: FRIEND_LIST|why:online
+2025-05-24 15:35:18,299 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-24 15:35:20,656 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif
+2025-05-24 15:35:20,719 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 15:35:23,407 [DEBUG] 处理收到的消息: MSG|why|1
+2025-05-24 15:35:26,045 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-24 15:35:26,045 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-24 15:35:26,046 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-24 15:35:26,046 [DEBUG] 来电者: why
+2025-05-24 15:35:26,046 [DEBUG] 当前用户: why_1
+2025-05-24 15:35:26,046 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 15:35:26,046 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-24 15:35:26,046 [DEBUG] 添加来电到待处理队列: why
+2025-05-24 15:35:26,046 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-24 15:35:26,046 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-24 15:35:26,147 [DEBUG] 从待处理队列中处理来电: why
+2025-05-24 15:35:26,180 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-24 15:35:26,546 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-24 15:35:26,546 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-24 15:35:26,546 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-24 15:35:26,546 [DEBUG] 来电者: why
+2025-05-24 15:35:26,546 [DEBUG] 当前用户: why_1
+2025-05-24 15:35:26,546 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 15:35:26,546 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-24 15:35:26,546 [DEBUG] 添加来电到待处理队列: why
+2025-05-24 15:35:26,546 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-24 15:35:26,546 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-24 15:35:26,653 [DEBUG] 从待处理队列中处理来电: why
+2025-05-24 15:35:26,687 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-24 15:35:27,047 [DEBUG] 处理收到的消息: CALL_INCOMING|why
+2025-05-24 15:35:27,048 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-24 15:35:27,048 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why
+2025-05-24 15:35:27,048 [DEBUG] 来电者: why
+2025-05-24 15:35:27,048 [DEBUG] 当前用户: why_1
+2025-05-24 15:35:27,048 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 15:35:27,048 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-24 15:35:27,048 [DEBUG] 添加来电到待处理队列: why
+2025-05-24 15:35:27,049 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-24 15:35:27,049 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-24 15:35:27,150 [DEBUG] 从待处理队列中处理来电: why
+2025-05-24 15:35:27,163 [DEBUG] 已显示通知窗口并从队列中移除: why
+2025-05-24 15:35:30,490 [DEBUG] 接受来电：why
+2025-05-24 15:35:30,491 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why_1|why|40165'
+2025-05-24 15:35:30,491 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 40165
+2025-05-24 15:35:30,491 [ERROR] 接受通话失败: name 'AudioDeviceSelector' is not defined
+2025-05-24 15:39:44,612 [DEBUG] 处理收到的消息: CALL_ENDED|why
+2025-05-24 15:39:44,613 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why
+2025-05-24 15:39:45,614 [DEBUG] 停止UDP音频线程，发送: 0 包，接收: 0 包
+2025-05-24 15:39:45,615 [ERROR] UDP接收错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 15:39:45,716 [DEBUG] 停止客户端线程
+2025-05-24 15:39:45,716 [WARNING] 服务器连接断开
+2025-05-24 15:39:45,716 [DEBUG] 客户端线程结束

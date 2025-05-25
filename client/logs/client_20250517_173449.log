@@ -1,0 +1,48 @@
+2025-05-17 17:34:57,169 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 17:34:57,170 [DEBUG] 创建客户端线程
+2025-05-17 17:34:57,171 [DEBUG] 客户端线程初始化
+2025-05-17 17:34:57,172 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 17:34:57,172 [DEBUG] 分配随机UDP端口: 43989
+2025-05-17 17:34:57,172 [DEBUG] 客户端线程开始运行
+2025-05-17 17:34:57,173 [DEBUG] 尝试绑定UDP端口: 43989
+2025-05-17 17:34:57,174 [DEBUG] UDP端口绑定成功: 43989
+2025-05-17 17:34:57,175 [DEBUG] 创建UDP音频线程，端口: 43989
+2025-05-17 17:34:57,175 [DEBUG] UDP音频线程启动成功
+2025-05-17 17:34:57,176 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|43989
+2025-05-17 17:34:57,187 [DEBUG] UDP音频服务初始化完成，端口: 43989
+2025-05-17 17:34:57,233 [DEBUG] 初始化UI
+2025-05-17 17:34:57,238 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 17:34:57,239 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 43989
+2025-05-17 17:34:57,333 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 17:34:57,334 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 17:35:08,065 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 17:35:13,426 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1
+2025-05-17 17:35:13,522 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:35:15,170 [DEBUG] 尝试发起语音通话
+2025-05-17 17:35:15,171 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-17 17:35:15,171 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|43989
+2025-05-17 17:35:15,171 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 43989
+2025-05-17 17:35:15,206 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 17:35:16,676 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-17 17:35:16,677 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-17 17:35:23,515 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|57538
+2025-05-17 17:35:23,516 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 17:35:24,016 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|57538
+2025-05-17 17:35:24,017 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 17:35:24,517 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|57538
+2025-05-17 17:35:24,518 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 17:35:45,233 [DEBUG] 停止客户端线程
+2025-05-17 17:35:45,234 [WARNING] 服务器连接断开
+2025-05-17 17:35:45,234 [DEBUG] 客户端线程结束

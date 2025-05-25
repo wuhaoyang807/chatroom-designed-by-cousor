@@ -1,0 +1,44 @@
+2025-05-17 12:44:00,053 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 12:44:00,054 [DEBUG] 创建客户端线程
+2025-05-17 12:44:00,054 [DEBUG] 客户端线程初始化
+2025-05-17 12:44:00,054 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 12:44:00,054 [DEBUG] 分配随机UDP端口: 53258
+2025-05-17 12:44:00,054 [DEBUG] 客户端线程开始运行
+2025-05-17 12:44:00,055 [DEBUG] 尝试绑定UDP端口: 53258
+2025-05-17 12:44:00,055 [DEBUG] UDP端口绑定成功: 53258
+2025-05-17 12:44:00,055 [DEBUG] 创建UDP音频线程，端口: 53258
+2025-05-17 12:44:00,056 [DEBUG] UDP音频线程启动成功
+2025-05-17 12:44:00,056 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|53258
+2025-05-17 12:44:00,067 [DEBUG] UDP音频服务初始化完成，端口: 53258
+2025-05-17 12:44:00,083 [DEBUG] 初始化UI
+2025-05-17 12:44:00,086 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 12:44:00,087 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 53258
+2025-05-17 12:44:00,132 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 12:44:00,133 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 12:44:01,770 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 12:44:01,818 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png
+2025-05-17 12:44:08,671 [ERROR] 接收消息出错: [WinError 10035] 无法立即完成一个非阻止性套接字操作。
+2025-05-17 12:44:08,672 [DEBUG] 客户端线程结束
+2025-05-17 12:44:13,570 [DEBUG] 停止客户端线程
+2025-05-17 12:44:21,918 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 12:44:21,919 [DEBUG] 创建客户端线程
+2025-05-17 12:44:21,919 [DEBUG] 客户端线程初始化
+2025-05-17 12:44:21,919 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 12:44:21,919 [DEBUG] 分配随机UDP端口: 46803
+2025-05-17 12:44:21,919 [DEBUG] 尝试绑定UDP端口: 46803
+2025-05-17 12:44:21,919 [DEBUG] 客户端线程开始运行
+2025-05-17 12:44:21,920 [DEBUG] UDP端口绑定成功: 46803
+2025-05-17 12:44:21,920 [DEBUG] 创建UDP音频线程，端口: 46803
+2025-05-17 12:44:21,920 [DEBUG] UDP音频线程启动成功
+2025-05-17 12:44:21,920 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|46803
+2025-05-17 12:44:21,921 [DEBUG] UDP音频服务初始化完成，端口: 46803
+2025-05-17 12:44:21,923 [DEBUG] 初始化UI
+2025-05-17 12:44:21,929 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 12:44:21,929 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 46803
+2025-05-17 12:44:21,962 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 12:44:21,962 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 12:44:22,807 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 12:44:22,857 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png
+2025-05-17 12:44:27,012 [ERROR] 接收消息出错: [WinError 10035] 无法立即完成一个非阻止性套接字操作。
+2025-05-17 12:44:27,014 [DEBUG] 客户端线程结束
+2025-05-17 12:44:30,929 [DEBUG] 停止客户端线程

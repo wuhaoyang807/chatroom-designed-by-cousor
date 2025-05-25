@@ -1,0 +1,118 @@
+2025-05-17 17:27:25,169 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 17:27:25,170 [DEBUG] 创建客户端线程
+2025-05-17 17:27:25,170 [DEBUG] 客户端线程初始化
+2025-05-17 17:27:25,171 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 17:27:25,171 [DEBUG] 分配随机UDP端口: 40274
+2025-05-17 17:27:25,172 [DEBUG] 客户端线程开始运行
+2025-05-17 17:27:25,172 [DEBUG] 尝试绑定UDP端口: 40274
+2025-05-17 17:27:25,174 [DEBUG] UDP端口绑定成功: 40274
+2025-05-17 17:27:25,174 [DEBUG] 创建UDP音频线程，端口: 40274
+2025-05-17 17:27:25,175 [DEBUG] UDP音频线程启动成功
+2025-05-17 17:27:25,175 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40274
+2025-05-17 17:27:25,186 [DEBUG] UDP音频服务初始化完成，端口: 40274
+2025-05-17 17:27:25,245 [DEBUG] 初始化UI
+2025-05-17 17:27:25,252 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 17:27:25,253 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40274
+2025-05-17 17:27:25,383 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 17:27:25,384 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 17:27:46,629 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 17:27:55,470 [DEBUG] 处理收到的消息: MSG|why_1|1
+2025-05-17 17:27:58,539 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:27:58,540 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:27:58,540 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:27:58,540 [DEBUG] 来电者: why_1
+2025-05-17 17:27:58,540 [DEBUG] 当前用户: why
+2025-05-17 17:27:58,541 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:27:58,551 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:27:58,552 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:27:58,552 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:27:58,553 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:27:58,653 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:27:58,737 [ERROR] 创建通知窗口失败: name 'QPropertyAnimation' is not defined
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+2025-05-17 17:27:58,738 [DEBUG] 创建来电对话框，来电者: why_1
+2025-05-17 17:27:58,740 [DEBUG] 来电对话框UI初始化完成，来电者: why_1
+2025-05-17 17:27:59,041 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:27:59,041 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:27:59,042 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:27:59,042 [DEBUG] 来电者: why_1
+2025-05-17 17:27:59,042 [DEBUG] 当前用户: why
+2025-05-17 17:27:59,043 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:27:59,043 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:27:59,044 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:27:59,044 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:27:59,045 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:27:59,146 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:27:59,224 [ERROR] 创建通知窗口失败: name 'QPropertyAnimation' is not defined
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+2025-05-17 17:27:59,226 [DEBUG] 创建来电对话框，来电者: why_1
+2025-05-17 17:27:59,229 [DEBUG] 来电对话框UI初始化完成，来电者: why_1
+2025-05-17 17:27:59,540 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-17 17:27:59,541 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 17:27:59,541 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-17 17:27:59,541 [DEBUG] 来电者: why_1
+2025-05-17 17:27:59,541 [DEBUG] 当前用户: why
+2025-05-17 17:27:59,542 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 17:27:59,542 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 17:27:59,542 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-17 17:27:59,542 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 17:27:59,543 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 17:27:59,642 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-17 17:27:59,677 [ERROR] 创建通知窗口失败: name 'QPropertyAnimation' is not defined
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1726, in check_pending_calls
+    notification_window = CallNotificationWindow(caller)
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 2277, in __init__
+    self.opacity_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+NameError: name 'QPropertyAnimation' is not defined
+2025-05-17 17:27:59,679 [DEBUG] 创建来电对话框，来电者: why_1
+2025-05-17 17:27:59,681 [DEBUG] 来电对话框UI初始化完成，来电者: why_1
+2025-05-17 17:28:17,385 [DEBUG] 用户点击拒绝来自 why_1 的通话
+2025-05-17 17:28:17,386 [DEBUG] 已发送拒绝通话消息: CALL_REJECT|why|why_1
+2025-05-17 17:28:17,386 [DEBUG] 来电对话框被关闭
+2025-05-17 17:28:38,438 [DEBUG] 用户点击接听来自 why_1 的通话
+2025-05-17 17:28:38,438 [DEBUG] 接受来电：why_1
+2025-05-17 17:28:38,439 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why|why_1|40274'
+2025-05-17 17:28:38,439 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 40274
+2025-05-17 17:28:38,595 [DEBUG] 已创建通话对话框(被叫方)
+2025-05-17 17:28:38,595 [DEBUG] 来电对话框被关闭
+2025-05-17 17:28:46,831 [DEBUG] 用户点击拒绝来自 why_1 的通话
+2025-05-17 17:28:46,831 [DEBUG] 已发送拒绝通话消息: CALL_REJECT|why|why_1
+2025-05-17 17:28:46,832 [DEBUG] 来电对话框被关闭

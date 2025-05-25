@@ -1,0 +1,37 @@
+2025-05-16 23:07:40,621 [DEBUG] 初始化主窗口: 用户=why
+2025-05-16 23:07:40,621 [DEBUG] 创建客户端线程
+2025-05-16 23:07:40,622 [DEBUG] 客户端线程初始化
+2025-05-16 23:07:40,623 [DEBUG] 开始初始化UDP音频服务
+2025-05-16 23:07:40,623 [DEBUG] 计算得到初始UDP端口: 40632
+2025-05-16 23:07:40,623 [DEBUG] 客户端线程开始运行
+2025-05-16 23:07:40,624 [DEBUG] 尝试绑定UDP端口: 40632
+2025-05-16 23:07:40,625 [DEBUG] UDP端口绑定成功: 40632
+2025-05-16 23:07:40,626 [DEBUG] 创建UDP音频线程，端口: 40632
+2025-05-16 23:07:40,627 [DEBUG] UDP音频线程启动成功
+2025-05-16 23:07:40,627 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40632
+2025-05-16 23:07:40,639 [DEBUG] UDP音频服务初始化完成，端口: 40632
+2025-05-16 23:07:40,733 [DEBUG] 初始化UI
+2025-05-16 23:07:40,740 [DEBUG] 初始刷新好友和群组列表
+2025-05-16 23:07:40,740 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40632
+2025-05-16 23:07:40,786 [DEBUG] 接收到消息: FRIEND_LIST|why_1:offline
+2025-05-16 23:07:40,786 [DEBUG] 接收到消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:07:40,809 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-16 23:07:40,809 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-16 23:07:56,090 [DEBUG] 接收到消息: FRIEND_ONLINE|why_1
+2025-05-16 23:07:56,098 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-16 23:08:02,444 [DEBUG] 接收到消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:08:02,448 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2
+2025-05-16 23:08:16,975 [DEBUG] 尝试发起语音通话
+2025-05-16 23:08:16,976 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-16 23:08:16,976 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|40632
+2025-05-16 23:08:16,976 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 40632
+2025-05-16 23:08:16,999 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-16 23:08:25,456 [DEBUG] 尝试发起语音通话
+2025-05-16 23:08:25,457 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-16 23:08:25,457 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|40632
+2025-05-16 23:08:25,457 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 40632
+2025-05-16 23:08:25,483 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-16 23:08:35,185 [DEBUG] 停止客户端线程
+2025-05-16 23:08:35,187 [WARNING] 服务器连接断开
+2025-05-16 23:08:35,188 [DEBUG] 客户端线程结束
+2025-05-16 23:08:36,518 [DEBUG] 停止客户端线程

@@ -1,0 +1,86 @@
+2025-05-17 19:54:49,595 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 19:54:49,595 [DEBUG] 创建客户端线程
+2025-05-17 19:54:49,595 [DEBUG] 客户端线程初始化
+2025-05-17 19:54:49,595 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 19:54:49,596 [DEBUG] 客户端线程开始运行
+2025-05-17 19:54:49,596 [DEBUG] 分配随机UDP端口: 60219
+2025-05-17 19:54:49,596 [DEBUG] 尝试绑定UDP端口: 60219
+2025-05-17 19:54:49,597 [DEBUG] UDP端口绑定成功: 60219
+2025-05-17 19:54:49,597 [DEBUG] 创建UDP音频线程，端口: 60219
+2025-05-17 19:54:49,597 [DEBUG] UDP音频线程启动成功
+2025-05-17 19:54:49,597 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|60219
+2025-05-17 19:54:49,602 [DEBUG] UDP音频服务初始化完成，端口: 60219
+2025-05-17 19:54:49,618 [DEBUG] 初始化UI
+2025-05-17 19:54:49,621 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 19:54:49,621 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 60219
+2025-05-17 19:54:49,658 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:online
+2025-05-17 19:54:49,658 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 19:54:55,308 [DEBUG] 处理收到的消息: PRIVATE_HISTORY
+2025-05-17 19:54:55,310 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 19:55:03,816 [DEBUG] 处理收到的消息: MSG|gty|1
+2025-05-17 19:55:11,523 [DEBUG] 尝试发起语音通话
+2025-05-17 19:55:11,523 [DEBUG] 发起语音通话请求：why -> gty
+2025-05-17 19:55:11,523 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|gty|60219
+2025-05-17 19:55:11,524 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 60219
+2025-05-17 19:55:11,531 [DEBUG] 已创建通话对话框(主叫方)
+2025-05-17 19:55:13,027 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|gty
+2025-05-17 19:55:13,028 [DEBUG] 服务器确认正在向 gty 发送通话请求
+2025-05-17 19:55:15,843 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|42664
+2025-05-17 19:55:15,843 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 19:55:16,345 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|42664
+2025-05-17 19:55:16,346 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 19:55:16,846 [DEBUG] 处理收到的消息: CALL_ACCEPTED|gty|172.18.204.180|42664
+2025-05-17 19:55:16,846 [ERROR] 处理通话接受消息出错: not enough values to unpack (expected 2, got 1)
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1287, in on_message
+    caller_ip, caller_port = parts[2].split('|')
+ValueError: not enough values to unpack (expected 2, got 1)
+2025-05-17 19:55:49,030 [DEBUG] 处理收到的消息: FRIEND_ONLINE|gty
+2025-05-17 19:55:55,295 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 19:55:55,295 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 19:55:55,295 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 19:55:55,295 [DEBUG] 来电者: gty
+2025-05-17 19:55:55,296 [DEBUG] 当前用户: why
+2025-05-17 19:55:55,296 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 19:55:55,296 [DEBUG] 当前窗口状态: visible=True, active=True
+2025-05-17 19:55:55,296 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 19:55:55,296 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 19:55:55,296 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 19:55:55,396 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 19:55:55,425 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 19:55:55,795 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 19:55:55,795 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 19:55:55,795 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 19:55:55,795 [DEBUG] 来电者: gty
+2025-05-17 19:55:55,795 [DEBUG] 当前用户: why
+2025-05-17 19:55:55,795 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 19:55:55,795 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 19:55:55,795 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 19:55:55,796 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 19:55:55,796 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 19:55:55,897 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 19:55:55,907 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 19:55:56,297 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 19:55:56,297 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 19:55:56,297 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 19:55:56,297 [DEBUG] 来电者: gty
+2025-05-17 19:55:56,297 [DEBUG] 当前用户: why
+2025-05-17 19:55:56,297 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 19:55:56,297 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 19:55:56,297 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 19:55:56,297 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 19:55:56,297 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 19:55:56,397 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 19:55:56,408 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 19:56:01,404 [DEBUG] 接受来电：gty
+2025-05-17 19:56:01,404 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why|gty|60219'
+2025-05-17 19:56:01,404 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 60219
+2025-05-17 19:56:01,508 [DEBUG] 已创建通话对话框(被叫方)

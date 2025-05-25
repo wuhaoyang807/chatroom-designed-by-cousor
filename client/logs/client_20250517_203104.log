@@ -1,0 +1,98 @@
+2025-05-17 20:31:11,096 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 20:31:11,097 [DEBUG] 创建客户端线程
+2025-05-17 20:31:11,097 [DEBUG] 客户端线程初始化
+2025-05-17 20:31:11,097 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 20:31:11,097 [DEBUG] 分配随机UDP端口: 47337
+2025-05-17 20:31:11,097 [DEBUG] 客户端线程开始运行
+2025-05-17 20:31:11,098 [DEBUG] 尝试绑定UDP端口: 47337
+2025-05-17 20:31:11,098 [DEBUG] UDP端口绑定成功: 47337
+2025-05-17 20:31:11,098 [DEBUG] 创建UDP音频线程，端口: 47337
+2025-05-17 20:31:11,099 [DEBUG] UDP音频线程启动成功
+2025-05-17 20:31:11,099 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|47337
+2025-05-17 20:31:11,109 [DEBUG] UDP音频服务初始化完成，端口: 47337
+2025-05-17 20:31:11,126 [DEBUG] 初始化UI
+2025-05-17 20:31:11,130 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 20:31:11,131 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 47337
+2025-05-17 20:31:11,178 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-17 20:31:11,179 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 20:31:23,806 [DEBUG] 处理收到的消息: FRIEND_ONLINE|gty
+2025-05-17 20:31:29,882 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:29,882 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:29,883 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:29,883 [DEBUG] 来电者: gty
+2025-05-17 20:31:29,883 [DEBUG] 当前用户: why
+2025-05-17 20:31:29,883 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:29,883 [DEBUG] 当前窗口状态: visible=True, active=True
+2025-05-17 20:31:29,883 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:29,883 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:29,883 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:29,984 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:30,008 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:30,383 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:30,383 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:30,383 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:30,383 [DEBUG] 来电者: gty
+2025-05-17 20:31:30,383 [DEBUG] 当前用户: why
+2025-05-17 20:31:30,383 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:30,384 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 20:31:30,384 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:30,384 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:30,384 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:30,485 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:30,496 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:30,884 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:30,884 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:30,884 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:30,884 [DEBUG] 来电者: gty
+2025-05-17 20:31:30,884 [DEBUG] 当前用户: why
+2025-05-17 20:31:30,884 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:30,885 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 20:31:30,885 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:30,885 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:30,885 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:30,986 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:31,006 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:47,216 [DEBUG] 已发送拒绝通话消息: CALL_REJECT|why|gty
+2025-05-17 20:31:49,930 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:49,931 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:49,931 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:49,931 [DEBUG] 来电者: gty
+2025-05-17 20:31:49,931 [DEBUG] 当前用户: why
+2025-05-17 20:31:49,932 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:49,932 [DEBUG] 当前窗口状态: visible=True, active=True
+2025-05-17 20:31:49,932 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:49,933 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:49,945 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:50,033 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:50,049 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:50,431 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:50,431 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:50,431 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:50,431 [DEBUG] 来电者: gty
+2025-05-17 20:31:50,431 [DEBUG] 当前用户: why
+2025-05-17 20:31:50,432 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:50,432 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 20:31:50,432 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:50,432 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:50,432 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:50,532 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:50,547 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:50,932 [DEBUG] 处理收到的消息: CALL_INCOMING|gty
+2025-05-17 20:31:50,932 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-17 20:31:50,932 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|gty
+2025-05-17 20:31:50,933 [DEBUG] 来电者: gty
+2025-05-17 20:31:50,933 [DEBUG] 当前用户: why
+2025-05-17 20:31:50,933 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-17 20:31:50,933 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-17 20:31:50,933 [DEBUG] 添加来电到待处理队列: gty
+2025-05-17 20:31:50,933 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-17 20:31:50,933 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-17 20:31:51,033 [DEBUG] 从待处理队列中处理来电: gty
+2025-05-17 20:31:51,049 [DEBUG] 已显示通知窗口并从队列中移除: gty
+2025-05-17 20:31:53,785 [DEBUG] 接受来电：gty
+2025-05-17 20:31:53,786 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why|gty|47337'
+2025-05-17 20:31:53,786 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 47337
+2025-05-17 20:32:26,729 [ERROR] 接受通话失败: 'CallDialog' object has no attribute 'init_ui'
+2025-05-17 20:32:39,186 [DEBUG] 停止客户端线程
+2025-05-17 20:32:39,187 [WARNING] 服务器连接断开
+2025-05-17 20:32:39,187 [DEBUG] 客户端线程结束

@@ -1,0 +1,29 @@
+2025-05-17 10:59:24,070 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-17 10:59:24,071 [DEBUG] 创建客户端线程
+2025-05-17 10:59:24,073 [DEBUG] 客户端线程初始化
+2025-05-17 10:59:24,073 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 10:59:24,074 [DEBUG] 客户端线程开始运行
+2025-05-17 10:59:24,074 [DEBUG] 分配随机UDP端口: 60881
+2025-05-17 10:59:24,075 [DEBUG] 尝试绑定UDP端口: 60881
+2025-05-17 10:59:24,075 [DEBUG] UDP端口绑定成功: 60881
+2025-05-17 10:59:24,076 [DEBUG] 创建UDP音频线程，端口: 60881
+2025-05-17 10:59:24,077 [DEBUG] UDP音频线程启动成功
+2025-05-17 10:59:24,077 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|60881
+2025-05-17 10:59:24,077 [DEBUG] UDP音频服务初始化完成，端口: 60881
+2025-05-17 10:59:24,113 [DEBUG] 初始化UI
+2025-05-17 10:59:24,122 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 10:59:24,123 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 60881
+2025-05-17 10:59:24,168 [DEBUG] 处理收到的消息: FRIEND_LIST|why:online
+2025-05-17 10:59:24,170 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 11:00:59,028 [DEBUG] 处理收到的消息: EMOJI|why|smart.png
+2025-05-17 11:00:59,826 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png
+2025-05-17 11:01:51,696 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why
+2025-05-17 11:02:01,142 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why
+2025-05-17 11:02:10,769 [DEBUG] 处理收到的消息: EMOJI|why|image_emoticon6.png
+2025-05-17 11:02:11,970 [DEBUG] 处理收到的消息: EMOJI|why|image_emoticon6.png
+2025-05-17 11:02:19,165 [DEBUG] 处理收到的消息: EMOJI|why|gif4.gif
+2025-05-17 11:02:36,188 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why
+2025-05-17 11:02:43,304 [DEBUG] 停止客户端线程
+2025-05-17 11:02:43,306 [WARNING] 服务器连接断开
+2025-05-17 11:02:43,310 [DEBUG] 客户端线程结束
+2025-05-17 11:02:44,169 [DEBUG] 停止客户端线程

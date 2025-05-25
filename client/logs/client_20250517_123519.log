@@ -1,0 +1,32 @@
+2025-05-17 12:35:26,633 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 12:35:26,634 [DEBUG] 创建客户端线程
+2025-05-17 12:35:26,634 [DEBUG] 客户端线程初始化
+2025-05-17 12:35:26,634 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 12:35:26,634 [DEBUG] 分配随机UDP端口: 61492
+2025-05-17 12:35:26,635 [DEBUG] 客户端线程开始运行
+2025-05-17 12:35:26,635 [DEBUG] 尝试绑定UDP端口: 61492
+2025-05-17 12:35:26,635 [DEBUG] UDP端口绑定成功: 61492
+2025-05-17 12:35:26,635 [DEBUG] 创建UDP音频线程，端口: 61492
+2025-05-17 12:35:26,636 [DEBUG] UDP音频线程启动成功
+2025-05-17 12:35:26,636 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|61492
+2025-05-17 12:35:26,646 [DEBUG] UDP音频服务初始化完成，端口: 61492
+2025-05-17 12:35:26,664 [DEBUG] 初始化UI
+2025-05-17 12:35:26,667 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 12:35:26,667 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 61492
+2025-05-17 12:35:26,711 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 12:35:26,711 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 12:35:36,172 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-17 12:35:38,506 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png
+2025-05-17 12:35:38,551 [DEBUG] 处理收到的消息: FILE_LIST|ConFuzzius_A_Data_Dependency-Aware_Hybrid_Fuzzer_for_Smart_Contracts.pdf|sFuzz_An_Efficient_Adaptive_Fuzzer_for_Solidity_Smart_Contracts.pdf|xijin.png
+2025-05-17 12:35:51,137 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-17 12:36:04,931 [DEBUG] 处理收到的消息: [
+2025-05-17 12:36:09,949 [DEBUG] 处理收到的消息: xk
+2025-05-17 12:36:14,960 [DEBUG] 处理收到的消息: T
+2025-05-17 12:36:19,961 [DEBUG] 处理收到的消息: %
+2025-05-17 12:36:19,961 [DEBUG] 处理收到的消息: 
+2025-05-17 12:36:19,961 [DEBUG] 处理收到的消息: 
+2025-05-17 12:36:51,014 [DEBUG] 处理收到的消息: 
+2025-05-17 12:36:57,016 [DEBUG] 处理收到的消息: X)P
+2025-05-17 12:36:57,016 [DEBUG] 处理收到的消息: 
+2025-05-17 12:37:06,734 [DEBUG] 停止客户端线程
+2025-05-17 12:37:08,735 [DEBUG] 客户端线程结束

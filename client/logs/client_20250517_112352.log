@@ -1,0 +1,517 @@
+2025-05-17 11:23:59,899 [DEBUG] 初始化主窗口: 用户=why_1
+2025-05-17 11:23:59,900 [DEBUG] 创建客户端线程
+2025-05-17 11:23:59,901 [DEBUG] 客户端线程初始化
+2025-05-17 11:23:59,901 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 11:23:59,902 [DEBUG] 客户端线程开始运行
+2025-05-17 11:23:59,902 [DEBUG] 分配随机UDP端口: 55817
+2025-05-17 11:23:59,904 [DEBUG] 尝试绑定UDP端口: 55817
+2025-05-17 11:23:59,905 [DEBUG] UDP端口绑定成功: 55817
+2025-05-17 11:23:59,905 [DEBUG] 创建UDP音频线程，端口: 55817
+2025-05-17 11:23:59,906 [DEBUG] UDP音频线程启动成功
+2025-05-17 11:23:59,906 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why_1|55817
+2025-05-17 11:23:59,917 [DEBUG] UDP音频服务初始化完成，端口: 55817
+2025-05-17 11:23:59,940 [DEBUG] 初始化UI
+2025-05-17 11:23:59,944 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 11:23:59,945 [DEBUG] 主窗口初始化完成，用户: why_1, UDP端口: 55817
+2025-05-17 11:23:59,998 [DEBUG] 处理收到的消息: FRIEND_LIST|why:online
+2025-05-17 11:24:00,001 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 11:24:02,668 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif
+2025-05-17 11:24:02,719 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 11:25:52,299 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif
+2025-05-17 11:25:52,349 [DEBUG] 处理收到的消息: FILE_LIST|main1.py
+2025-05-17 11:25:56,810 [DEBUG] 处理收到的消息: FILE_DATA|main1.py|41009
+2025-05-17 11:25:57,815 [ERROR] 处理消息时出错: timed out, 消息内容: FILE_DATA|main1.py|41009
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1507, in on_message
+    chunk = self.sock.recv(min(4096, filesize - len(filedata)))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+2025-05-17 11:25:57,826 [DEBUG] 处理收到的消息: import sys
+2025-05-17 11:25:57,829 [DEBUG] 处理收到的消息: import socket
+2025-05-17 11:25:57,829 [DEBUG] 处理收到的消息: from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit,
+2025-05-17 11:25:57,831 [DEBUG] 处理收到的消息:                              QListWidget, QMessageBox, QInputDialog, QListWidgetItem, QTabWidget)
+2025-05-17 11:25:57,832 [DEBUG] 处理收到的消息: from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
+2025-05-17 11:25:57,833 [DEBUG] 处理收到的消息: from PyQt5.QtGui import QIcon, QPixmap, QMovie, QColor
+2025-05-17 11:25:57,834 [DEBUG] 处理收到的消息: import os
+2025-05-17 11:25:57,834 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,835 [DEBUG] 处理收到的消息: # 服务器配置
+2025-05-17 11:25:57,836 [DEBUG] 处理收到的消息: SERVER_HOST = '127.0.0.1'
+2025-05-17 11:25:57,836 [DEBUG] 处理收到的消息: SERVER_PORT = 12345
+2025-05-17 11:25:57,840 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,841 [DEBUG] 处理收到的消息: EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
+2025-05-17 11:25:57,842 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,843 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,843 [DEBUG] 处理收到的消息: class ClientThread(QThread):
+2025-05-17 11:25:57,844 [DEBUG] 处理收到的消息:     message_received = pyqtSignal(str)
+2025-05-17 11:25:57,845 [DEBUG] 处理收到的消息:     connection_lost = pyqtSignal()
+2025-05-17 11:25:57,846 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,846 [DEBUG] 处理收到的消息:     def __init__(self, sock):
+2025-05-17 11:25:57,847 [DEBUG] 处理收到的消息:         super().__init__()
+2025-05-17 11:25:57,848 [DEBUG] 处理收到的消息:         self.sock = sock
+2025-05-17 11:25:57,848 [DEBUG] 处理收到的消息:         self.running = True
+2025-05-17 11:25:57,852 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,852 [DEBUG] 处理收到的消息:     def run(self):
+2025-05-17 11:25:57,853 [DEBUG] 处理收到的消息:         while self.running:
+2025-05-17 11:25:57,854 [DEBUG] 处理收到的消息:             try:
+2025-05-17 11:25:57,855 [DEBUG] 处理收到的消息:                 data = self.sock.recv(4096)
+2025-05-17 11:25:57,855 [DEBUG] 处理收到的消息:                 if not data:
+2025-05-17 11:25:57,856 [DEBUG] 处理收到的消息:                     print("服务器连接断开")
+2025-05-17 11:25:57,857 [DEBUG] 处理收到的消息:                     self.connection_lost.emit()
+2025-05-17 11:25:57,858 [DEBUG] 处理收到的消息:                     break
+2025-05-17 11:25:57,859 [DEBUG] 处理收到的消息:                 self.message_received.emit(data.decode('utf-8'))
+2025-05-17 11:25:57,859 [DEBUG] 处理收到的消息:             except ConnectionResetError:
+2025-05-17 11:25:57,862 [DEBUG] 处理收到的消息:                 print("连接被重置")
+2025-05-17 11:25:57,863 [DEBUG] 处理收到的消息:                 self.connection_lost.emit()
+2025-05-17 11:25:57,864 [DEBUG] 处理收到的消息:                 break
+2025-05-17 11:25:57,864 [DEBUG] 处理收到的消息:             except Exception as e:
+2025-05-17 11:25:57,865 [DEBUG] 处理收到的消息:                 print(f"接收消息出错: {e}")
+2025-05-17 11:25:57,866 [DEBUG] 处理收到的消息:                 self.connection_lost.emit()
+2025-05-17 11:25:57,866 [DEBUG] 处理收到的消息:                 break
+2025-05-17 11:25:57,867 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,868 [DEBUG] 处理收到的消息:     def stop(self):
+2025-05-17 11:25:57,868 [DEBUG] 处理收到的消息:         self.running = False
+2025-05-17 11:25:57,869 [DEBUG] 处理收到的消息:         self.quit()
+2025-05-17 11:25:57,870 [DEBUG] 处理收到的消息:         self.wait()
+2025-05-17 11:25:57,870 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,874 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,875 [DEBUG] 处理收到的消息: def excepthook(type, value, traceback):
+2025-05-17 11:25:57,876 [DEBUG] 处理收到的消息:     QMessageBox.critical(None, '未捕获异常', str(value))
+2025-05-17 11:25:57,876 [DEBUG] 处理收到的消息:     sys.__excepthook__(type, value, traceback)
+2025-05-17 11:25:57,877 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,878 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,878 [DEBUG] 处理收到的消息: sys.excepthook = excepthook
+2025-05-17 11:25:57,879 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,880 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,882 [DEBUG] 处理收到的消息: class LoginWindow(QWidget):
+2025-05-17 11:25:57,897 [DEBUG] 处理收到的消息:     def __init__(self):
+2025-05-17 11:25:57,898 [DEBUG] 处理收到的消息:         super().__init__()
+2025-05-17 11:25:57,899 [DEBUG] 处理收到的消息:         self.setWindowTitle('登录/注册')
+2025-05-17 11:25:57,900 [DEBUG] 处理收到的消息:         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+2025-05-17 11:25:57,901 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:57,901 [DEBUG] 处理收到的消息:             self.sock.connect((SERVER_HOST, SERVER_PORT))
+2025-05-17 11:25:57,902 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:57,902 [DEBUG] 处理收到的消息:             QMessageBox.critical(self, '错误', f'无法连接服务器: {e}')
+2025-05-17 11:25:57,903 [DEBUG] 处理收到的消息:             sys.exit(1)
+2025-05-17 11:25:57,904 [DEBUG] 处理收到的消息:         self.init_ui()
+2025-05-17 11:25:57,904 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,905 [DEBUG] 处理收到的消息:     def init_ui(self):
+2025-05-17 11:25:57,910 [DEBUG] 处理收到的消息:         layout = QVBoxLayout()
+2025-05-17 11:25:57,910 [DEBUG] 处理收到的消息:         self.user_edit = QLineEdit()
+2025-05-17 11:25:57,911 [DEBUG] 处理收到的消息:         self.user_edit.setPlaceholderText('用户名')
+2025-05-17 11:25:57,912 [DEBUG] 处理收到的消息:         self.pwd_edit = QLineEdit()
+2025-05-17 11:25:57,912 [DEBUG] 处理收到的消息:         self.pwd_edit.setPlaceholderText('密码')
+2025-05-17 11:25:57,913 [DEBUG] 处理收到的消息:         self.pwd_edit.setEchoMode(QLineEdit.Password)
+2025-05-17 11:25:57,914 [DEBUG] 处理收到的消息:         self.login_btn = QPushButton('登录')
+2025-05-17 11:25:57,914 [DEBUG] 处理收到的消息:         self.reg_btn = QPushButton('注册')
+2025-05-17 11:25:57,915 [DEBUG] 处理收到的消息:         self.login_btn.clicked.connect(self.login)
+2025-05-17 11:25:57,916 [DEBUG] 处理收到的消息:         self.reg_btn.clicked.connect(self.register)
+2025-05-17 11:25:57,917 [DEBUG] 处理收到的消息:         layout.addWidget(QLabel('用户名:'))
+2025-05-17 11:25:57,917 [DEBUG] 处理收到的消息:         layout.addWidget(self.user_edit)
+2025-05-17 11:25:57,921 [DEBUG] 处理收到的消息:         layout.addWidget(QLabel('密码:'))
+2025-05-17 11:25:57,921 [DEBUG] 处理收到的消息:         layout.addWidget(self.pwd_edit)
+2025-05-17 11:25:57,922 [DEBUG] 处理收到的消息:         btn_layout = QHBoxLayout()
+2025-05-17 11:25:57,923 [DEBUG] 处理收到的消息:         btn_layout.addWidget(self.login_btn)
+2025-05-17 11:25:57,923 [DEBUG] 处理收到的消息:         btn_layout.addWidget(self.reg_btn)
+2025-05-17 11:25:57,924 [DEBUG] 处理收到的消息:         layout.addLayout(btn_layout)
+2025-05-17 11:25:57,925 [DEBUG] 处理收到的消息:         self.setLayout(layout)
+2025-05-17 11:25:57,925 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,926 [DEBUG] 处理收到的消息:     def login(self):
+2025-05-17 11:25:57,926 [DEBUG] 处理收到的消息:         username = self.user_edit.text().strip()
+2025-05-17 11:25:57,927 [DEBUG] 处理收到的消息:         password = self.pwd_edit.text().strip()
+2025-05-17 11:25:57,928 [DEBUG] 处理收到的消息:         if not username or not password:
+2025-05-17 11:25:57,928 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '提示', '请输入用户名和密码')
+2025-05-17 11:25:57,929 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:57,933 [DEBUG] 处理收到的消息:         self.sock.send(f'LOGIN|{username}|{password}'.encode('utf-8'))
+2025-05-17 11:25:57,934 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:57,935 [DEBUG] 处理收到的消息:             resp = self.sock.recv(4096).decode('utf-8')
+2025-05-17 11:25:57,935 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:57,936 [DEBUG] 处理收到的消息:             QMessageBox.critical(self, '错误', f'网络错误: {e}')
+2025-05-17 11:25:57,937 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:57,937 [DEBUG] 处理收到的消息:         parts = resp.split('|', 2)
+2025-05-17 11:25:57,938 [DEBUG] 处理收到的消息:         if parts[0] == 'LOGIN_RESULT' and parts[1] == 'OK':
+2025-05-17 11:25:57,939 [DEBUG] 处理收到的消息:             self.accept_login(username)
+2025-05-17 11:25:57,939 [DEBUG] 处理收到的消息:         else:
+2025-05-17 11:25:57,940 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '登录失败', parts[2] if len(parts) > 2 else '未知错误')
+2025-05-17 11:25:57,941 [DEBUG] 处理收到的消息:             self.show()  # 保证窗口不关闭
+2025-05-17 11:25:57,941 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,945 [DEBUG] 处理收到的消息:     def register(self):
+2025-05-17 11:25:57,945 [DEBUG] 处理收到的消息:         username = self.user_edit.text().strip()
+2025-05-17 11:25:57,946 [DEBUG] 处理收到的消息:         password = self.pwd_edit.text().strip()
+2025-05-17 11:25:57,947 [DEBUG] 处理收到的消息:         if not username or not password:
+2025-05-17 11:25:57,948 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '提示', '请输入用户名和密码')
+2025-05-17 11:25:57,948 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:57,949 [DEBUG] 处理收到的消息:         self.sock.send(f'REGISTER|{username}|{password}'.encode('utf-8'))
+2025-05-17 11:25:57,950 [DEBUG] 处理收到的消息:         resp = self.sock.recv(4096).decode('utf-8')
+2025-05-17 11:25:57,950 [DEBUG] 处理收到的消息:         parts = resp.split('|', 2)
+2025-05-17 11:25:57,951 [DEBUG] 处理收到的消息:         if parts[0] == 'REGISTER_RESULT' and parts[1] == 'OK':
+2025-05-17 11:25:57,952 [DEBUG] 处理收到的消息:             QMessageBox.information(self, '注册成功', parts[2])
+2025-05-17 11:25:57,952 [DEBUG] 处理收到的消息:         else:
+2025-05-17 11:25:57,956 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '注册失败', parts[2] if len(parts) > 2 else '未知错误')
+2025-05-17 11:25:57,957 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,957 [DEBUG] 处理收到的消息:     def accept_login(self, username):
+2025-05-17 11:25:57,958 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:57,958 [DEBUG] 处理收到的消息:             self.hide()
+2025-05-17 11:25:57,959 [DEBUG] 处理收到的消息:             self.main_win = MainWindow(self.sock, username)
+2025-05-17 11:25:57,960 [DEBUG] 处理收到的消息:             self.main_win.show()
+2025-05-17 11:25:57,960 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:57,961 [DEBUG] 处理收到的消息:             QMessageBox.critical(self, '错误', f'登录后主窗口异常: {e}')
+2025-05-17 11:25:57,962 [DEBUG] 处理收到的消息:             self.show()
+2025-05-17 11:25:57,962 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,963 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,963 [DEBUG] 处理收到的消息: class EmojiDialog(QWidget):
+2025-05-17 11:25:57,967 [DEBUG] 处理收到的消息:     emoji_selected = pyqtSignal(str)
+2025-05-17 11:25:57,968 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,968 [DEBUG] 处理收到的消息:     def __init__(self):
+2025-05-17 11:25:57,969 [DEBUG] 处理收到的消息:         super().__init__()
+2025-05-17 11:25:57,969 [DEBUG] 处理收到的消息:         self.setWindowTitle('选择表情')
+2025-05-17 11:25:57,970 [DEBUG] 处理收到的消息:         layout = QHBoxLayout()
+2025-05-17 11:25:57,971 [DEBUG] 处理收到的消息:         self.setLayout(layout)
+2025-05-17 11:25:57,971 [DEBUG] 处理收到的消息:         self.setWindowFlags(self.windowFlags() | Qt.Tool)
+2025-05-17 11:25:57,972 [DEBUG] 处理收到的消息:         self.load_emojis(layout)
+2025-05-17 11:25:57,973 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,974 [DEBUG] 处理收到的消息:     def load_emojis(self, layout):
+2025-05-17 11:25:57,974 [DEBUG] 处理收到的消息:         if not os.path.exists(EMOJI_DIR):
+2025-05-17 11:25:57,975 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:57,979 [DEBUG] 处理收到的消息:         for fname in os.listdir(EMOJI_DIR):
+2025-05-17 11:25:57,979 [DEBUG] 处理收到的消息:             if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+2025-05-17 11:25:57,980 [DEBUG] 处理收到的消息:                 btn = QPushButton()
+2025-05-17 11:25:57,981 [DEBUG] 处理收到的消息:                 btn.setIcon(QIcon(os.path.join(EMOJI_DIR, fname)))
+2025-05-17 11:25:57,982 [DEBUG] 处理收到的消息:                 btn.setIconSize(QPixmap(os.path.join(EMOJI_DIR, fname)).size())
+2025-05-17 11:25:57,982 [DEBUG] 处理收到的消息:                 btn.setFixedSize(40, 40)
+2025-05-17 11:25:57,983 [DEBUG] 处理收到的消息:                 btn.clicked.connect(lambda _, f=fname: self.emoji_selected.emit(f))
+2025-05-17 11:25:57,984 [DEBUG] 处理收到的消息:                 layout.addWidget(btn)
+2025-05-17 11:25:57,984 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,985 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,985 [DEBUG] 处理收到的消息: class MainWindow(QWidget):
+2025-05-17 11:25:57,986 [DEBUG] 处理收到的消息:     def __init__(self, sock, username):
+2025-05-17 11:25:57,987 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:57,987 [DEBUG] 处理收到的消息:             super().__init__()
+2025-05-17 11:25:57,991 [DEBUG] 处理收到的消息:             self.sock = sock
+2025-05-17 11:25:57,991 [DEBUG] 处理收到的消息:             self.username = username
+2025-05-17 11:25:57,992 [DEBUG] 处理收到的消息:             self.setWindowTitle(f'聊天 - {username}')
+2025-05-17 11:25:57,993 [DEBUG] 处理收到的消息:             self.current_friend = None
+2025-05-17 11:25:57,993 [DEBUG] 处理收到的消息:             self.friends = []
+2025-05-17 11:25:57,994 [DEBUG] 处理收到的消息:             self.friend_status = {}
+2025-05-17 11:25:57,994 [DEBUG] 处理收到的消息:             self.current_group = None
+2025-05-17 11:25:57,995 [DEBUG] 处理收到的消息:             self.groups = []
+2025-05-17 11:25:57,996 [DEBUG] 处理收到的消息:             self.group_status = {}
+2025-05-17 11:25:57,996 [DEBUG] 处理收到的消息:             self.selecting_group = False  # 防重入
+2025-05-17 11:25:57,997 [DEBUG] 处理收到的消息:             self.unread_groups = set()  # 新增：未读群聊消息集合
+2025-05-17 11:25:57,998 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:57,998 [DEBUG] 处理收到的消息:             # 添加表情缓存
+2025-05-17 11:25:57,999 [DEBUG] 处理收到的消息:             self.emoji_cache = {}
+2025-05-17 11:25:57,999 [DEBUG] 处理收到的消息:             self.preload_emojis()  # 预加载表情
+2025-05-17 11:25:58,006 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,007 [DEBUG] 处理收到的消息:             self.init_ui()
+2025-05-17 11:25:58,007 [DEBUG] 处理收到的消息:             self.client_thread = ClientThread(self.sock)
+2025-05-17 11:25:58,008 [DEBUG] 处理收到的消息:             self.client_thread.message_received.connect(self.on_message)
+2025-05-17 11:25:58,009 [DEBUG] 处理收到的消息:             self.client_thread.connection_lost.connect(self.on_connection_lost)
+2025-05-17 11:25:58,009 [DEBUG] 处理收到的消息:             self.client_thread.start()
+2025-05-17 11:25:58,010 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,011 [DEBUG] 处理收到的消息:             # 启动定时器，确保登录后刷新群聊列表
+2025-05-17 11:25:58,011 [DEBUG] 处理收到的消息:             self.refresh_timer = QTimer(self)
+2025-05-17 11:25:58,012 [DEBUG] 处理收到的消息:             self.refresh_timer.timeout.connect(self.initial_refresh)
+2025-05-17 11:25:58,012 [DEBUG] 处理收到的消息:             self.refresh_timer.setSingleShot(True)
+2025-05-17 11:25:58,013 [DEBUG] 处理收到的消息:             self.refresh_timer.start(500)  # 延迟500毫秒刷新
+2025-05-17 11:25:58,018 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:58,018 [DEBUG] 处理收到的消息:             QMessageBox.critical(None, '错误', f'主窗口初始化异常: {e}')
+2025-05-17 11:25:58,019 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,020 [DEBUG] 处理收到的消息:     def preload_emojis(self):
+2025-05-17 11:25:58,020 [DEBUG] 处理收到的消息:         """预加载所有表情到缓存"""
+2025-05-17 11:25:58,021 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:58,022 [DEBUG] 处理收到的消息:             if not os.path.exists(EMOJI_DIR):
+2025-05-17 11:25:58,022 [DEBUG] 处理收到的消息:                 print("表情目录不存在")
+2025-05-17 11:25:58,023 [DEBUG] 处理收到的消息:                 return
+2025-05-17 11:25:58,024 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,024 [DEBUG] 处理收到的消息:             print("开始预加载表情...")
+2025-05-17 11:25:58,025 [DEBUG] 处理收到的消息:             for fname in os.listdir(EMOJI_DIR):
+2025-05-17 11:25:58,028 [DEBUG] 处理收到的消息:                 if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+2025-05-17 11:25:58,029 [DEBUG] 处理收到的消息:                     path = os.path.join(EMOJI_DIR, fname)
+2025-05-17 11:25:58,030 [DEBUG] 处理收到的消息:                     if fname.lower().endswith('.gif'):
+2025-05-17 11:25:58,031 [DEBUG] 处理收到的消息:                         # 加载GIF
+2025-05-17 11:25:58,031 [DEBUG] 处理收到的消息:                         movie = QMovie(path)
+2025-05-17 11:25:58,033 [DEBUG] 处理收到的消息:                         movie.setCacheMode(QMovie.CacheAll)
+2025-05-17 11:25:58,033 [DEBUG] 处理收到的消息:                         self.emoji_cache[fname] = {'type': 'gif', 'movie': movie}
+2025-05-17 11:25:58,034 [DEBUG] 处理收到的消息:                     else:
+2025-05-17 11:25:58,035 [DEBUG] 处理收到的消息:                         # 加载静态图片
+2025-05-17 11:25:58,036 [DEBUG] 处理收到的消息:                         pix = QPixmap(path)
+2025-05-17 11:25:58,036 [DEBUG] 处理收到的消息:                         scaled_pix = pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+2025-05-17 11:25:58,037 [DEBUG] 处理收到的消息:                         self.emoji_cache[fname] = {'type': 'image', 'pixmap': scaled_pix}
+2025-05-17 11:25:58,041 [DEBUG] 处理收到的消息:             print(f"预加载完成，共 {len(self.emoji_cache)} 个表情")
+2025-05-17 11:25:58,042 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:58,043 [DEBUG] 处理收到的消息:             print(f"预加载表情出错: {e}")
+2025-05-17 11:25:58,044 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,044 [DEBUG] 处理收到的消息:     def get_emoji_from_cache(self, emoji_id, label):
+2025-05-17 11:25:58,045 [DEBUG] 处理收到的消息:         """从缓存获取表情并设置到标签"""
+2025-05-17 11:25:58,046 [DEBUG] 处理收到的消息:         if emoji_id in self.emoji_cache:
+2025-05-17 11:25:58,047 [DEBUG] 处理收到的消息:             emoji_data = self.emoji_cache[emoji_id]
+2025-05-17 11:25:58,048 [DEBUG] 处理收到的消息:             if emoji_data['type'] == 'gif':
+2025-05-17 11:25:58,048 [DEBUG] 处理收到的消息:                 movie = emoji_data['movie']
+2025-05-17 11:25:58,049 [DEBUG] 处理收到的消息:                 label.setMovie(movie)
+2025-05-17 11:25:58,053 [DEBUG] 处理收到的消息:                 movie.start()
+2025-05-17 11:25:58,054 [DEBUG] 处理收到的消息:             else:
+2025-05-17 11:25:58,054 [DEBUG] 处理收到的消息:                 label.setPixmap(emoji_data['pixmap'])
+2025-05-17 11:25:58,055 [DEBUG] 处理收到的消息:             return True
+2025-05-17 11:25:58,056 [DEBUG] 处理收到的消息:         return False
+2025-05-17 11:25:58,057 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,058 [DEBUG] 处理收到的消息:     def init_ui(self):
+2025-05-17 11:25:58,058 [DEBUG] 处理收到的消息:         main_layout = QHBoxLayout()
+2025-05-17 11:25:58,059 [DEBUG] 处理收到的消息:         # 好友/群聊列表
+2025-05-17 11:25:58,060 [DEBUG] 处理收到的消息:         left_layout = QVBoxLayout()
+2025-05-17 11:25:58,060 [DEBUG] 处理收到的消息:         self.refresh_friends_btn = QPushButton('刷新好友')
+2025-05-17 11:25:58,061 [DEBUG] 处理收到的消息:         self.refresh_friends_btn.clicked.connect(self.get_friends)
+2025-05-17 11:25:58,064 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.refresh_friends_btn)
+2025-05-17 11:25:58,065 [DEBUG] 处理收到的消息:         self.friend_list = QListWidget()
+2025-05-17 11:25:58,066 [DEBUG] 处理收到的消息:         self.friend_list.itemClicked.connect(self.select_friend)
+2025-05-17 11:25:58,067 [DEBUG] 处理收到的消息:         self.add_friend_btn = QPushButton('添加好友')
+2025-05-17 11:25:58,068 [DEBUG] 处理收到的消息:         self.del_friend_btn = QPushButton('删除好友')
+2025-05-17 11:25:58,068 [DEBUG] 处理收到的消息:         self.add_friend_btn.clicked.connect(self.add_friend)
+2025-05-17 11:25:58,069 [DEBUG] 处理收到的消息:         self.del_friend_btn.clicked.connect(self.del_friend)
+2025-05-17 11:25:58,070 [DEBUG] 处理收到的消息:         left_layout.addWidget(QLabel('好友列表'))
+2025-05-17 11:25:58,071 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.friend_list)
+2025-05-17 11:25:58,072 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.add_friend_btn)
+2025-05-17 11:25:58,075 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.del_friend_btn)
+2025-05-17 11:25:58,076 [DEBUG] 处理收到的消息:         # 群聊列表
+2025-05-17 11:25:58,077 [DEBUG] 处理收到的消息:         self.group_list = QListWidget()
+2025-05-17 11:25:58,078 [DEBUG] 处理收到的消息:         self.group_list.itemClicked.connect(self.select_group)
+2025-05-17 11:25:58,079 [DEBUG] 处理收到的消息:         self.create_group_btn = QPushButton('创建群聊')
+2025-05-17 11:25:58,079 [DEBUG] 处理收到的消息:         self.join_group_btn = QPushButton('加入群聊')
+2025-05-17 11:25:58,080 [DEBUG] 处理收到的消息:         self.create_group_btn.clicked.connect(self.create_group)
+2025-05-17 11:25:58,081 [DEBUG] 处理收到的消息:         self.join_group_btn.clicked.connect(self.join_group)
+2025-05-17 11:25:58,082 [DEBUG] 处理收到的消息:         left_layout.addWidget(QLabel('群聊列表'))
+2025-05-17 11:25:58,083 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.group_list)
+2025-05-17 11:25:58,083 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.create_group_btn)
+2025-05-17 11:25:58,087 [DEBUG] 处理收到的消息:         left_layout.addWidget(self.join_group_btn)
+2025-05-17 11:25:58,087 [DEBUG] 处理收到的消息:         # 聊天区
+2025-05-17 11:25:58,088 [DEBUG] 处理收到的消息:         right_layout = QVBoxLayout()
+2025-05-17 11:25:58,089 [DEBUG] 处理收到的消息:         self.tab_widget = QTabWidget()
+2025-05-17 11:25:58,090 [DEBUG] 处理收到的消息:         self.private_tab = QWidget()
+2025-05-17 11:25:58,091 [DEBUG] 处理收到的消息:         self.group_tab = QWidget()
+2025-05-17 11:25:58,091 [DEBUG] 处理收到的消息:         self.tab_widget.addTab(self.private_tab, '私聊')
+2025-05-17 11:25:58,092 [DEBUG] 处理收到的消息:         self.tab_widget.addTab(self.group_tab, '群聊')
+2025-05-17 11:25:58,093 [DEBUG] 处理收到的消息:         # 私聊区
+2025-05-17 11:25:58,094 [DEBUG] 处理收到的消息:         private_layout = QVBoxLayout()
+2025-05-17 11:25:58,094 [DEBUG] 处理收到的消息:         self.chat_display = QListWidget()
+2025-05-17 11:25:58,098 [DEBUG] 处理收到的消息:         private_layout.addWidget(self.chat_display)
+2025-05-17 11:25:58,098 [DEBUG] 处理收到的消息:         input_layout = QHBoxLayout()
+2025-05-17 11:25:58,099 [DEBUG] 处理收到的消息:         self.input_edit = QLineEdit()
+2025-05-17 11:25:58,100 [DEBUG] 处理收到的消息:         self.input_edit.setPlaceholderText('输入消息...')
+2025-05-17 11:25:58,100 [DEBUG] 处理收到的消息:         self.send_btn = QPushButton('发送')
+2025-05-17 11:25:58,101 [DEBUG] 处理收到的消息:         self.send_btn.clicked.connect(self.send_message)
+2025-05-17 11:25:58,111 [DEBUG] 处理收到的消息:         self.emoji_btn.setFixedWidth(40)
+2025-05-17 11:25:58,111 [DEBUG] 处理收到的消息:         self.emoji_btn.clicked.connect(self.open_emoji_dialog)
+2025-05-17 11:25:58,112 [DEBUG] 处理收到的消息:         input_layout.addWidget(self.input_edit)
+2025-05-17 11:25:58,113 [DEBUG] 处理收到的消息:         input_layout.addWidget(self.emoji_btn)
+2025-05-17 11:25:58,113 [DEBUG] 处理收到的消息:         input_layout.addWidget(self.send_btn)
+2025-05-17 11:25:58,114 [DEBUG] 处理收到的消息:         private_layout.addLayout(input_layout)
+2025-05-17 11:25:58,115 [DEBUG] 处理收到的消息:         self.private_tab.setLayout(private_layout)
+2025-05-17 11:25:58,116 [DEBUG] 处理收到的消息:         # 群聊区
+2025-05-17 11:25:58,116 [DEBUG] 处理收到的消息:         group_layout = QVBoxLayout()
+2025-05-17 11:25:58,117 [DEBUG] 处理收到的消息:         self.group_chat_display = QListWidget()
+2025-05-17 11:25:58,118 [DEBUG] 处理收到的消息:         group_layout.addWidget(self.group_chat_display)
+2025-05-17 11:25:58,118 [DEBUG] 处理收到的消息:         group_input_layout = QHBoxLayout()
+2025-05-17 11:25:58,122 [DEBUG] 处理收到的消息:         self.group_input_edit = QLineEdit()
+2025-05-17 11:25:58,123 [DEBUG] 处理收到的消息:         self.group_input_edit.setPlaceholderText('输入群聊消息...')
+2025-05-17 11:25:58,124 [DEBUG] 处理收到的消息:         self.group_send_btn = QPushButton('发送')
+2025-05-17 11:25:58,124 [DEBUG] 处理收到的消息:         self.group_send_btn.clicked.connect(self.send_group_message)
+2025-05-17 11:25:58,128 [DEBUG] 处理收到的消息:         self.group_emoji_btn.setFixedWidth(40)
+2025-05-17 11:25:58,129 [DEBUG] 处理收到的消息:         self.group_emoji_btn.clicked.connect(self.open_emoji_dialog)
+2025-05-17 11:25:58,129 [DEBUG] 处理收到的消息:         self.group_anon_btn = QPushButton('匿名')
+2025-05-17 11:25:58,130 [DEBUG] 处理收到的消息:         self.group_anon_btn.setCheckable(True)
+2025-05-17 11:25:58,134 [DEBUG] 处理收到的消息:         self.group_anon_btn.clicked.connect(self.toggle_anon_mode)
+2025-05-17 11:25:58,134 [DEBUG] 处理收到的消息:         group_input_layout.addWidget(self.group_input_edit)
+2025-05-17 11:25:58,135 [DEBUG] 处理收到的消息:         group_input_layout.addWidget(self.group_emoji_btn)
+2025-05-17 11:25:58,136 [DEBUG] 处理收到的消息:         group_input_layout.addWidget(self.group_anon_btn)
+2025-05-17 11:25:58,136 [DEBUG] 处理收到的消息:         group_input_layout.addWidget(self.group_send_btn)
+2025-05-17 11:25:58,137 [DEBUG] 处理收到的消息:         group_layout.addLayout(group_input_layout)
+2025-05-17 11:25:58,138 [DEBUG] 处理收到的消息:         # 群成员显示
+2025-05-17 11:25:58,138 [DEBUG] 处理收到的消息:         self.group_members_label = QLabel('群成员:')
+2025-05-17 11:25:58,139 [DEBUG] 处理收到的消息:         self.group_members_list = QListWidget()
+2025-05-17 11:25:58,140 [DEBUG] 处理收到的消息:         group_layout.addWidget(self.group_members_label)
+2025-05-17 11:25:58,140 [DEBUG] 处理收到的消息:         group_layout.addWidget(self.group_members_list)
+2025-05-17 11:25:58,141 [DEBUG] 处理收到的消息:         self.group_tab.setLayout(group_layout)
+2025-05-17 11:25:58,142 [DEBUG] 处理收到的消息:         right_layout.addWidget(self.tab_widget)
+2025-05-17 11:25:58,142 [DEBUG] 处理收到的消息:         main_layout.addLayout(left_layout, 1)
+2025-05-17 11:25:58,146 [DEBUG] 处理收到的消息:         main_layout.addLayout(right_layout, 3)
+2025-05-17 11:25:58,146 [DEBUG] 处理收到的消息:         self.setLayout(main_layout)
+2025-05-17 11:25:58,147 [DEBUG] 处理收到的消息:         self.emoji_dialog = None
+2025-05-17 11:25:58,148 [DEBUG] 处理收到的消息:         self.anon_nick = None
+2025-05-17 11:25:58,148 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,149 [DEBUG] 处理收到的消息:     def get_friends(self):
+2025-05-17 11:25:58,150 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:58,150 [DEBUG] 处理收到的消息:             self.sock.send(f'GET_FRIENDS|{self.username}'.encode('utf-8'))
+2025-05-17 11:25:58,151 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:58,152 [DEBUG] 处理收到的消息:             print(f"获取好友列表出错: {e}")
+2025-05-17 11:25:58,152 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '网络错误', '获取好友列表失败，请检查网络连接')
+2025-05-17 11:25:58,153 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,154 [DEBUG] 处理收到的消息:     def get_groups(self):
+2025-05-17 11:25:58,154 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:58,158 [DEBUG] 处理收到的消息:             self.sock.send(f'GET_GROUPS|{self.username}'.encode('utf-8'))
+2025-05-17 11:25:58,159 [DEBUG] 处理收到的消息:             # 清空未读标记
+2025-05-17 11:25:58,159 [DEBUG] 处理收到的消息:             self.unread_groups = set()
+2025-05-17 11:25:58,160 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:58,161 [DEBUG] 处理收到的消息:             print(f"获取群聊列表出错: {e}")
+2025-05-17 11:25:58,161 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '网络错误', '获取群聊列表失败，请检查网络连接')
+2025-05-17 11:25:58,162 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,163 [DEBUG] 处理收到的消息:     def select_friend(self, item):
+2025-05-17 11:25:58,163 [DEBUG] 处理收到的消息:         self.current_friend = item.text().split(' ')[0]
+2025-05-17 11:25:58,164 [DEBUG] 处理收到的消息:         self.chat_display.clear()
+2025-05-17 11:25:58,165 [DEBUG] 处理收到的消息:         self.append_text_message('', f'与 {self.current_friend} 的聊天：')
+2025-05-17 11:25:58,165 [DEBUG] 处理收到的消息:         # 获取私聊历史记录
+2025-05-17 11:25:58,166 [DEBUG] 处理收到的消息:         self.get_private_history()
+2025-05-17 11:25:58,166 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,171 [DEBUG] 处理收到的消息:     def get_private_history(self):
+2025-05-17 11:25:58,171 [DEBUG] 处理收到的消息:         """获取与当前好友的私聊历史记录"""
+2025-05-17 11:25:58,172 [DEBUG] 处理收到的消息:         if not self.current_friend:
+2025-05-17 11:25:58,173 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,173 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:58,174 [DEBUG] 处理收到的消息:             self.sock.send(f'GET_PRIVATE_HISTORY|{self.username}|{self.current_friend}'.encode('utf-8'))
+2025-05-17 11:25:58,175 [DEBUG] 处理收到的消息:         except Exception as e:
+2025-05-17 11:25:58,175 [DEBUG] 处理收到的消息:             print(f"获取私聊历史记录出错: {e}")
+2025-05-17 11:25:58,176 [DEBUG] 处理收到的消息:             self.append_text_message('[系统]', '获取聊天记录失败，请检查网络连接')
+2025-05-17 11:25:58,177 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,177 [DEBUG] 处理收到的消息:     def add_friend(self):
+2025-05-17 11:25:58,178 [DEBUG] 处理收到的消息:         friend, ok = QInputDialog.getText(self, '添加好友', '输入好友用户名:')
+2025-05-17 11:25:58,182 [DEBUG] 处理收到的消息:         if ok and friend:
+2025-05-17 11:25:58,183 [DEBUG] 处理收到的消息:             self.sock.send(f'ADD_FRIEND|{self.username}|{friend}'.encode('utf-8'))
+2025-05-17 11:25:58,184 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,184 [DEBUG] 处理收到的消息:     def del_friend(self):
+2025-05-17 11:25:58,185 [DEBUG] 处理收到的消息:         if not self.current_friend:
+2025-05-17 11:25:58,186 [DEBUG] 处理收到的消息:             QMessageBox.warning(self, '提示', '请先选择要删除的好友')
+2025-05-17 11:25:58,186 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,187 [DEBUG] 处理收到的消息:         self.sock.send(f'DEL_FRIEND|{self.username}|{self.current_friend}'.encode('utf-8'))
+2025-05-17 11:25:58,188 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,189 [DEBUG] 处理收到的消息:     def append_text_message(self, sender, text, is_self=False):
+2025-05-17 11:25:58,189 [DEBUG] 处理收到的消息:         label = QLabel()
+2025-05-17 11:25:58,190 [DEBUG] 处理收到的消息:         label.setText(f'<b>{sender}:</b> {text}')
+2025-05-17 11:25:58,194 [DEBUG] 处理收到的消息:         item = QListWidgetItem()
+2025-05-17 11:25:58,194 [DEBUG] 处理收到的消息:         self.chat_display.addItem(item)
+2025-05-17 11:25:58,195 [DEBUG] 处理收到的消息:         self.chat_display.setItemWidget(item, label)
+2025-05-17 11:25:58,196 [DEBUG] 处理收到的消息:         item.setSizeHint(label.sizeHint())
+2025-05-17 11:25:58,197 [DEBUG] 处理收到的消息:         if is_self:
+2025-05-17 11:25:58,198 [DEBUG] 处理收到的消息:             label.setStyleSheet('color:blue;')
+2025-05-17 11:25:58,199 [DEBUG] 处理收到的消息:         self.chat_display.scrollToBottom()
+2025-05-17 11:25:58,199 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,200 [DEBUG] 处理收到的消息:     def append_emoji_message(self, sender, emoji_id):
+2025-05-17 11:25:58,200 [DEBUG] 处理收到的消息:         widget = QWidget()
+2025-05-17 11:25:58,201 [DEBUG] 处理收到的消息:         layout = QHBoxLayout()
+2025-05-17 11:25:58,202 [DEBUG] 处理收到的消息:         layout.setContentsMargins(0, 0, 0, 0)
+2025-05-17 11:25:58,202 [DEBUG] 处理收到的消息:         name_label = QLabel(f'<b>{sender}:</b>')
+2025-05-17 11:25:58,206 [DEBUG] 处理收到的消息:         img_label = QLabel()
+2025-05-17 11:25:58,206 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,207 [DEBUG] 处理收到的消息:         # 尝试从缓存获取表情
+2025-05-17 11:25:58,208 [DEBUG] 处理收到的消息:         if not self.get_emoji_from_cache(emoji_id, img_label):
+2025-05-17 11:25:58,208 [DEBUG] 处理收到的消息:             path = os.path.join(EMOJI_DIR, emoji_id)
+2025-05-17 11:25:58,209 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,210 [DEBUG] 处理收到的消息:             # 添加路径检查
+2025-05-17 11:25:58,210 [DEBUG] 处理收到的消息:             if not os.path.exists(path):
+2025-05-17 11:25:58,211 [DEBUG] 处理收到的消息:                 print(f"表情文件不存在: {path}")
+2025-05-17 11:25:58,212 [DEBUG] 处理收到的消息:                 img_label.setText(f"[表情: {emoji_id}]")
+2025-05-17 11:25:58,212 [DEBUG] 处理收到的消息:             elif emoji_id.lower().endswith('.gif'):
+2025-05-17 11:25:58,213 [DEBUG] 处理收到的消息:                 # 使用定时器确保GIF加载完成
+2025-05-17 11:25:58,217 [DEBUG] 处理收到的消息:                 movie = QMovie(path)
+2025-05-17 11:25:58,217 [DEBUG] 处理收到的消息:                 img_label.setMovie(movie)
+2025-05-17 11:25:58,218 [DEBUG] 处理收到的消息:                 movie.setCacheMode(QMovie.CacheAll)
+2025-05-17 11:25:58,219 [DEBUG] 处理收到的消息:                 movie.start()
+2025-05-17 11:25:58,219 [DEBUG] 处理收到的消息:                 # 强制处理事件以确保显示更新
+2025-05-17 11:25:58,220 [DEBUG] 处理收到的消息:                 QApplication.processEvents()
+2025-05-17 11:25:58,221 [DEBUG] 处理收到的消息:             else:
+2025-05-17 11:25:58,221 [DEBUG] 处理收到的消息:                 # 静态图片加载
+2025-05-17 11:25:58,222 [DEBUG] 处理收到的消息:                 pix = QPixmap(path)
+2025-05-17 11:25:58,223 [DEBUG] 处理收到的消息:                 if pix.isNull():
+2025-05-17 11:25:58,223 [DEBUG] 处理收到的消息:                     # 如果加载失败，尝试重新加载
+2025-05-17 11:25:58,224 [DEBUG] 处理收到的消息:                     print(f"表情加载失败，尝试重新加载: {emoji_id}")
+2025-05-17 11:25:58,228 [DEBUG] 处理收到的消息:                     pix = QPixmap(path)
+2025-05-17 11:25:58,229 [DEBUG] 处理收到的消息:                 img_label.setPixmap(pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+2025-05-17 11:25:58,230 [DEBUG] 处理收到的消息:                 # 强制处理事件以确保显示更新
+2025-05-17 11:25:58,230 [DEBUG] 处理收到的消息:                 QApplication.processEvents()
+2025-05-17 11:25:58,231 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,232 [DEBUG] 处理收到的消息:         layout.addWidget(name_label)
+2025-05-17 11:25:58,232 [DEBUG] 处理收到的消息:         layout.addWidget(img_label)
+2025-05-17 11:25:58,233 [DEBUG] 处理收到的消息:         widget.setLayout(layout)
+2025-05-17 11:25:58,234 [DEBUG] 处理收到的消息:         item = QListWidgetItem()
+2025-05-17 11:25:58,234 [DEBUG] 处理收到的消息:         self.chat_display.addItem(item)
+2025-05-17 11:25:58,235 [DEBUG] 处理收到的消息:         self.chat_display.setItemWidget(item, widget)
+2025-05-17 11:25:58,236 [DEBUG] 处理收到的消息:         item.setSizeHint(widget.sizeHint())
+2025-05-17 11:25:58,236 [DEBUG] 处理收到的消息:         self.chat_display.scrollToBottom()
+2025-05-17 11:25:58,240 [DEBUG] 处理收到的消息:         # 强制刷新UI
+2025-05-17 11:25:58,241 [DEBUG] 处理收到的消息:         self.chat_display.repaint()
+2025-05-17 11:25:58,241 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,242 [DEBUG] 处理收到的消息:     def send_message(self):
+2025-05-17 11:25:58,243 [DEBUG] 处理收到的消息:         msg = self.input_edit.text().strip()
+2025-05-17 11:25:58,243 [DEBUG] 处理收到的消息:         if not msg or not self.current_friend:
+2025-05-17 11:25:58,244 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,245 [DEBUG] 处理收到的消息:         self.sock.send(f'MSG|{self.current_friend}|{msg}'.encode('utf-8'))
+2025-05-17 11:25:58,246 [DEBUG] 处理收到的消息:         self.input_edit.clear()
+2025-05-17 11:25:58,246 [DEBUG] 处理收到的消息:         self.append_text_message('我', msg, is_self=True)
+2025-05-17 11:25:58,247 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,251 [DEBUG] 处理收到的消息:     def open_emoji_dialog(self):
+2025-05-17 11:25:58,251 [DEBUG] 处理收到的消息:         if self.emoji_dialog is None:
+2025-05-17 11:25:58,252 [DEBUG] 处理收到的消息:             self.emoji_dialog = EmojiDialog()
+2025-05-17 11:25:58,253 [DEBUG] 处理收到的消息:             self.emoji_dialog.emoji_selected.connect(self.handle_emoji_selected)
+2025-05-17 11:25:58,253 [DEBUG] 处理收到的消息:         self.emoji_dialog.show()
+2025-05-17 11:25:58,254 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,255 [DEBUG] 处理收到的消息:     def handle_emoji_selected(self, emoji_id):
+2025-05-17 11:25:58,255 [DEBUG] 处理收到的消息:         if self.tab_widget.currentWidget() == self.private_tab:
+2025-05-17 11:25:58,256 [DEBUG] 处理收到的消息:             self.send_emoji(emoji_id)
+2025-05-17 11:25:58,257 [DEBUG] 处理收到的消息:         else:
+2025-05-17 11:25:58,258 [DEBUG] 处理收到的消息:             self.send_group_emoji(emoji_id)
+2025-05-17 11:25:58,258 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,262 [DEBUG] 处理收到的消息:     def send_emoji(self, emoji_id):
+2025-05-17 11:25:58,262 [DEBUG] 处理收到的消息:         if not self.current_friend:
+2025-05-17 11:25:58,263 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,264 [DEBUG] 处理收到的消息:         self.sock.send(f'EMOJI|{self.current_friend}|{emoji_id}'.encode('utf-8'))
+2025-05-17 11:25:58,265 [DEBUG] 处理收到的消息:         self.append_emoji_message('我', emoji_id)
+2025-05-17 11:25:58,265 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,266 [DEBUG] 处理收到的消息:     def select_group(self, item):
+2025-05-17 11:25:58,267 [DEBUG] 处理收到的消息:         if self.selecting_group:
+2025-05-17 11:25:58,267 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,268 [DEBUG] 处理收到的消息:         self.selecting_group = True
+2025-05-17 11:25:58,269 [DEBUG] 处理收到的消息:         try:
+2025-05-17 11:25:58,269 [DEBUG] 处理收到的消息:             group_info = item.text().split(' ', 1)[0]
+2025-05-17 11:25:58,272 [DEBUG] 处理收到的消息:             # 统一群组ID格式
+2025-05-17 11:25:58,273 [DEBUG] 处理收到的消息:             group_info = str(group_info)
+2025-05-17 11:25:58,274 [DEBUG] 处理收到的消息:             if self.current_group and str(self.current_group) == group_info:
+2025-05-17 11:25:58,274 [DEBUG] 处理收到的消息:                 self.selecting_group = False
+2025-05-17 11:25:58,275 [DEBUG] 处理收到的消息:                 return
+2025-05-17 11:25:58,276 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,276 [DEBUG] 处理收到的消息:             self.current_group = group_info
+2025-05-17 11:25:58,277 [DEBUG] 处理收到的消息:             # 清除未读标记
+2025-05-17 11:25:58,278 [DEBUG] 处理收到的消息:             if group_info in self.unread_groups:
+2025-05-17 11:25:58,279 [DEBUG] 处理收到的消息:                 self.unread_groups.remove(group_info)
+2025-05-17 11:25:58,279 [DEBUG] 处理收到的消息:                 self.update_group_list()  # 更新群聊列表显示
+2025-05-17 11:25:58,280 [DEBUG] 处理收到的消息:             self.tab_widget.setCurrentWidget(self.group_tab)
+2025-05-17 11:25:58,284 [DEBUG] 处理收到的消息:             self.group_chat_display.clear()
+2025-05-17 11:25:58,285 [DEBUG] 处理收到的消息:             self.anon_nick = None
+2025-05-17 11:25:58,285 [DEBUG] 处理收到的消息:             self.group_members_list.clear()
+2025-05-17 11:25:58,286 [DEBUG] 处理收到的消息:             # 先获取群聊成员，再获取历史记录
+2025-05-17 11:25:58,287 [DEBUG] 处理收到的消息:             self.sock.send(f'GET_GROUP_MEMBERS|{self.current_group}'.encode('utf-8'))
+2025-05-17 11:25:58,288 [DEBUG] 处理收到的消息:             self.sock.send(f'GET_GROUP_HISTORY|{self.current_group}'.encode('utf-8'))
+2025-05-17 11:25:58,290 [DEBUG] 处理收到的消息:         finally:
+2025-05-17 11:25:58,291 [DEBUG] 处理收到的消息:             self.selecting_group = False
+2025-05-17 11:25:58,291 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,292 [DEBUG] 处理收到的消息:     def create_group(self):
+2025-05-17 11:25:58,295 [DEBUG] 处理收到的消息:         group_name, ok = QInputDialog.getText(self, '创建群聊', '输入群聊名称:')
+2025-05-17 11:25:58,296 [DEBUG] 处理收到的消息:         if ok and group_name:
+2025-05-17 11:25:58,297 [DEBUG] 处理收到的消息:             self.sock.send(f'CREATE_GROUP|{self.username}|{group_name}'.encode('utf-8'))
+2025-05-17 11:25:58,298 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,299 [DEBUG] 处理收到的消息:     def join_group(self):
+2025-05-17 11:25:58,299 [DEBUG] 处理收到的消息:         group_id, ok = QInputDialog.getText(self, '加入群聊', '输入群聊ID:')
+2025-05-17 11:25:58,300 [DEBUG] 处理收到的消息:         if ok and group_id:
+2025-05-17 11:25:58,301 [DEBUG] 处理收到的消息:             self.sock.send(f'JOIN_GROUP|{self.username}|{group_id}'.encode('utf-8'))
+2025-05-17 11:25:58,302 [DEBUG] 处理收到的消息: 
+2025-05-17 11:25:58,303 [DEBUG] 处理收到的消息:     def send_group_message(self):
+2025-05-17 11:25:58,303 [DEBUG] 处理收到的消息:         msg = self.group_input_edit.text().strip()
+2025-05-17 11:25:58,307 [DEBUG] 处理收到的消息:         if not msg or not self.current_group:
+2025-05-17 11:25:58,308 [DEBUG] 处理收到的消息:             return
+2025-05-17 11:25:58,309 [DEBUG] 处理收到的消息:         if self.group_anon_btn.isChecked():
+2025-05-17 11:25:58,309 [DEBUG] 处理收到的消息:             if not self.anon_nick:
+2025-05-17 11:25:58,310 [DEBUG] 处理收到的消息:                 anon_nick, ok = QInputDialog.getText(self, '匿名昵称', '输入匿名昵称:')
+2025-05-17 11:25:58,311 [DEBUG] 处理收到的消息:                 if not ok or not anon_nick:
+2025-05-17 11:25:58,312 [DEBUG] 处理收到的消息:                     return
+2025-05-17 11:25:58,312 [DEBUG] 处理收到的消息:                 self.anon_nick = anon_nick
+2025-05-17 11:25:58,313 [DEBUG] 处理收到的消息:             self.sock.send(f'GROUP_MSG_ANON|{self.current_group}|{self.anon_nick}|{msg}'.encode('utf-8'))
+2025-05-17 11:26:05,526 [DEBUG] 停止客户端线程
+2025-05-17 11:26:05,527 [WARNING] 服务器连接断开
+2025-05-17 11:26:05,528 [DEBUG] 客户端线程结束
+2025-05-17 11:26:06,946 [DEBUG] 停止客户端线程

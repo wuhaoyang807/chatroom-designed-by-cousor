@@ -1,0 +1,33 @@
+2025-05-24 18:27:59,665 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 18:27:59,666 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 18:27:59,666 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 18:27:59,667 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 18:28:06,497 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 18:28:06,497 [DEBUG] 创建客户端线程
+2025-05-24 18:28:06,497 [DEBUG] 客户端线程初始化
+2025-05-24 18:28:06,497 [DEBUG] 找到可用UDP端口: 40340
+2025-05-24 18:28:06,497 [DEBUG] 客户端线程开始运行
+2025-05-24 18:28:06,498 [DEBUG] Opus编解码器初始化成功
+2025-05-24 18:28:06,498 [DEBUG] Opus编解码器初始化: 采样率=48000, 通道数=1
+2025-05-24 18:28:06,499 [DEBUG] Opus编解码器创建成功
+2025-05-24 18:28:06,499 [DEBUG] UDP音频线程绑定到端口: 40340
+2025-05-24 18:28:06,500 [DEBUG] UDP音频线程已启动，端口: 40340
+2025-05-24 18:28:06,500 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40340
+2025-05-24 18:28:06,500 [DEBUG] UDP音频接收线程开始运行，端口: 40340
+2025-05-24 18:28:06,500 [DEBUG] UDP音频服务初始化完成，端口: 40340
+2025-05-24 18:28:06,515 [DEBUG] 初始化UI
+2025-05-24 18:28:06,519 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 18:28:06,519 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40340
+2025-05-24 18:28:06,567 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-24 18:28:06,568 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-24 18:28:08,709 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1
+2025-05-24 18:28:08,756 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 18:28:26,544 [INFO] 服务器指示使用专用文件端口: 12347
+2025-05-24 18:28:26,584 [WARNING] 接收服务器进度更新出错: invalid literal for int() with base 10: '100SUCCESS'
+2025-05-24 18:28:26,584 [ERROR] 文件上传失败: 上传失败: 
+2025-05-24 18:28:27,777 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png|main.py
+2025-05-24 18:28:29,620 [DEBUG] 停止UDP音频线程，发送: 0 包，接收: 0 包
+2025-05-24 18:28:29,620 [ERROR] UDP接收错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 18:28:29,721 [DEBUG] 停止客户端线程
+2025-05-24 18:28:29,721 [WARNING] 服务器连接断开
+2025-05-24 18:28:29,722 [DEBUG] 客户端线程结束

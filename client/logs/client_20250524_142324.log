@@ -1,0 +1,56 @@
+2025-05-24 14:23:24,846 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 14:23:24,848 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 14:23:24,848 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-24 14:23:24,859 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-24 14:23:33,033 [DEBUG] 初始化主窗口: 用户=why
+2025-05-24 14:23:33,033 [DEBUG] 创建客户端线程
+2025-05-24 14:23:33,034 [DEBUG] 客户端线程初始化
+2025-05-24 14:23:33,034 [DEBUG] 客户端线程开始运行
+2025-05-24 14:23:33,034 [DEBUG] 找到可用UDP端口: 40857
+2025-05-24 14:23:33,034 [DEBUG] UDP音频线程绑定到端口: 40857
+2025-05-24 14:23:33,035 [DEBUG] UDP音频线程已启动，端口: 40857
+2025-05-24 14:23:33,035 [DEBUG] UDP音频接收线程开始运行，端口: 40857
+2025-05-24 14:23:33,035 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|40857
+2025-05-24 14:23:33,035 [DEBUG] UDP音频服务初始化完成，端口: 40857
+2025-05-24 14:23:33,054 [DEBUG] 初始化UI
+2025-05-24 14:23:33,058 [DEBUG] 初始刷新好友和群组列表
+2025-05-24 14:23:33,059 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 40857
+2025-05-24 14:23:33,107 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-24 14:23:33,107 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-24 14:23:58,276 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-24 14:23:59,810 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif
+2025-05-24 14:23:59,881 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png
+2025-05-24 14:24:03,678 [DEBUG] 尝试发起语音通话
+2025-05-24 14:24:03,678 [DEBUG] 发起语音通话请求：why -> why_1
+2025-05-24 14:24:03,678 [DEBUG] 准备发送通话请求: CALL_REQUEST|why|why_1|40857
+2025-05-24 14:24:03,678 [DEBUG] 已发送CALL_REQUEST消息，本地UDP端口: 40857
+2025-05-24 14:24:03,688 [ERROR] 发起通话请求失败: name 'AudioDeviceSelector' is not defined
+Traceback (most recent call last):
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 1957, in start_voice_call
+    self.call_dialog = CallDialog(
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 496, in __init__
+    self.audio_devices = self.get_audio_devices()
+  File "D:\OneDrive\Desktop\cursor_try_chat_app\client\main.py", line 526, in get_audio_devices
+    dialog = AudioDeviceSelector(self)
+NameError: name 'AudioDeviceSelector' is not defined
+2025-05-24 14:24:05,181 [DEBUG] 处理收到的消息: CALL_RESPONSE|SENDING|why_1
+2025-05-24 14:24:05,181 [DEBUG] 服务器确认正在向 why_1 发送通话请求
+2025-05-24 14:24:06,487 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40626
+2025-05-24 14:24:06,487 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40626
+2025-05-24 14:24:06,487 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 14:24:06,487 [WARNING] 收到CALL_ACCEPTED但不匹配当前通话状态: why_1
+2025-05-24 14:24:06,987 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40626
+2025-05-24 14:24:06,987 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40626
+2025-05-24 14:24:06,987 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 14:24:06,987 [WARNING] 收到CALL_ACCEPTED但不匹配当前通话状态: why_1
+2025-05-24 14:24:07,488 [DEBUG] 处理收到的消息: CALL_ACCEPTED|why_1|127.0.0.1|40626
+2025-05-24 14:24:07,488 [DEBUG] 收到CALL_ACCEPTED: from=why_1, ip=127.0.0.1, port=40626
+2025-05-24 14:24:07,488 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-24 14:24:07,488 [WARNING] 收到CALL_ACCEPTED但不匹配当前通话状态: why_1
+2025-05-24 14:24:19,822 [DEBUG] 处理收到的消息: CALL_ENDED|why_1
+2025-05-24 14:24:19,823 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-24 14:24:20,984 [DEBUG] 停止UDP音频线程，发送: 0 包，接收: 0 包
+2025-05-24 14:24:20,985 [ERROR] UDP接收错误: [WinError 10038] 在一个非套接字上尝试了一个操作。
+2025-05-24 14:24:21,086 [DEBUG] 停止客户端线程
+2025-05-24 14:24:21,086 [WARNING] 服务器连接断开
+2025-05-24 14:24:21,086 [DEBUG] 客户端线程结束

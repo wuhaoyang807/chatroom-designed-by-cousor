@@ -1,0 +1,24 @@
+2025-05-17 17:05:45,708 [DEBUG] 初始化主窗口: 用户=why
+2025-05-17 17:05:45,709 [DEBUG] 创建客户端线程
+2025-05-17 17:05:45,709 [DEBUG] 客户端线程初始化
+2025-05-17 17:05:45,710 [DEBUG] 开始初始化UDP音频服务
+2025-05-17 17:05:45,711 [DEBUG] 客户端线程开始运行
+2025-05-17 17:05:45,711 [DEBUG] 分配随机UDP端口: 58271
+2025-05-17 17:05:45,712 [DEBUG] 尝试绑定UDP端口: 58271
+2025-05-17 17:05:45,713 [DEBUG] UDP端口绑定成功: 58271
+2025-05-17 17:05:45,713 [DEBUG] 创建UDP音频线程，端口: 58271
+2025-05-17 17:05:45,714 [DEBUG] UDP音频线程启动成功
+2025-05-17 17:05:45,715 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|58271
+2025-05-17 17:05:45,726 [DEBUG] UDP音频服务初始化完成，端口: 58271
+2025-05-17 17:05:45,785 [DEBUG] 初始化UI
+2025-05-17 17:05:45,792 [DEBUG] 初始刷新好友和群组列表
+2025-05-17 17:05:45,793 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 58271
+2025-05-17 17:05:46,093 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline
+2025-05-17 17:05:46,094 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4
+2025-05-17 17:05:47,548 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png
+2025-05-17 17:05:47,617 [DEBUG] 处理收到的消息: FILE_LIST|
+2025-05-17 17:06:00,507 [DEBUG] 处理收到的消息: UPLOAD_SUCCESSPRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png
+2025-05-17 17:06:00,508 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:06:02,183 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png
+2025-05-17 17:06:02,237 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log
+2025-05-17 17:06:08,856 [DEBUG] 处理收到的消息: DOWNLOAD_READY|4212|1|2:second_grop|3:third_grop|4:4
