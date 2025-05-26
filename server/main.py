@@ -8,26 +8,22 @@ import shutil
 import threading
 import json
 
-# 导入配置
-try:
-    from config import *
-except ImportError:
-    # 如果没有配置文件，使用默认配置
-    HOST = '0.0.0.0'
-    PORT = 12345
-    UDP_PORT = 12346
-    FILE_PORT = 12347
-    USER_CSV = 'users.csv'
-    FRIENDSHIP_CSV = 'friendships.csv'
-    GROUP_CSV = 'groups.csv'
-    GROUP_MEMBERS_CSV = 'group_members.csv'
-    DEBUG_CALL = True
-    
-    import os
-    USER_FILES_DIR = 'user_files'
-    FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
-    os.makedirs(USER_FILES_DIR, exist_ok=True)
-    os.makedirs(FILES_DIR, exist_ok=True)
+# 服务器配置
+HOST = '0.0.0.0'
+PORT = 12345
+UDP_PORT = 12346  # 为语音通话添加UDP端口
+FILE_PORT = 12347  # 专用文件传输端口
+USER_CSV = 'users.csv'
+FRIENDSHIP_CSV = 'friendships.csv'
+GROUP_CSV = 'groups.csv'
+GROUP_MEMBERS_CSV = 'group_members.csv'
+DEBUG_CALL = True  # 添加调试标志
+USER_FILES_DIR = 'user_files'
+os.makedirs(USER_FILES_DIR, exist_ok=True)
+
+# 文件传输相关配置
+FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
+os.makedirs(FILES_DIR, exist_ok=True)
 
 # 文件传输服务器
 file_transfer_server = None
@@ -186,55 +182,43 @@ def notify_friends_status(username, online):
                     pass
 
 
-# UDP音频服务 - 通过服务器中继音频数据
+# 处理UDP音频数据中继
 def handle_udp_audio():
-    print(f"UDP音频中继服务开始监听 {HOST}:{UDP_PORT}")
+    print(f"UDP音频服务开始监听 {HOST}:{UDP_PORT}")
     while True:
         try:
-            data, addr = udp_socket.recvfrom(65536)
-            if len(data) > 1:
-                try:
-                    # 解析数据包头部
-                    header_len = data[0]
-                    if len(data) > header_len + 1:
-                        header = data[1:header_len + 1].decode('utf-8')
-                        payload = data[header_len + 1:]
+            data, addr = udp_socket.recvfrom(65536)  # 更大的缓冲区用于音频
+            # 解析头部以确定目标用户
+            if len(data) < 2:  # 确保数据至少包含2字节头部
+                continue
+
+            header_len = data[0]  # 第一个字节表示头部长度
+            if len(data) < header_len + 1:
+                continue
+
+            header = data[1:header_len + 1].decode('utf-8')
+            # 头部格式：发送者|接收者
+            try:
+                sender, receiver = header.split('|')
+
+                # 检查接收者是否在线和是否处于通话中
+                with lock:
+                    if receiver in active_calls and active_calls[receiver][0] == sender and receiver in udp_addresses:
+                        # 转发音频数据到接收者
+                        target_addr = udp_addresses[receiver]
+                        udp_socket.sendto(data, target_addr)
+                        # 每100个包记录一次转发日志
+                        if hasattr(handle_udp_audio, 'forward_count'):
+                            handle_udp_audio.forward_count += 1
+                        else:
+                            handle_udp_audio.forward_count = 1
                         
-                        # 检查是否是测试包
-                        if header.startswith('RELAY_TEST|') or header.startswith('NAT_TEST|'):
-                            # 忽略测试包，不记录日志
-                            continue
-                        
-                        # 解析发送者和接收者
-                        if '|' in header:
-                            sender, receiver = header.split('|', 1)
-                            
-                            # 检查通话状态
-                            with lock:
-                                if sender in active_calls and receiver in active_calls:
-                                    # 转发音频数据给接收者
-                                    if receiver in udp_addresses:
-                                        receiver_addr = udp_addresses[receiver]
-                                        try:
-                                            # 重新打包数据并转发
-                                            forward_header = f"{sender}|{receiver}"
-                                            forward_header_bytes = forward_header.encode('utf-8')
-                                            forward_packet = bytearray([len(forward_header_bytes)]) + forward_header_bytes + payload
-                                            udp_socket.sendto(forward_packet, receiver_addr)
-                                            
-                                            # 每100个包记录一次日志
-                                            if not hasattr(handle_udp_audio, 'relay_count'):
-                                                handle_udp_audio.relay_count = 0
-                                            handle_udp_audio.relay_count += 1
-                                            if handle_udp_audio.relay_count % 100 == 0:
-                                                print(f"音频中继: {sender} -> {receiver}, 包#{handle_udp_audio.relay_count}")
-                                        except Exception as e:
-                                            print(f"转发音频数据失败: {e}")
-                except Exception as e:
-                    print(f"处理音频数据包错误: {e}")
+                        if handle_udp_audio.forward_count % 100 == 0:
+                            print(f"已转发 {handle_udp_audio.forward_count} 个音频包: {sender} -> {receiver}")
+            except Exception as e:
+                print(f"处理UDP音频数据出错: {e}")
         except Exception as e:
-            print(f"UDP监听异常: {e}")
-            time.sleep(0.1)
+            print(f"UDP音频处理异常: {e}")
 
 
 def send_msg(conn, msg):
@@ -430,7 +414,7 @@ def handle_client(conn, addr):
                         client_udp_port = int(udp_port)
                         print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
 
-                        # 保存发起者的UDP地址（使用客户端的真实外网IP）
+                        # 保存发起者的UDP地址
                         with lock:
                             udp_addresses[from_user] = (client_ip, client_udp_port)
 
@@ -450,21 +434,30 @@ def handle_client(conn, addr):
                                             print(f"  目标用户 {to_user} 已在通话中")
                                         send_msg(conn, f'CALL_RESPONSE|BUSY|{to_user}')
                                     else:
-                                        # 将通话请求转发给对方，包含发起者的外网IP
+                                        # 将通话请求转发给对方
                                         try:
                                             if DEBUG_CALL:
                                                 print(f"  发送CALL_INCOMING到 {to_user}")
                                                 print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
 
-                                            # 发送通话请求消息，包含发起者的外网IP和端口
-                                            send_msg(to_user_conn, f'CALL_INCOMING|{from_user}|{client_ip}|{client_udp_port}')
+                                            # 使用多次发送和确认，增加可靠性
+                                            for i in range(3):  # 发送3次确保收到
+                                                # 发送通话请求消息
+                                                send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
+
+                                                if DEBUG_CALL:
+                                                    print(
+                                                        f"  第{i + 1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
+
+                                                # 短暂延迟确保接收方有时间处理
+                                                time.sleep(0.5)
 
                                             # 发送确认到发起方
                                             send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
 
                                             # 通知发起方对方已经收到通话请求
                                             if DEBUG_CALL:
-                                                print(f"  CALL_INCOMING已发送，对方应该收到请求")
+                                                print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
                                         except Exception as e:
                                             if DEBUG_CALL:
                                                 print(f"  发送CALL_INCOMING失败: {e}")
@@ -506,28 +499,18 @@ def handle_client(conn, addr):
                             # 保存接受者的UDP地址
                             udp_addresses[from_user] = (client_ip, client_udp_port)
 
-                            # 记录通话状态 - 使用服务器中继模式
+                            # 记录通话状态 - 修复：确保双方都有正确的对方地址
                             if to_user in udp_addresses:
                                 # 发起方的地址
                                 caller_addr = udp_addresses[to_user]
                                 active_calls[from_user] = (to_user, caller_addr)
                                 active_calls[to_user] = (from_user, (client_ip, client_udp_port))
                                 
-                                # 确定服务器的外网地址
-                                # 如果HOST是0.0.0.0，使用客户端连接的服务器IP
-                                if HOST == '0.0.0.0':
-                                    # 获取客户端连接到的服务器IP地址
-                                    server_ip = conn.getsockname()[0]
-                                    if server_ip == '0.0.0.0' or server_ip.startswith('127.'):
-                                        # 如果还是本地地址，尝试从客户端IP推断
-                                        server_ip = SERVER_HOST if SERVER_HOST != '0.0.0.0' else client_ip
-                                else:
-                                    server_ip = HOST
-                                
-                                # 向发起方发送通话接受确认，使用服务器UDP地址
+                                # 向双方发送连接信息
                                 if to_user in clients:
                                     try:
-                                        accept_msg = f'CALL_ACCEPTED|{from_user}|{server_ip}|{UDP_PORT}'
+                                        # 向发起方发送接受者的地址信息
+                                        accept_msg = f'CALL_ACCEPTED|{from_user}|{client_ip}|{client_udp_port}'
                                         send_msg(clients[to_user], accept_msg)
                                         if DEBUG_CALL:
                                             print(f"  发送CALL_ACCEPTED给发起方 {to_user}: {accept_msg}")
@@ -536,10 +519,11 @@ def handle_client(conn, addr):
                                             print(f"  发送CALL_ACCEPTED失败: {e}")
                                         del clients[to_user]  # 清理无效连接
                                 
-                                # 向接受方发送连接信息，使用服务器UDP地址
+                                # 向接受方发送发起方的地址信息
                                 if from_user in clients:
                                     try:
-                                        connect_msg = f'CALL_CONNECT_INFO|{to_user}|{server_ip}|{UDP_PORT}'
+                                        caller_ip, caller_port = caller_addr
+                                        connect_msg = f'CALL_CONNECT_INFO|{to_user}|{caller_ip}|{caller_port}'
                                         send_msg(clients[from_user], connect_msg)
                                         if DEBUG_CALL:
                                             print(f"  发送CALL_CONNECT_INFO给接受方 {from_user}: {connect_msg}")
