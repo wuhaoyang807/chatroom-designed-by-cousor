@@ -32,7 +32,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
-        logging.FileHandler(log_file),
+        logging.FileHandler(log_file, encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -56,8 +56,10 @@ class AudioCompressor:
                 # 轻度压缩：保持原始质量
                 return audio_data
             elif compression_level == 2:
-                # 中度压缩：降低音量动态范围
-                return audioop.mul(audio_data, 2, 0.8)  # 降低音量到80%
+                # 中度压缩：降低音量动态范围，并添加简单的回声抑制
+                # 降低音量以减少反馈
+                reduced_volume = audioop.mul(audio_data, 2, 0.6)  # 降低音量到60%
+                return reduced_volume
             elif compression_level == 3:
                 # 高度压缩：降低位深度
                 # 将16位音频转换为8位再转回16位
@@ -92,15 +94,107 @@ class AudioCompressor:
             
             # 对于大多数压缩级别，解压缩就是恢复音量
             if compression_level == 2:
-                return audioop.mul(audio_data, 2, 1.25)  # 恢复音量
+                # 恢复音量，但保持在合理范围内以避免反馈
+                return audioop.mul(audio_data, 2, 1.1)  # 恢复音量到110%
             else:
                 return audio_data
         except Exception as e:
             logging.error(f"音频解压缩失败: {e}")
             return audio_data
 
+    @staticmethod
+    def apply_echo_suppression(audio_data):
+        """
+        简单的回声抑制：检测音频强度，如果太高则降低音量
+        """
+        try:
+            if not audio_data or len(audio_data) == 0:
+                return audio_data
+            
+            # 计算音频的RMS（均方根）值来判断音量
+            rms = audioop.rms(audio_data, 2)
+            
+            # 如果音量过高（可能是反馈），则大幅降低音量
+            if rms > 8000:  # 阈值可以调整
+                return audioop.mul(audio_data, 2, 0.3)  # 降低到30%
+            elif rms > 5000:
+                return audioop.mul(audio_data, 2, 0.6)  # 降低到60%
+            else:
+                return audio_data
+        except Exception as e:
+            logging.error(f"回声抑制失败: {e}")
+            return audio_data
+
+
+# 变音工具类
+class VoiceChanger:
+    """语音变音工具类"""
+    
+    @staticmethod
+    def change_pitch(audio_data, pitch_factor):
+        """
+        改变音调
+        pitch_factor: 音调变化因子，>1提高音调，<1降低音调
+        """
+        try:
+            if not audio_data or len(audio_data) == 0:
+                return audio_data
+            
+            # 将字节数据转换为样本数组
+            samples = struct.unpack('<' + 'h' * (len(audio_data) // 2), audio_data)
+            
+            # 简单的音调变化：通过改变采样率来实现
+            if pitch_factor != 1.0:
+                # 重新采样以改变音调
+                new_length = int(len(samples) / pitch_factor)
+                new_samples = []
+                
+                for i in range(new_length):
+                    # 线性插值
+                    old_index = i * pitch_factor
+                    index1 = int(old_index)
+                    index2 = min(index1 + 1, len(samples) - 1)
+                    
+                    if index1 < len(samples):
+                        # 线性插值计算新样本值
+                        fraction = old_index - index1
+                        sample = samples[index1] * (1 - fraction) + samples[index2] * fraction
+                        new_samples.append(int(sample))
+                
+                # 如果新长度小于原长度，需要填充或截断到原长度
+                if len(new_samples) < len(samples):
+                    # 重复最后的样本来填充
+                    while len(new_samples) < len(samples):
+                        new_samples.append(new_samples[-1] if new_samples else 0)
+                else:
+                    # 截断到原长度
+                    new_samples = new_samples[:len(samples)]
+                
+                # 转换回字节数据
+                return struct.pack('<' + 'h' * len(new_samples), *new_samples)
+            else:
+                return audio_data
+                
+        except Exception as e:
+            logging.error(f"变音处理失败: {e}")
+            return audio_data
+    
+    @staticmethod
+    def apply_female_voice(audio_data):
+        """
+        应用女声效果（提高音调）
+        """
+        return VoiceChanger.change_pitch(audio_data, 1.3)  # 提高30%的音调
+    
+    @staticmethod
+    def apply_original_voice(audio_data):
+        """
+        保持原声
+        """
+        return audio_data
+
 # 服务器配置
-SERVER_HOST = '127.0.0.1'  # 默认本地地址
+SERVER_HOST = '127.0.0.1'  # 默认本地地址why
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
@@ -314,6 +408,342 @@ class UDPAudioThread(QThread):
             print(f"关闭UDP socket错误: {e}")
 
 
+class VoiceMessageDialog(QDialog):
+    """语音消息录制对话框"""
+    voice_message_ready = pyqtSignal(bytes, str)  # 音频数据和变音类型
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("录制语音消息")
+        self.setFixedSize(350, 250)
+        self.setModal(True)
+        
+        self.audio = None
+        self.stream = None
+        self.recording = False
+        self.audio_data = []
+        self.voice_type = "original"  # 默认原声
+        
+        self.init_ui()
+        center_window(self)
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # 标题
+        title_label = QLabel("🎤 录制语音消息")
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet("font-size: 16pt; font-weight: bold; color: #2E86AB;")
+        
+        # 变音选择
+        voice_group = QVBoxLayout()
+        voice_label = QLabel("选择声音类型:")
+        voice_label.setStyleSheet("font-weight: bold;")
+        
+        self.voice_radio_layout = QHBoxLayout()
+        self.original_radio = QPushButton("原声")
+        self.female_radio = QPushButton("女声")
+        
+        # 设置按钮样式
+        button_style = """
+            QPushButton {
+                background-color: #f0f0f0;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+                min-width: 80px;
+            }
+            QPushButton:checked {
+                background-color: #2E86AB;
+                color: white;
+                border-color: #2E86AB;
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0;
+            }
+            QPushButton:checked:hover {
+                background-color: #1E5F7A;
+            }
+        """
+        
+        self.original_radio.setCheckable(True)
+        self.female_radio.setCheckable(True)
+        self.original_radio.setChecked(True)  # 默认选中原声
+        self.original_radio.setStyleSheet(button_style)
+        self.female_radio.setStyleSheet(button_style)
+        
+        # 设置互斥选择
+        self.original_radio.clicked.connect(lambda: self.select_voice_type("original"))
+        self.female_radio.clicked.connect(lambda: self.select_voice_type("female"))
+        
+        self.voice_radio_layout.addWidget(self.original_radio)
+        self.voice_radio_layout.addWidget(self.female_radio)
+        
+        voice_group.addWidget(voice_label)
+        voice_group.addLayout(self.voice_radio_layout)
+        
+        # 录制状态显示
+        self.status_label = QLabel("点击开始录制")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("color: #666; font-size: 12pt;")
+        
+        # 录制时长显示
+        self.duration_label = QLabel("录制时长: 00:00")
+        self.duration_label.setAlignment(Qt.AlignCenter)
+        self.duration_label.setStyleSheet("color: #666; font-size: 10pt;")
+        
+        # 录制按钮
+        self.record_btn = QPushButton("🎤 开始录制")
+        self.record_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+            QPushButton:pressed {
+                background-color: #1e7e34;
+            }
+        """)
+        self.record_btn.clicked.connect(self.toggle_recording)
+        
+        # 操作按钮
+        button_layout = QHBoxLayout()
+        self.send_btn = QPushButton("发送")
+        self.cancel_btn = QPushButton("取消")
+        
+        self.send_btn.setEnabled(False)  # 初始禁用
+        self.send_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover:enabled {
+                background-color: #0056b3;
+            }
+            QPushButton:disabled {
+                background-color: #ccc;
+                color: #666;
+            }
+        """)
+        
+        self.cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #545b62;
+            }
+        """)
+        
+        self.send_btn.clicked.connect(self.send_voice_message)
+        self.cancel_btn.clicked.connect(self.reject)
+        
+        button_layout.addWidget(self.send_btn)
+        button_layout.addWidget(self.cancel_btn)
+        
+        # 组装布局
+        layout.addWidget(title_label)
+        layout.addSpacing(10)
+        layout.addLayout(voice_group)
+        layout.addSpacing(10)
+        layout.addWidget(self.status_label)
+        layout.addWidget(self.duration_label)
+        layout.addSpacing(10)
+        layout.addWidget(self.record_btn)
+        layout.addSpacing(10)
+        layout.addLayout(button_layout)
+        
+        self.setLayout(layout)
+        
+        # 录制计时器
+        self.record_timer = QTimer(self)
+        self.record_timer.timeout.connect(self.update_duration)
+        self.record_start_time = 0
+
+    def select_voice_type(self, voice_type):
+        """选择变音类型"""
+        self.voice_type = voice_type
+        if voice_type == "original":
+            self.original_radio.setChecked(True)
+            self.female_radio.setChecked(False)
+        else:
+            self.original_radio.setChecked(False)
+            self.female_radio.setChecked(True)
+
+    def toggle_recording(self):
+        """切换录制状态"""
+        if not self.recording:
+            self.start_recording()
+        else:
+            self.stop_recording()
+
+    def start_recording(self):
+        """开始录制"""
+        try:
+            self.audio = pyaudio.PyAudio()
+            self.stream = self.audio.open(
+                format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK
+            )
+            
+            self.recording = True
+            self.audio_data = []
+            self.record_start_time = time.time()
+            
+            # 更新UI
+            self.record_btn.setText("⏹ 停止录制")
+            self.record_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 12px;
+                    font-size: 14pt;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #c82333;
+                }
+            """)
+            self.status_label.setText("🔴 正在录制...")
+            self.status_label.setStyleSheet("color: red; font-size: 12pt; font-weight: bold;")
+            
+            # 禁用变音选择
+            self.original_radio.setEnabled(False)
+            self.female_radio.setEnabled(False)
+            
+            # 开始计时器
+            self.record_timer.start(100)  # 每100ms更新一次
+            
+            # 开始录制线程
+            self.record_thread = threading.Thread(target=self.record_audio)
+            self.record_thread.daemon = True
+            self.record_thread.start()
+            
+        except Exception as e:
+            QMessageBox.warning(self, "录制错误", f"无法开始录制: {e}")
+            self.recording = False
+
+    def record_audio(self):
+        """录制音频数据"""
+        try:
+            while self.recording and self.stream:
+                try:
+                    data = self.stream.read(CHUNK, exception_on_overflow=False)
+                    if data and len(data) > 0:
+                        self.audio_data.append(data)
+                    else:
+                        logging.warning("录制到空音频数据")
+                except Exception as read_error:
+                    logging.error(f"读取音频数据失败: {read_error}")
+                    break
+        except Exception as e:
+            logging.error(f"录制音频出错: {e}")
+            self.recording = False
+
+    def stop_recording(self):
+        """停止录制"""
+        self.recording = False
+        self.record_timer.stop()
+        
+        if self.stream:
+            self.stream.stop_stream()
+            self.stream.close()
+            self.stream = None
+        
+        if self.audio:
+            self.audio.terminate()
+            self.audio = None
+        
+        # 更新UI
+        self.record_btn.setText("🎤 重新录制")
+        self.record_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 12px;
+                font-size: 14pt;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        
+        if self.audio_data:
+            duration = time.time() - self.record_start_time
+            self.status_label.setText(f"✅ 录制完成 ({duration:.1f}秒)")
+            self.status_label.setStyleSheet("color: green; font-size: 12pt; font-weight: bold;")
+            self.send_btn.setEnabled(True)
+        else:
+            self.status_label.setText("录制失败，请重试")
+            self.status_label.setStyleSheet("color: red; font-size: 12pt;")
+        
+        # 重新启用变音选择
+        self.original_radio.setEnabled(True)
+        self.female_radio.setEnabled(True)
+
+    def update_duration(self):
+        """更新录制时长显示"""
+        if self.recording:
+            duration = time.time() - self.record_start_time
+            minutes = int(duration // 60)
+            seconds = int(duration % 60)
+            self.duration_label.setText(f"录制时长: {minutes:02d}:{seconds:02d}")
+
+    def send_voice_message(self):
+        """发送语音消息"""
+        if not self.audio_data:
+            QMessageBox.warning(self, "提示", "请先录制语音消息")
+            return
+        
+        try:
+            # 合并音频数据
+            audio_bytes = b''.join(self.audio_data)
+            
+            # 应用变音效果
+            if self.voice_type == "female":
+                audio_bytes = VoiceChanger.apply_female_voice(audio_bytes)
+            else:
+                audio_bytes = VoiceChanger.apply_original_voice(audio_bytes)
+            
+            # 发送信号
+            self.voice_message_ready.emit(audio_bytes, self.voice_type)
+            self.accept()
+            
+        except Exception as e:
+            QMessageBox.warning(self, "发送失败", f"处理语音消息失败: {e}")
+
+    def closeEvent(self, event):
+        """关闭对话框时清理资源"""
+        if self.recording:
+            self.stop_recording()
+        event.accept()
+
+
 class AudioDeviceSelector(QDialog):
     """音频设备选择对话框"""
 
@@ -345,10 +775,13 @@ class AudioDeviceSelector(QDialog):
 
         # 按钮区域
         button_layout = QHBoxLayout()
+        self.test_btn = QPushButton("测试设备")
+        self.test_btn.clicked.connect(self.test_devices)
         self.ok_button = QPushButton("确定")
         self.cancel_button = QPushButton("取消")
         self.ok_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.test_btn)
         button_layout.addWidget(self.ok_button)
         button_layout.addWidget(self.cancel_button)
 
@@ -410,6 +843,81 @@ class AudioDeviceSelector(QDialog):
     def closeEvent(self, event):
         self.audio.terminate()
         event.accept()
+
+    def test_devices(self):
+        """测试选中的音频设备"""
+        try:
+            input_device = self.input_combo.currentData()
+            output_device = self.output_combo.currentData()
+            
+            if input_device is None or output_device is None:
+                QMessageBox.warning(self, "设备选择错误", "请先选择输入和输出设备")
+                return
+            
+            # 显示测试对话框
+            test_dialog = QMessageBox(self)
+            test_dialog.setWindowTitle("设备测试")
+            test_dialog.setText("正在测试音频设备...\n请对着麦克风说话，您应该能听到自己的声音")
+            test_dialog.setStandardButtons(QMessageBox.Cancel)
+            test_dialog.setModal(False)
+            test_dialog.show()
+            
+            # 创建测试音频流
+            test_stream_in = None
+            test_stream_out = None
+            
+            try:
+                # 打开输入流
+                test_stream_in = self.audio.open(
+                    format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    input_device_index=input_device,
+                    frames_per_buffer=CHUNK
+                )
+                
+                # 打开输出流
+                test_stream_out = self.audio.open(
+                    format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    output=True,
+                    output_device_index=output_device,
+                    frames_per_buffer=CHUNK
+                )
+                
+                # 测试3秒钟
+                for i in range(int(3 * RATE / CHUNK)):
+                    if test_dialog.result() == QMessageBox.Cancel:
+                        break
+                    
+                    # 读取音频数据
+                    data = test_stream_in.read(CHUNK, exception_on_overflow=False)
+                    # 降低音量以避免反馈
+                    reduced_data = audioop.mul(data, 2, 0.3)
+                    # 播放音频数据
+                    test_stream_out.write(reduced_data)
+                    
+                    QApplication.processEvents()
+                
+                test_dialog.close()
+                QMessageBox.information(self, "测试完成", "音频设备测试完成！\n如果您听到了自己的声音，说明设备工作正常。")
+                
+            except Exception as e:
+                test_dialog.close()
+                QMessageBox.warning(self, "测试失败", f"音频设备测试失败: {e}")
+            finally:
+                # 清理测试流
+                if test_stream_in:
+                    test_stream_in.stop_stream()
+                    test_stream_in.close()
+                if test_stream_out:
+                    test_stream_out.stop_stream()
+                    test_stream_out.close()
+                    
+        except Exception as e:
+            QMessageBox.warning(self, "测试错误", f"无法测试音频设备: {e}")
 
 
 class AudioRecorder(QThread):
@@ -475,8 +983,10 @@ class AudioRecorder(QThread):
                             
                             # 验证目标地址
                             if self.target_addr and len(self.target_addr) == 2:
+                                # 应用回声抑制
+                                echo_suppressed = AudioCompressor.apply_echo_suppression(audio_data)
                                 # 应用音频压缩
-                                compressed_audio = AudioCompressor.compress_audio(audio_data, compression_level=2)
+                                compressed_audio = AudioCompressor.compress_audio(echo_suppressed, compression_level=2)
                                 self.udp_thread.send_audio(compressed_audio, self.target_addr, self.sender, self.receiver)
                             else:
                                 logging.warning(f"无效的目标地址: {self.target_addr}")
@@ -582,9 +1092,8 @@ class AudioPlayer(QThread):
                                     # 每播放100个包记录一次日志
                                     if self.play_count % 100 == 0:
                                         logging.debug(f"播放音频数据: 包 #{self.play_count}, {len(audio_data)} 字节")
-                                    # 应用音频解压缩
-                                    decompressed_audio = AudioCompressor.decompress_audio(audio_data, compression_level=2)
-                                    self.stream.write(decompressed_audio)
+                                    # 直接播放音频数据（语音消息不需要解压缩）
+                                    self.stream.write(audio_data)
                     except Exception as e:
                         logging.error(f"播放错误: {e}")
                         self.error_occurred = True
@@ -630,289 +1139,95 @@ class AudioPlayer(QThread):
         self.wait()
 
 
-class CallDialog(QDialog):
-    """语音通话对话框"""
-    call_ended = pyqtSignal()
+class VoiceMessageAudioPlayer(QThread):
+    """专门用于语音消息播放的音频播放器"""
 
-    def __init__(self, parent=None, friend_name=None, is_caller=False, udp_thread=None, target_addr=None,
-                 username=None):
-        super().__init__(parent)
-        self.friend_name = friend_name
-        self.is_caller = is_caller
-        self.udp_thread = udp_thread
-        self.target_addr = target_addr
-        self.username = username
-        self.audio_recorder = None
-        self.audio_player = None
-        self.call_active = False
+    def __init__(self):
+        super().__init__()
+        self.audio = None
+        self.stream = None
+        self.running = True
+        self.audio_queue = []
+        self.queue_lock = threading.Lock()
         self.error_occurred = False
+        logging.debug("初始化语音消息音频播放器")
 
-        # 获取音频设备
-        self.audio_devices = self.get_audio_devices()
-
-        self.init_ui()
-
-        if is_caller:
-            self.status_label.setText(f"正在等待 {friend_name} 接听...")
-        else:
-            self.status_label.setText(f"与 {friend_name} 通话中...")
-            # 接收方需要等待目标地址，不立即开始通话
-            if self.target_addr:
-                self.start_call()
-
-    def init_ui(self):
-        """初始化UI界面"""
-        self.setWindowTitle("语音通话")
-        self.setFixedSize(350, 200)
-
-        layout = QVBoxLayout()
-
-        self.status_label = QLabel(f"与 {self.friend_name} 通话中...")
-        self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("font-size: 14pt; font-weight: bold;")
-
-        # 添加通话状态指示器
-        self.connection_label = QLabel("正在连接...")
-        self.connection_label.setAlignment(Qt.AlignCenter)
-        self.connection_label.setStyleSheet("color: orange;")
-
-        self.end_call_btn = QPushButton("结束通话")
-        self.end_call_btn.setStyleSheet("background-color: red; color: white; font-size: 12pt; padding: 10px;")
-        self.end_call_btn.clicked.connect(self.end_call)
-
-        layout.addWidget(self.status_label)
-        layout.addWidget(self.connection_label)
-        layout.addWidget(self.end_call_btn)
-
-        self.setLayout(layout)
-
-    def get_audio_devices(self):
-        """获取音频设备"""
+    def run(self):
         try:
-            dialog = AudioDeviceSelector(self)
-            if dialog.exec_() == QDialog.Accepted:
-                devices = dialog.get_selected_devices()
-                logging.debug(f"用户选择的音频设备: {devices}")
-                return devices
-            else:
-                # 用户取消选择，使用默认设备
-                logging.debug("用户取消音频设备选择，使用默认设备")
-                return self.get_default_devices()
-        except Exception as e:
-            logging.error(f"获取音频设备失败: {e}")
-            return self.get_default_devices()
+            # 初始化音频设备
+            self.audio = pyaudio.PyAudio()
 
-    def get_default_devices(self):
-        """获取默认音频设备"""
-        try:
-            audio = pyaudio.PyAudio()
-            default_input = audio.get_default_input_device_info()['index']
-            default_output = audio.get_default_output_device_info()['index']
-            audio.terminate()
-            return {'input': default_input, 'output': default_output}
-        except Exception as e:
-            logging.error(f"获取默认音频设备失败: {e}")
-            return {'input': 0, 'output': 0}  # 使用设备索引0作为最后的备选
+            # 使用默认输出设备
+            output_device_index = self.audio.get_default_output_device_info()['index']
+            logging.debug(f"使用默认输出设备: {output_device_index}")
 
-    def start_call(self):
-        """开始音频通话"""
-        if self.call_active:
-            return
-
-        logging.debug(f"开始通话: is_caller={self.is_caller}, target_addr={self.target_addr}")
-        self.call_active = True
-        self.status_label.setText(f"与 {self.friend_name} 通话中...")
-        self.connection_label.setText("正在建立连接...")
-
-        try:
-            # 验证音频设备
-            if not self.audio_devices or 'input' not in self.audio_devices or 'output' not in self.audio_devices:
-                raise ValueError("无效的音频设备配置")
-
-            # 验证目标地址
-            if not self.target_addr or len(self.target_addr) != 2:
-                raise ValueError(f"无效的目标地址: {self.target_addr}")
-
-            # 启动音频播放器
-            self.audio_player = AudioPlayer(self.audio_devices['output'])
-            self.udp_thread.audio_received.connect(self.on_audio_received)
-            self.audio_player.start()
-            logging.debug("音频播放器已启动")
-
-            # 启动音频录制器
-            self.audio_recorder = AudioRecorder(
-                self.udp_thread,
-                self.target_addr,
-                self.username,
-                self.friend_name,
-                self.audio_devices['input']
+            # 打开音频流
+            self.stream = self.audio.open(
+                format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                output=True,
+                frames_per_buffer=CHUNK,
+                output_device_index=output_device_index,
+                stream_callback=None,
+                start=True
             )
-            self.audio_recorder.start()
-            logging.debug("音频录制器已启动")
 
-            # 更新状态
-            self.connection_label.setText("通话已连接")
-            self.connection_label.setStyleSheet("color: green;")
+            logging.debug("语音消息播放器开始运行...")
 
+                        # 持续从队列中获取和播放音频
+            while self.running and not self.error_occurred:
+                if self.audio_queue and self.stream and self.stream.is_active():
+                    try:
+                        with self.queue_lock:
+                            if self.audio_queue:
+                                audio_data = self.audio_queue.pop(0)
+                                if audio_data and len(audio_data) > 0:
+                                    # 直接播放音频数据
+                                    self.stream.write(audio_data)
+                    except Exception as e:
+                        logging.error(f"语音消息播放错误: {e}")
+                        self.error_occurred = True
+                        time.sleep(0.01)
+                else:
+                    time.sleep(0.01)
         except Exception as e:
-            logging.error(f"启动通话失败: {e}")
+            logging.error(f"语音消息播放器初始化错误: {e}")
             self.error_occurred = True
-            self.connection_label.setText(f"连接失败: {e}")
-            self.connection_label.setStyleSheet("color: red;")
-            QMessageBox.critical(self, "通话错误", f"启动通话失败: {e}")
+        finally:
+            self.stop_playback()
 
-    def on_audio_received(self, audio_data):
-        """收到音频数据"""
-        if self.audio_player and self.call_active and not self.error_occurred:
-            try:
-                if audio_data and len(audio_data) > 0:
-                    self.audio_player.add_audio(audio_data)
-                    # 更新连接状态
-                    if self.connection_label.text() != "通话已连接":
-                        self.connection_label.setText("通话已连接")
-                        self.connection_label.setStyleSheet("color: green;")
-            except Exception as e:
-                logging.error(f"处理接收到的音频数据失败: {e}")
-                self.error_occurred = True
-
-    def update_target_addr(self, target_addr):
-        """更新目标地址并开始通话"""
-        logging.debug(f"更新目标地址: {target_addr}")
-        self.target_addr = target_addr
-        if not self.call_active:
-            self.start_call()
-        elif self.audio_recorder:
-            # 如果通话已经开始，更新录制器的目标地址
-            self.audio_recorder.target_addr = target_addr
-
-    def end_call(self):
-        """结束通话"""
-        if not self.call_active:
+    def add_audio(self, audio_data):
+        if not audio_data or len(audio_data) == 0:
             return
-            
-        logging.debug("结束通话")
-        self.call_active = False
 
-        # 停止音频录制和播放
-        if self.audio_recorder:
+        with self.queue_lock:
+            self.audio_queue.append(audio_data)
+
+    def stop_playback(self):
+        if self.stream:
             try:
-                self.audio_recorder.stop()
+                if self.stream.is_active():
+                    self.stream.stop_stream()
+                self.stream.close()
             except Exception as e:
-                print(f"停止音频录制器失败: {e}")
-            self.audio_recorder = None
+                logging.error(f"关闭语音消息播放流错误: {e}")
+            finally:
+                self.stream = None
 
-        if self.audio_player:
+    def stop(self):
+        self.running = False
+        self.stop_playback()
+        if self.audio:
             try:
-                self.audio_player.stop()
+                self.audio.terminate()
             except Exception as e:
-                print(f"停止音频播放器失败: {e}")
-            self.audio_player = None
-
-        if self.udp_thread:
-            try:
-                self.udp_thread.audio_received.disconnect(self.on_audio_received)
-            except Exception as e:
-                print(f"断开音频接收信号失败: {e}")
-
-        self.call_ended.emit()
-        self.close()
-
-    def closeEvent(self, event):
-        """窗口关闭时结束通话"""
-        if self.call_active:
-            self.end_call()
-        event.accept()
+                logging.error(f"终止语音消息音频设备错误: {e}")
+        self.quit()
+        self.wait()
 
 
-class IncomingCallDialog(QDialog):
-    """来电对话框"""
-    call_accepted = pyqtSignal()
-    call_rejected = pyqtSignal()
-
-    def __init__(self, parent=None, caller_name=None):
-        super().__init__(parent)
-        self.caller_name = caller_name
-        # 设置窗口为独立窗口，总是在最前，且无法点击其他窗口直到处理通知
-        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
-        self.setWindowModality(Qt.ApplicationModal)  # 阻止点击其他窗口
-
-        logging.debug(f"创建来电对话框，来电者: {caller_name}")
-        self.init_ui()
-        center_window(self)  # 居中显示
-
-        # 播放系统提示音
-        QApplication.beep()
-        QApplication.beep()  # 播放两次以引起注意
-
-        # 额外创建系统通知，防止窗口被遮挡
-        try:
-            QMessageBox.information(None, "来电通知", f"收到来自 {caller_name} 的语音通话请求！",
-                                    QMessageBox.Ok)
-        except:
-            pass
-
-    def init_ui(self):
-        self.setWindowTitle("【来电提醒】")
-        self.setFixedSize(400, 200)
-
-        layout = QVBoxLayout()
-
-        # 使用更显眼的标题
-        title_label = QLabel(f"收到来电!")
-        title_label.setStyleSheet("font-size: 18pt; font-weight: bold; color: red;")
-        title_label.setAlignment(Qt.AlignCenter)
-
-        self.status_label = QLabel(f"{self.caller_name} 正在呼叫你...")
-        self.status_label.setStyleSheet("font-size: 14pt;")
-        self.status_label.setAlignment(Qt.AlignCenter)
-
-        btn_layout = QHBoxLayout()
-
-        self.accept_btn = QPushButton("接听")
-        self.accept_btn.setStyleSheet("background-color: green; color: white; font-size: 12pt; min-height: 40px;")
-        self.accept_btn.clicked.connect(self.accept_call)
-
-        self.reject_btn = QPushButton("拒绝")
-        self.reject_btn.setStyleSheet("background-color: red; color: white; font-size: 12pt; min-height: 40px;")
-        self.reject_btn.clicked.connect(self.reject_call)
-
-        btn_layout.addWidget(self.accept_btn)
-        btn_layout.addWidget(self.reject_btn)
-
-        layout.addWidget(title_label)
-        layout.addWidget(self.status_label)
-        layout.addSpacing(20)
-        layout.addLayout(btn_layout)
-
-        self.setLayout(layout)
-        logging.debug(f"来电对话框UI初始化完成，来电者: {self.caller_name}")
-
-        # 设置定时提醒
-        self.reminder_timer = QTimer(self)
-        self.reminder_timer.timeout.connect(self.reminder_beep)
-        self.reminder_timer.start(3000)  # 每3秒提醒一次
-
-    def reminder_beep(self):
-        """定期发出提示音"""
-        QApplication.beep()
-
-    def accept_call(self):
-        logging.debug(f"用户点击接听来自 {self.caller_name} 的通话")
-        self.reminder_timer.stop()
-        self.call_accepted.emit()
-        self.close()
-
-    def reject_call(self):
-        logging.debug(f"用户点击拒绝来自 {self.caller_name} 的通话")
-        self.reminder_timer.stop()
-        self.call_rejected.emit()
-        self.close()
-
-    def closeEvent(self, event):
-        """窗口关闭时处理"""
-        logging.debug(f"来电对话框被关闭")
-        self.reminder_timer.stop()
-        event.accept()
+# 移除所有语音通话相关的对话框类
 
 
 def excepthook(type, value, traceback):
@@ -972,7 +1287,7 @@ class LoginWindow(QWidget):
             return
         self.sock.send(f'LOGIN|{username}|{password}'.encode('utf-8'))
         try:
-            resp = self.sock.recv(4096).decode('utf-8')
+            resp = self.sock.recv(16384).decode('utf-8')
         except Exception as e:
             QMessageBox.critical(self, '错误', f'网络错误: {e}')
             return
@@ -990,7 +1305,7 @@ class LoginWindow(QWidget):
             QMessageBox.warning(self, '提示', '请输入用户名和密码')
             return
         self.sock.send(f'REGISTER|{username}|{password}'.encode('utf-8'))
-        resp = self.sock.recv(4096).decode('utf-8')
+        resp = self.sock.recv(16384).decode('utf-8')
         parts = resp.split('|', 2)
         if parts[0] == 'REGISTER_RESULT' and parts[1] == 'OK':
             QMessageBox.information(self, '注册成功', parts[2])
@@ -1005,7 +1320,7 @@ class LoginWindow(QWidget):
             return
         try:
             self.sock.send(f'DELETE_USER|{username}|{password}'.encode('utf-8'))
-            resp = self.sock.recv(4096).decode('utf-8')
+            resp = self.sock.recv(16384).decode('utf-8')
             parts = resp.split('|', 2)
             if parts[0] == 'DELETE_USER_RESULT' and parts[1] == 'OK':
                 QMessageBox.information(self, '注销成功', '账号已注销，您可以重新注册同名账号。')
@@ -1082,6 +1397,178 @@ class EmojiDialog(QWidget):
                 QMessageBox.warning(self, '上传失败', f'无法添加表情: {e}')
 
 
+class VoiceMessagePlayer(QWidget):
+    """语音消息播放器组件"""
+    
+    def __init__(self, audio_data, voice_type="original", duration=0):
+        super().__init__()
+        self.audio_data = audio_data
+        self.voice_type = voice_type
+        self.duration = duration
+        self.playing = False
+        self.audio_player = None
+        
+        self.init_ui()
+    
+    def init_ui(self):
+        layout = QHBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 播放按钮
+        self.play_btn = QPushButton("▶")
+        self.play_btn.setFixedSize(30, 30)
+        self.play_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 15px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #0056b3;
+            }
+        """)
+        self.play_btn.clicked.connect(self.toggle_play)
+        
+        # 语音类型标识
+        voice_icon = "🎤" if self.voice_type == "original" else "👩"
+        self.voice_label = QLabel(f"{voice_icon} 语音消息")
+        self.voice_label.setStyleSheet("color: #666; font-size: 10pt;")
+        
+        # 时长显示
+        duration_text = f"{int(self.duration)}秒" if self.duration > 0 else "语音"
+        self.duration_label = QLabel(duration_text)
+        self.duration_label.setStyleSheet("color: #999; font-size: 9pt;")
+        
+        layout.addWidget(self.play_btn)
+        layout.addWidget(self.voice_label)
+        layout.addWidget(self.duration_label)
+        layout.addStretch()
+        
+        self.setLayout(layout)
+        self.setFixedHeight(40)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #f0f8ff;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+            }
+        """)
+    
+    def toggle_play(self):
+        """切换播放状态"""
+        if not self.playing:
+            self.start_play()
+        else:
+            self.stop_play()
+    
+    def start_play(self):
+        """开始播放"""
+        try:
+            if not self.audio_data or len(self.audio_data) == 0:
+                logging.warning("音频数据为空，无法播放")
+                return
+            
+            self.playing = True
+            self.play_btn.setText("⏸")
+            self.voice_label.setText("🔊 正在播放...")
+            
+            logging.debug(f"开始播放语音消息，数据长度: {len(self.audio_data)} 字节")
+            
+            # 使用简化的播放方法
+            import threading
+            def play_audio():
+                audio = None
+                stream = None
+                try:
+                    audio = pyaudio.PyAudio()
+                    
+                    # 验证音频格式
+                    try:
+                        stream = audio.open(
+                            format=FORMAT,
+                            channels=CHANNELS,
+                            rate=RATE,
+                            output=True,
+                            frames_per_buffer=CHUNK
+                        )
+                        logging.debug("音频流创建成功")
+                    except Exception as stream_error:
+                        logging.error(f"创建音频流失败: {stream_error}")
+                        raise stream_error
+                    
+                    # 验证音频数据长度
+                    if len(self.audio_data) % 2 != 0:
+                        # 如果数据长度为奇数，去掉最后一个字节
+                        audio_data = self.audio_data[:-1]
+                        logging.warning("音频数据长度为奇数，已调整")
+                    else:
+                        audio_data = self.audio_data
+                    
+                    # 分块播放音频数据
+                    chunk_size = CHUNK * 2  # 每个样本2字节
+                    total_chunks = len(audio_data) // chunk_size
+                    logging.debug(f"总共需要播放 {total_chunks} 个音频块")
+                    
+                    for i in range(0, len(audio_data), chunk_size):
+                        if not self.playing:  # 检查是否被停止
+                            logging.debug("播放被用户停止")
+                            break
+                        
+                        chunk = audio_data[i:i + chunk_size]
+                        if len(chunk) > 0:
+                            try:
+                                stream.write(chunk)
+                            except Exception as write_error:
+                                logging.error(f"写入音频数据失败: {write_error}")
+                                break
+                    
+                    logging.debug("音频播放完成")
+                    
+                except Exception as e:
+                    logging.error(f"播放音频失败: {e}")
+                    import traceback
+                    traceback.print_exc()
+                finally:
+                    # 清理资源
+                    if stream:
+                        try:
+                            stream.stop_stream()
+                            stream.close()
+                        except:
+                            pass
+                    if audio:
+                        try:
+                            audio.terminate()
+                        except:
+                            pass
+                    
+                    # 播放完成后重置UI
+                    QTimer.singleShot(100, self.on_play_finished)
+            
+            # 在新线程中播放音频
+            threading.Thread(target=play_audio, daemon=True).start()
+            
+        except Exception as e:
+            logging.error(f"启动语音消息播放失败: {e}")
+            import traceback
+            traceback.print_exc()
+            self.stop_play()
+    
+    def stop_play(self):
+        """停止播放"""
+        self.playing = False
+        self.play_btn.setText("▶")
+        voice_icon = "🎤" if self.voice_type == "original" else "👩"
+        self.voice_label.setText(f"{voice_icon} 语音消息")
+    
+    def on_play_finished(self):
+        """播放完成回调"""
+        if self.playing:
+            self.stop_play()
+
+
 class MainWindow(QWidget):
     def __init__(self, sock, username):
         super().__init__()
@@ -1098,11 +1585,7 @@ class MainWindow(QWidget):
         self.anon_nick = None  # 匿名昵称
         self.selecting_group = False  # 防止群聊选择的重入调用
 
-        # 语音通话相关变量
-        self.in_call = False
-        self.call_target = None
-        self.call_dialog = None
-        self.incoming_call_dialog = None
+        # 移除语音通话相关变量，保留UDP线程用于其他功能
         self.udp_thread = None
         self.udp_local_port = None
 
@@ -1116,8 +1599,7 @@ class MainWindow(QWidget):
         self.client_thread.connection_lost.connect(self.on_connection_lost)
         self.client_thread.start()
 
-        # 初始化UDP音频服务
-        self.init_udp_audio()
+        # 移除UDP音频服务初始化
 
         # 预加载表情
         self.preload_emojis()
@@ -1128,11 +1610,7 @@ class MainWindow(QWidget):
         logging.debug(f"初始刷新好友和群组列表")
         self.initial_refresh()
 
-        # 创建处理来电的专用窗口
-        self.call_notification_timer = QTimer(self)
-        self.call_notification_timer.timeout.connect(self.check_pending_calls)
-        self.call_notification_timer.start(1000)  # 每秒检查一次
-        self.pending_calls = []  # 存储待处理的来电
+        # 移除语音通话相关的定时器和变量
 
         logging.debug(f"主窗口初始化完成，用户: {username}, UDP端口: {self.udp_local_port}")
         center_window(self)  # 居中显示窗口
@@ -1200,10 +1678,10 @@ class MainWindow(QWidget):
                 if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
                     path = os.path.join(EMOJI_DIR, fname)
                     if fname.lower().endswith('.gif'):
-                        # 加载GIF
+                        # 加载GIF - 保存路径而不是QMovie实例
                         movie = QMovie(path)
                         movie.setCacheMode(QMovie.CacheAll)
-                        self.emoji_cache[fname] = {'type': 'gif', 'movie': movie}
+                        self.emoji_cache[fname] = {'type': 'gif', 'movie': movie, 'path': path}
                     else:
                         # 加载静态图片
                         pix = QPixmap(path)
@@ -1218,9 +1696,13 @@ class MainWindow(QWidget):
         if emoji_id in self.emoji_cache:
             emoji_data = self.emoji_cache[emoji_id]
             if emoji_data['type'] == 'gif':
-                movie = emoji_data['movie']
+                # 为每个标签创建新的QMovie实例，避免共享问题
+                movie = QMovie(emoji_data['path'])
+                movie.setCacheMode(QMovie.CacheAll)
                 label.setMovie(movie)
                 movie.start()
+                # 保存movie引用到label，防止被垃圾回收
+                label.movie_ref = movie
             else:
                 label.setPixmap(emoji_data['pixmap'])
             return True
@@ -1283,14 +1765,14 @@ class MainWindow(QWidget):
         self.emoji_btn = QPushButton('😀')
         self.emoji_btn.setFixedWidth(40)
         self.emoji_btn.clicked.connect(self.open_emoji_dialog)
-        # 添加语音通话按钮
-        self.call_btn = QPushButton('📞')
-        self.call_btn.setFixedWidth(40)
-        self.call_btn.setToolTip('语音通话')
-        self.call_btn.clicked.connect(self.start_voice_call)
+        # 添加语音消息按钮
+        self.voice_btn = QPushButton('🎤')
+        self.voice_btn.setFixedWidth(40)
+        self.voice_btn.setToolTip('发送语音消息')
+        self.voice_btn.clicked.connect(self.send_voice_message)
         input_layout.addWidget(self.input_edit)
         input_layout.addWidget(self.emoji_btn)
-        input_layout.addWidget(self.call_btn)
+        input_layout.addWidget(self.voice_btn)
         input_layout.addWidget(self.send_btn)
         private_layout.addLayout(input_layout)
         self.private_tab.setLayout(private_layout)
@@ -1356,7 +1838,46 @@ class MainWindow(QWidget):
         self.chat_display.clear()
         self.append_text_message('', f'与 {self.current_friend} 的聊天：')
         self.get_private_history()
+        self.load_and_display_voice_history()
         self.get_private_file_list()
+
+    def load_and_display_voice_history(self):
+        """加载并显示语音消息历史"""
+        if not self.current_friend:
+            return
+        
+        try:
+            voice_history = self.load_voice_message_history(self.current_friend)
+            for record in voice_history:
+                try:
+                    # 解码音频数据
+                    import base64
+                    audio_base64 = record['audio_base64']
+                    try:
+                        # 修复base64填充问题
+                        missing_padding = len(audio_base64) % 4
+                        if missing_padding:
+                            audio_base64 += '=' * (4 - missing_padding)
+                        audio_data = base64.b64decode(audio_base64.encode('utf-8'))
+                    except Exception as decode_error:
+                        logging.error(f"语音消息历史记录base64解码失败: {decode_error}")
+                        continue  # 跳过这条损坏的语音消息
+                    
+                    # 显示语音消息
+                    sender = record['sender']
+                    voice_type = record['voice_type']
+                    duration = record['duration']
+                    
+                    is_self = (sender == self.username)
+                    display_sender = '我' if is_self else sender
+                    
+                    self.append_voice_message(display_sender, audio_data, voice_type, duration, is_self)
+                    
+                except Exception as e:
+                    logging.error(f"显示语音消息历史失败: {e}")
+                    
+        except Exception as e:
+            logging.error(f"加载语音消息历史失败: {e}")
 
     def get_private_history(self):
         """获取与当前好友的私聊历史记录"""
@@ -1460,6 +1981,159 @@ class MainWindow(QWidget):
             return
         self.sock.send(f'EMOJI|{self.current_friend}|{emoji_id}'.encode('utf-8'))
         self.append_emoji_message('我', emoji_id)
+
+    def send_voice_message(self):
+        """发送语音消息"""
+        if not self.current_friend:
+            QMessageBox.warning(self, '提示', '请先选择好友')
+            return
+        
+        # 语音消息可以发送给离线好友，服务器会保存
+        # 不需要检查在线状态
+        
+        # 打开语音消息录制对话框
+        voice_dialog = VoiceMessageDialog(self)
+        voice_dialog.voice_message_ready.connect(self.on_voice_message_ready)
+        voice_dialog.exec_()
+
+    def on_voice_message_ready(self, audio_data, voice_type):
+        """处理录制完成的语音消息"""
+        try:
+            if not audio_data or len(audio_data) == 0:
+                QMessageBox.warning(self, '错误', '录制的音频数据为空')
+                return
+            
+            logging.debug(f"准备发送语音消息: 数据长度={len(audio_data)}, 类型={voice_type}")
+            
+            # 将音频数据编码为base64以便传输
+            import base64
+            try:
+                audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                logging.debug(f"音频数据编码成功，base64长度: {len(audio_base64)}")
+            except Exception as encode_error:
+                logging.error(f"音频数据编码失败: {encode_error}")
+                QMessageBox.warning(self, '发送失败', f'音频数据编码失败: {encode_error}')
+                return
+            
+            # 计算音频时长
+            duration = len(audio_data) / (RATE * 2)  # 估算时长
+            logging.debug(f"计算音频时长: {duration:.1f}秒")
+            
+            # 验证参数
+            if not self.current_friend:
+                QMessageBox.warning(self, '错误', '请先选择好友')
+                return
+            
+            if not voice_type:
+                voice_type = "original"
+            
+            # 发送语音消息到服务器
+            try:
+                voice_msg = f'VOICE_MSG|{self.current_friend}|{voice_type}|{duration:.1f}|{audio_base64}'
+                logging.debug(f"发送语音消息: 目标={self.current_friend}, 消息长度={len(voice_msg)}")
+                
+                # 使用UTF-8编码发送
+                self.sock.send(voice_msg.encode('utf-8'))
+                logging.debug("语音消息发送成功")
+                
+                # 在本地显示发送的语音消息
+                self.append_voice_message('我', audio_data, voice_type, duration, is_self=True)
+                
+                # 保存发送的语音消息到本地历史记录
+                self.save_voice_message_history(self.username, voice_type, duration, audio_base64)
+                
+            except Exception as send_error:
+                logging.error(f"发送语音消息到服务器失败: {send_error}")
+                QMessageBox.warning(self, '发送失败', f'发送语音消息失败: {send_error}')
+                return
+            
+        except Exception as e:
+            logging.error(f"处理语音消息失败: {e}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.warning(self, '发送失败', f'处理语音消息失败: {e}')
+
+    def append_voice_message(self, sender, audio_data, voice_type="original", duration=0, is_self=False):
+        """在聊天界面添加语音消息"""
+        widget = QWidget()
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 发送者标签
+        name_label = QLabel(f'<b>{sender}:</b>')
+        if is_self:
+            name_label.setStyleSheet('color:blue;')
+        
+        # 语音消息播放器
+        voice_player = VoiceMessagePlayer(audio_data, voice_type, duration)
+        
+        layout.addWidget(name_label)
+        layout.addWidget(voice_player)
+        layout.addStretch()
+        
+        widget.setLayout(layout)
+        
+        item = QListWidgetItem()
+        self.chat_display.addItem(item)
+        self.chat_display.setItemWidget(item, widget)
+        item.setSizeHint(widget.sizeHint())
+        self.chat_display.scrollToBottom()
+
+    def save_voice_message_history(self, from_user, voice_type, duration, audio_base64):
+        """保存语音消息到本地历史记录"""
+        try:
+            # 创建语音消息存储目录
+            voice_dir = os.path.join(os.path.dirname(__file__), 'voice_messages')
+            os.makedirs(voice_dir, exist_ok=True)
+            
+            # 使用字典序排序确保两个用户之间的消息保存在同一个文件中
+            users = sorted([self.username, from_user])
+            voice_file = os.path.join(voice_dir, f'voice_{users[0]}_{users[1]}.json')
+            
+            # 读取现有历史记录
+            voice_history = []
+            if os.path.exists(voice_file):
+                try:
+                    with open(voice_file, 'r', encoding='utf-8') as f:
+                        voice_history = json.load(f)
+                except:
+                    voice_history = []
+            
+            # 添加新的语音消息记录
+            voice_record = {
+                'sender': from_user,
+                'voice_type': voice_type,
+                'duration': duration,
+                'audio_base64': audio_base64,
+                'timestamp': time.time()
+            }
+            voice_history.append(voice_record)
+            
+            # 保存历史记录
+            with open(voice_file, 'w', encoding='utf-8') as f:
+                json.dump(voice_history, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            logging.error(f"保存语音消息历史失败: {e}")
+
+    def load_voice_message_history(self, friend_name):
+        """加载语音消息历史记录"""
+        try:
+            voice_dir = os.path.join(os.path.dirname(__file__), 'voice_messages')
+            users = sorted([self.username, friend_name])
+            voice_file = os.path.join(voice_dir, f'voice_{users[0]}_{users[1]}.json')
+            
+            if not os.path.exists(voice_file):
+                return []
+            
+            with open(voice_file, 'r', encoding='utf-8') as f:
+                voice_history = json.load(f)
+            
+            return voice_history
+            
+        except Exception as e:
+            logging.error(f"加载语音消息历史失败: {e}")
+            return []
 
     def select_group(self, item):
         if self.selecting_group:
@@ -1679,32 +2353,7 @@ class MainWindow(QWidget):
                 self.close()
                 return
 
-            # 语音通话相关消息处理 - 提高优先级，移到前面处理
-            if cmd == 'CALL_INCOMING':
-                # 收到通话请求
-                try:
-                    logging.debug("======= CALL_INCOMING详细调试信息 =======")
-                    logging.debug(f"收到CALL_INCOMING消息: {data}")
-                    caller = parts[1]
-                    logging.debug(f"来电者: {caller}")
-                    logging.debug(f"当前用户: {self.username}")
-                    logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
-                    logging.debug(f"当前窗口状态: visible={self.isVisible()}, active={self.isActiveWindow()}")
-
-                    # 将来电添加到待处理队列，而不是直接处理
-                    if caller not in self.pending_calls:
-                        self.pending_calls.append(caller)
-                        logging.debug(f"添加来电到待处理队列: {caller}")
-                        # 立即触发一次检查
-                        QTimer.singleShot(100, self.check_pending_calls)
-
-                    logging.debug("CALL_INCOMING已添加到待处理队列")
-                    logging.debug("======= CALL_INCOMING详细调试信息结束 =======")
-                except Exception as e:
-                    logging.error(f"处理来电请求出错: {e}", exc_info=True)
-                    QMessageBox.warning(self, "通话错误", f"处理来电请求失败: {e}")
-                # 直接返回以避免后续处理干扰
-                return
+            # 移除语音通话相关消息处理
 
             # 处理其他消息类型
             if cmd == 'PRIVATE_HISTORY':
@@ -1733,6 +2382,70 @@ class MainWindow(QWidget):
                                 self.append_emoji_message('我', emoji_id)
                             else:
                                 self.append_emoji_message(sender, emoji_id)
+                        elif msg.startswith('[VOICE:'):
+                            # 处理语音消息历史记录
+                            try:
+                                # 解析语音消息格式: [VOICE:voice_type:duration:audio_base64]
+                                voice_content = msg[7:-1]  # 去掉 [VOICE: 和 ]
+                                voice_parts = voice_content.split(':', 3)  # 只分割前3个:，剩余的都是audio_base64
+                                
+                                if len(voice_parts) >= 4:
+                                    voice_type = voice_parts[0]
+                                    duration_str = voice_parts[1]
+                                    # voice_parts[2] 是空的或者其他数据
+                                    audio_base64 = voice_parts[3]
+                                    
+                                    logging.debug(f"解析历史语音消息: type={voice_type}, duration={duration_str}, data_len={len(audio_base64)}")
+                                    
+                                    try:
+                                        duration = float(duration_str)
+                                    except ValueError:
+                                        logging.warning(f"无效的历史语音消息时长: {duration_str}")
+                                        duration = 0.0
+                                    
+                                    # 解码音频数据
+                                    import base64
+                                    try:
+                                        # 修复base64填充问题
+                                        missing_padding = len(audio_base64) % 4
+                                        if missing_padding:
+                                            audio_base64 += '=' * (4 - missing_padding)
+                                        audio_data = base64.b64decode(audio_base64)
+                                        logging.debug(f"历史语音消息解码成功，长度: {len(audio_data)} 字节")
+                                    except Exception as decode_error:
+                                        logging.error(f"历史语音消息base64解码失败: {decode_error}")
+                                        # 如果解析失败，显示为文本消息
+                                        display_sender = '我' if sender == self.username else sender
+                                        is_self = (sender == self.username)
+                                        self.append_text_message(display_sender, '[语音消息-解码失败]', is_self)
+                                        continue
+                                    
+                                    # 验证音频数据
+                                    if len(audio_data) == 0:
+                                        logging.warning("历史语音消息数据为空")
+                                        display_sender = '我' if sender == self.username else sender
+                                        is_self = (sender == self.username)
+                                        self.append_text_message(display_sender, '[语音消息-数据为空]', is_self)
+                                        continue
+                                    
+                                    # 显示语音消息
+                                    display_sender = '我' if sender == self.username else sender
+                                    is_self = (sender == self.username)
+                                    self.append_voice_message(display_sender, audio_data, voice_type, duration, is_self)
+                                else:
+                                    logging.error(f"语音消息格式错误，参数不足: {msg}")
+                                    # 如果解析失败，显示为文本消息
+                                    display_sender = '我' if sender == self.username else sender
+                                    is_self = (sender == self.username)
+                                    self.append_text_message(display_sender, '[语音消息-格式错误]', is_self)
+                            except Exception as e:
+                                logging.error(f"处理历史语音消息失败: {e}")
+                                import traceback
+                                traceback.print_exc()
+                                # 如果解析失败，显示为文本消息
+                                display_sender = '我' if sender == self.username else sender
+                                is_self = (sender == self.username)
+                                self.append_text_message(display_sender, '[语音消息-处理失败]', is_self)
                         else:
                             if sender == self.username:
                                 self.append_text_message('我', msg, is_self=True)
@@ -1750,127 +2463,79 @@ class MainWindow(QWidget):
                 from_user, emoji_id = parts[1], parts[2]
                 if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
                     self.append_emoji_message(from_user, emoji_id)
-            elif cmd == 'CALL_ACCEPTED':
-                # 对方接受通话
+            elif cmd == 'VOICE_MSG':
+                # VOICE_MSG|from_user|voice_type|duration|audio_base64
                 try:
-                    if len(parts) < 4:
-                        logging.error(f"CALL_ACCEPTED消息格式错误: {data}")
+                    # 使用更安全的方式解析消息，避免base64数据中的|字符干扰
+                    msg_parts = data.split('|', 4)  # 只分割前4个|，剩余的都是audio_base64
+                    if len(msg_parts) < 5:
+                        logging.error(f"语音消息格式错误: 参数不足，收到 {len(msg_parts)} 个参数")
+                        self.append_text_message('[系统]', '收到格式错误的语音消息')
                         return
-
-                    from_user = parts[1]
-                    caller_ip = parts[2]
-                    caller_port = parts[3]
-
-                    logging.debug(f"收到CALL_ACCEPTED: from={from_user}, ip={caller_ip}, port={caller_port}")
-                    logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
-
-                    if self.in_call and self.call_target == from_user:
-                        # 更新通话对话框状态
-                        target_addr = (caller_ip, int(caller_port))
-                        logging.debug(f"收到对方UDP地址: {target_addr}")
-
-                        if self.call_dialog:
-                            # 如果已经创建了通话对话框（作为主叫方），则更新地址并开始通话
-                            logging.debug("更新主叫方通话对话框并开始通话")
-                            self.call_dialog.update_target_addr(target_addr)
-                            # 更新状态标签
-                            self.call_dialog.status_label.setText(f"与 {from_user} 通话中...")
-                        else:
-                            # 如果还没有创建通话对话框（可能是作为被叫方），则创建
-                            logging.debug("为被叫方创建通话对话框")
-                            self.create_call_dialog_as_receiver(from_user, caller_ip, caller_port)
-                    else:
-                        logging.warning(f"收到CALL_ACCEPTED但不匹配当前通话状态: {from_user}")
+                    
+                    from_user = msg_parts[1]
+                    voice_type = msg_parts[2]
+                    duration_str = msg_parts[3]
+                    audio_base64 = msg_parts[4]
+                    
+                    logging.debug(f"收到语音消息: from={from_user}, type={voice_type}, duration={duration_str}, data_len={len(audio_base64)}")
+                    
+                    # 验证参数
+                    if not from_user or not voice_type or not duration_str or not audio_base64:
+                        logging.error("语音消息参数无效")
+                        self.append_text_message('[系统]', '收到无效的语音消息')
+                        return
+                    
+                    try:
+                        duration = float(duration_str)
+                    except ValueError:
+                        logging.error(f"无效的时长参数: {duration_str}")
+                        duration = 0.0
+                    
+                    # 解码音频数据
+                    import base64
+                    try:
+                        # 修复base64填充问题
+                        missing_padding = len(audio_base64) % 4
+                        if missing_padding:
+                            audio_base64 += '=' * (4 - missing_padding)
+                        audio_data = base64.b64decode(audio_base64)
+                        logging.debug(f"音频数据解码成功，长度: {len(audio_data)} 字节")
+                    except Exception as decode_error:
+                        logging.error(f"base64解码失败: {decode_error}")
+                        self.append_text_message('[系统]', f'语音消息解码失败: {decode_error}')
+                        return
+                    
+                    # 验证音频数据
+                    if len(audio_data) == 0:
+                        logging.error("音频数据为空")
+                        self.append_text_message('[系统]', '收到空的语音消息')
+                        return
+                    
+                    # 只在当前私聊界面显示
+                    if self.tab_widget.currentWidget() == self.private_tab and from_user == self.current_friend:
+                        self.append_voice_message(from_user, audio_data, voice_type, duration)
+                    
+                    # 保存语音消息历史
+                    self.save_voice_message_history(from_user, voice_type, duration, audio_base64)
+                    
                 except Exception as e:
-                    logging.error(f"处理通话接受消息出错: {e}", exc_info=True)
-                    QMessageBox.warning(self, "通话错误", f"处理通话接受消息失败: {e}")
-                return
-            elif cmd == 'CALL_CONNECT_INFO':
-                # 接收方收到发起方的连接信息
+                    logging.error(f"处理语音消息失败: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    self.append_text_message('[系统]', f'处理语音消息失败: {str(e)}')
+            elif cmd == 'VOICE_MSG_SENT':
+                # 语音消息发送确认
                 try:
-                    if len(parts) < 4:
-                        logging.error(f"CALL_CONNECT_INFO消息格式错误: {data}")
-                        return
-
-                    caller = parts[1]
-                    caller_ip = parts[2]
-                    caller_port = parts[3]
-
-                    logging.debug(f"收到CALL_CONNECT_INFO: caller={caller}, ip={caller_ip}, port={caller_port}")
-
-                    if self.in_call and self.call_target == caller:
-                        target_addr = (caller_ip, int(caller_port))
-                        logging.debug(f"接收方获得发起方UDP地址: {target_addr}")
-
-                        if self.call_dialog:
-                            # 更新现有对话框的目标地址并开始通话
-                            self.call_dialog.update_target_addr(target_addr)
-                        else:
-                            # 创建新的通话对话框
-                            self.call_dialog = CallDialog(
-                                self,
-                                caller,
-                                is_caller=False,
-                                udp_thread=self.udp_thread,
-                                target_addr=target_addr,
-                                username=self.username
-                            )
-                            self.call_dialog.call_ended.connect(self.on_call_ended)
-                            self.call_dialog.show()
-                            logging.debug(f"为接收方创建通话对话框")
-                    else:
-                        logging.warning(f"收到CALL_CONNECT_INFO但不匹配当前通话状态: caller={caller}, in_call={self.in_call}, call_target={self.call_target}")
+                    to_user = parts[1] if len(parts) > 1 else ''
+                    logging.debug(f"语音消息发送成功: 发送给 {to_user}")
+                    # 可以在这里添加发送成功的UI反馈，比如显示一个小提示
+                    if to_user == self.current_friend:
+                        # 可以在聊天界面显示发送成功的提示
+                        pass
                 except Exception as e:
-                    logging.error(f"处理CALL_CONNECT_INFO消息出错: {e}", exc_info=True)
-                return
-            elif cmd == 'CALL_REJECTED':
-                # 对方拒绝通话
-                from_user = parts[1]
-                if self.in_call and self.call_target == from_user:
-                    QMessageBox.information(self, '通话结束', f'{from_user} 拒绝了通话请求')
-                    # 关闭通话对话框
-                    if self.call_dialog:
-                        self.call_dialog.close()
-                    self.in_call = False
-                    self.call_target = None
-            elif cmd == 'CALL_ENDED':
-                # 对方结束通话
-                from_user = parts[1]
-                if self.in_call and self.call_target == from_user:
-                    QMessageBox.information(self, '通话结束', f'{from_user} 结束了通话')
-                    # 关闭通话对话框
-                    if self.call_dialog:
-                        self.call_dialog.close()
-                    self.in_call = False
-                    self.call_target = None
-            elif cmd == 'CALL_RESPONSE':
-                # 服务器对通话请求的响应
-                status = parts[1]
-                target = parts[2]
-                if status == 'SENDING':
-                    # 新增的状态：服务器正在向目标用户发送通话请求
-                    logging.debug(f"服务器确认正在向 {target} 发送通话请求")
-                elif status == 'BUSY':
-                    QMessageBox.information(self, '通话请求', f'{target} 正在通话中，请稍后再试')
-                    if self.call_dialog:
-                        self.call_dialog.close()
-                    self.in_call = False
-                    self.call_target = None
-                elif status == 'OFFLINE':
-                    QMessageBox.information(self, '通话请求', f'{target} 不在线，无法通话')
-                    if self.call_dialog:
-                        self.call_dialog.close()
-                    self.in_call = False
-                    self.call_target = None
-                elif status == 'ERROR':
-                    # 新增的状态：服务器尝试发送通话请求时出错
-                    error_msg = parts[3] if len(parts) > 3 else "未知错误"
-                    logging.error(f"通话请求发送失败: {error_msg}")
-                    QMessageBox.warning(self, '通话请求失败', f'向 {target} 发送通话请求失败: {error_msg}')
-                    if self.call_dialog:
-                        self.call_dialog.close()
-                    self.in_call = False
-                    self.call_target = None
+                    logging.error(f"处理语音消息发送确认失败: {e}")
+            # 移除所有语音通话相关的消息处理代码
             elif cmd == 'FRIEND_LIST':
                 self.friends = []
                 self.friend_list.clear()
@@ -2108,19 +2773,7 @@ class MainWindow(QWidget):
 
     def closeEvent(self, event):
         try:
-            # 结束通话，如果有的话
-            if self.in_call and self.call_target:
-                try:
-                    self.sock.send(f'CALL_END|{self.username}|{self.call_target}'.encode('utf-8'))
-                except:
-                    pass
-
-            # 清理通话资源
-            if self.call_dialog:
-                self.call_dialog.close()
-
-            if self.udp_thread:
-                self.udp_thread.stop()
+            # 移除语音通话相关的清理代码
 
             # 尝试发送登出消息，但不等待响应
             try:
@@ -2159,194 +2812,7 @@ class MainWindow(QWidget):
         except Exception as e:
             print(f"初始化刷新出错: {e}")
 
-    def start_voice_call(self):
-        """发起语音通话"""
-        logging.debug("尝试发起语音通话")
-        if not self.current_friend:
-            logging.warning("未选择好友，无法发起通话")
-            QMessageBox.warning(self, '提示', '请先选择好友')
-            return
-
-        if self.in_call:
-            logging.warning("已在通话中，无法发起新通话")
-            QMessageBox.warning(self, '提示', '你已经在通话中')
-            return
-
-        # 检查好友是否在线
-        if self.current_friend not in self.friend_status or self.friend_status[self.current_friend] != 'online':
-            logging.warning(f"好友 {self.current_friend} 不在线")
-            QMessageBox.warning(self, '提示', f'{self.current_friend} 当前不在线')
-            return
-
-        # 发送通话请求到服务器
-        try:
-            logging.debug(f"发起语音通话请求：{self.username} -> {self.current_friend}")
-            call_request = f'CALL_REQUEST|{self.username}|{self.current_friend}|{self.udp_local_port}'
-            logging.debug(f"准备发送通话请求: {call_request}")
-            self.sock.send(call_request.encode('utf-8'))
-            logging.debug(f"已发送CALL_REQUEST消息，本地UDP端口: {self.udp_local_port}")
-            self.in_call = True
-            self.call_target = self.current_friend
-
-            # 创建通话对话框
-            self.call_dialog = CallDialog(
-                self,
-                self.current_friend,
-                is_caller=True,
-                udp_thread=self.udp_thread,
-                username=self.username
-            )
-            self.call_dialog.call_ended.connect(self.on_call_ended)
-            self.call_dialog.show()
-            logging.debug(f"已创建通话对话框(主叫方)")
-        except Exception as e:
-            self.in_call = False
-            self.call_target = None
-            logging.error(f"发起通话请求失败: {e}", exc_info=True)
-            QMessageBox.warning(self, '错误', f'发起通话失败: {e}')
-
-    def on_call_ended(self):
-        """通话结束处理"""
-        if self.call_target:
-            try:
-                # 发送通话结束消息
-                self.sock.send(f'CALL_END|{self.username}|{self.call_target}'.encode('utf-8'))
-            except Exception as e:
-                print(f"发送通话结束消息失败: {e}")
-
-        self.in_call = False
-        self.call_target = None
-        self.call_dialog = None
-
-    def check_pending_calls(self):
-        """定期检查待处理的来电并显示通知"""
-        if not self.pending_calls:
-            return
-
-        # 处理队列中的第一个来电
-        caller = self.pending_calls[0]
-        logging.debug(f"从待处理队列中处理来电: {caller}")
-
-        # 如果已经在通话中，自动拒绝
-        if self.in_call:
-            logging.debug(f"已在通话中，自动拒绝来电: {caller}")
-            try:
-                self.sock.send(f'CALL_REJECT|{self.username}|{caller}'.encode('utf-8'))
-            except Exception as e:
-                logging.error(f"发送拒绝通话消息失败: {e}")
-            self.pending_calls.remove(caller)
-            return
-
-        # 如果已经有通知窗口在显示，先关闭它
-        if hasattr(self, 'notification_window') and self.notification_window and self.notification_window.isVisible():
-            try:
-                self.notification_window.close()
-            except:
-                pass
-            self.notification_window = None
-
-        # 创建新的通知窗口
-        try:
-            # 创建独立的通知窗口
-            self.notification_window = CallNotificationWindow(caller)
-            self.notification_window.accept_signal.connect(lambda c: self.accept_incoming_call(c))
-            self.notification_window.reject_signal.connect(lambda c: self.reject_incoming_call(c))
-
-            # 确保窗口显示在最前面
-            self.notification_window.setWindowState(self.notification_window.windowState() | Qt.WindowActive)
-            self.notification_window.show()
-            self.notification_window.raise_()
-            self.notification_window.activateWindow()
-
-            # 播放系统提示音
-            QApplication.beep()
-            QApplication.beep()  # 播放两次以引起注意
-
-            # 从队列中移除
-            self.pending_calls.remove(caller)
-            logging.debug(f"已显示通知窗口并从队列中移除: {caller}")
-        except Exception as e:
-            logging.error(f"创建通知窗口失败: {e}", exc_info=True)
-            # 出错时也从队列中移除，避免重复处理
-            if caller in self.pending_calls:
-                self.pending_calls.remove(caller)
-
-    def accept_incoming_call(self, caller):
-        """接受来电"""
-        logging.debug(f"接受来电：{caller}")
-        try:
-            self.in_call = True
-            self.call_target = caller
-
-            # 发送接受通话消息
-            accept_msg = f'CALL_ACCEPT|{self.username}|{caller}|{self.udp_local_port}'.encode('utf-8')
-            logging.debug(f"准备发送CALL_ACCEPT: {accept_msg}")
-            self.sock.send(accept_msg)
-            logging.debug(f"已发送CALL_ACCEPT消息，本地UDP端口: {self.udp_local_port}")
-
-            # 创建通话对话框，但不立即开始通话（等待CALL_CONNECT_INFO）
-            self.call_dialog = CallDialog(
-                self,
-                caller,
-                is_caller=False,  # 作为接收方
-                udp_thread=self.udp_thread,
-                target_addr=None,  # 暂时没有目标地址
-                username=self.username
-            )
-            self.call_dialog.call_ended.connect(self.on_call_ended)
-            self.call_dialog.show()
-            logging.debug(f"已创建通话对话框(被叫方)，等待连接信息...")
-
-        except Exception as e:
-            self.in_call = False
-            self.call_target = None
-            logging.error(f"接受通话失败: {e}")
-            QMessageBox.warning(self, '错误', f'接受通话失败: {e}')
-
-    def reject_incoming_call(self, caller):
-        """拒绝来电"""
-        try:
-            self.sock.send(f'CALL_REJECT|{self.username}|{caller}'.encode('utf-8'))
-            logging.debug(f"已发送拒绝通话消息: CALL_REJECT|{self.username}|{caller}")
-        except Exception as e:
-            logging.error(f"拒绝通话失败: {e}")
-
-        self.incoming_call_dialog = None
-
-    def create_call_dialog_as_receiver(self, caller, caller_ip, caller_port):
-        """作为接收方创建通话对话框"""
-        if self.call_dialog or not self.in_call:
-            return
-
-        # 创建UDP目标地址
-        target_addr = (caller_ip, int(caller_port))
-        logging.debug(f"创建接收方通话对话框，目标地址: {target_addr}")
-
-        # 更新现有通话对话框的目标地址
-        if self.call_dialog:
-            self.call_dialog.target_addr = target_addr
-            self.call_dialog.start_call()
-            logging.debug(f"已更新接收方通话对话框的目标地址并开始通话")
-        else:
-            # 创建新的通话对话框
-            self.call_dialog = CallDialog(
-                self,
-                caller,
-                is_caller=False,
-                udp_thread=self.udp_thread,
-                target_addr=target_addr,
-                username=self.username
-            )
-            self.call_dialog.call_ended.connect(self.on_call_ended)
-            self.call_dialog.show()
-            logging.debug(f"已创建新的接收方通话对话框")
-
-    def handle_incoming_call(self, caller):
-        """处理来电 - 保留此方法以兼容旧代码"""
-        logging.debug(f"handle_incoming_call被调用: {caller}")
-        if caller not in self.pending_calls:
-            self.pending_calls.append(caller)
-            QTimer.singleShot(100, self.check_pending_calls)
+    # 移除所有语音通话相关的方法
 
     def switch_background(self):
         """切换聊天背景图片"""
@@ -2730,190 +3196,7 @@ class MainWindow(QWidget):
             self.file_list.addItem(fname)
 
 
-class CallNotificationWindow(QWidget):
-    """独立的通话通知窗口，不会受到主窗口状态的影响"""
-
-    accept_signal = pyqtSignal(str)  # 接受通话信号
-    reject_signal = pyqtSignal(str)  # 拒绝通话信号
-
-    def __init__(self, caller):
-        super().__init__(None)  # 没有父窗口，完全独立窗口
-        self.caller = caller
-        # 修改窗口标志，确保窗口始终可见且在最前面
-        self.setWindowFlags(
-            Qt.Window |  # 独立窗口
-            Qt.WindowStaysOnTopHint |  # 保持在最前面
-            Qt.FramelessWindowHint  # 无边框
-        )
-
-        # 设置窗口样式
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #302F3D;
-                color: white;
-                border: 2px solid #FF5555;
-                border-radius: 10px;
-            }
-            QLabel {
-                color: white;
-            }
-            QPushButton {
-                background-color: #444;
-                color: white;
-                border-radius: 5px;
-                padding: 8px;
-                font-weight: bold;
-                min-width: 80px;
-            }
-            QPushButton:hover {
-                background-color: #555;
-            }
-            #acceptButton {
-                background-color: #28a745;
-            }
-            #acceptButton:hover {
-                background-color: #218838;
-            }
-            #rejectButton {
-                background-color: #dc3545;
-            }
-            #rejectButton:hover {
-                background-color: #c82333;
-            }
-        """)
-
-        self.init_ui()
-        self.move_to_corner()
-
-        # 播放提示音
-        QApplication.beep()
-        QApplication.beep()  # 播放两次以引起注意
-
-        # 设置定时器自动关闭
-        self.auto_close_timer = QTimer(self)
-        self.auto_close_timer.timeout.connect(self.on_auto_close)
-        self.auto_close_timer.start(30000)  # 30秒后自动关闭
-
-        # 设置定时提醒
-        self.reminder_timer = QTimer(self)
-        self.reminder_timer.timeout.connect(self.reminder_beep)
-        self.reminder_timer.start(3000)  # 每3秒提醒一次
-
-        # 记录开始时间
-        self.start_time = time.time()
-
-        # 更新剩余时间的定时器
-        self.update_timer = QTimer(self)
-        self.update_timer.timeout.connect(self.update_time_left)
-        self.update_timer.start(1000)  # 每秒更新一次
-
-        # 确保窗口显示在最前面
-        self.show()
-        self.raise_()
-        self.activateWindow()
-
-    def init_ui(self):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)  # 设置边距
-
-        # 头部标签
-        title_label = QLabel(f"📞 来电通知")
-        title_label.setStyleSheet("font-size: 16pt; font-weight: bold; color: #FF5555;")
-        title_label.setAlignment(Qt.AlignCenter)
-
-        # 通话信息
-        caller_label = QLabel(f"<b>{self.caller}</b> 正在呼叫你")
-        caller_label.setStyleSheet("font-size: 14pt;")
-        caller_label.setAlignment(Qt.AlignCenter)
-
-        # 剩余时间显示
-        self.time_label = QLabel("30秒后自动拒绝")
-        self.time_label.setAlignment(Qt.AlignCenter)
-
-        # 按钮区域
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(10)  # 设置按钮间距
-
-        self.accept_btn = QPushButton("接听")
-        self.accept_btn.setObjectName("acceptButton")
-        self.accept_btn.setMinimumHeight(40)
-        self.accept_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
-        self.accept_btn.clicked.connect(self.on_accept)
-
-        self.reject_btn = QPushButton("拒绝")
-        self.reject_btn.setObjectName("rejectButton")
-        self.reject_btn.setMinimumHeight(40)
-        self.reject_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针
-        self.reject_btn.clicked.connect(self.on_reject)
-
-        btn_layout.addWidget(self.accept_btn)
-        btn_layout.addWidget(self.reject_btn)
-
-        # 组装布局
-        layout.addWidget(title_label)
-        layout.addWidget(caller_label)
-        layout.addWidget(self.time_label)
-        layout.addLayout(btn_layout)
-
-        self.setLayout(layout)
-        self.setFixedSize(300, 200)
-
-    def move_to_corner(self):
-        """将窗口移动到屏幕右下角"""
-        screen = QDesktopWidget().screenGeometry()
-        widget_size = self.size()
-        self.move(screen.width() - widget_size.width() - 20,
-                  screen.height() - widget_size.height() - 60)
-
-    def reminder_beep(self):
-        """定期发出提示音"""
-        QApplication.beep()
-
-    def update_time_left(self):
-        """更新剩余时间显示"""
-        elapsed = time.time() - self.start_time
-        remaining = max(0, 30 - int(elapsed))
-        self.time_label.setText(f"{remaining}秒后自动拒绝")
-
-    def on_accept(self):
-        """接受通话"""
-        self.auto_close_timer.stop()
-        self.reminder_timer.stop()
-        self.update_timer.stop()
-        self.accept_signal.emit(self.caller)
-        self.close()
-
-    def on_reject(self):
-        """拒绝通话"""
-        self.auto_close_timer.stop()
-        self.reminder_timer.stop()
-        self.update_timer.stop()
-        self.reject_signal.emit(self.caller)
-        self.close()
-
-    def on_auto_close(self):
-        """自动关闭并拒绝通话"""
-        self.reject_signal.emit(self.caller)
-        self.close()
-
-    def closeEvent(self, event):
-        """关闭窗口时确保定时器停止"""
-        self.auto_close_timer.stop()
-        self.reminder_timer.stop()
-        self.update_timer.stop()
-        event.accept()
-
-    def mousePressEvent(self, event):
-        """允许通过点击窗口任意位置来拖动窗口"""
-        if event.button() == Qt.LeftButton:
-            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
-            event.accept()
-
-    def mouseMoveEvent(self, event):
-        """处理窗口拖动"""
-        if event.buttons() == Qt.LeftButton:
-            self.move(event.globalPos() - self.drag_position)
-            event.accept()
+# 移除CallNotificationWindow类
 
 
 FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')

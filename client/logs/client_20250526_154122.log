@@ -1,0 +1,66 @@
+2025-05-26 15:41:22,351 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:41:22,363 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:41:22,363 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:41:22,374 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:41:30,594 [DEBUG] 初始化主窗口: 用户=why
+2025-05-26 15:41:30,594 [DEBUG] 创建客户端线程
+2025-05-26 15:41:30,595 [DEBUG] 客户端线程初始化
+2025-05-26 15:41:30,595 [DEBUG] 客户端线程开始运行
+2025-05-26 15:41:30,612 [DEBUG] 初始化UI
+2025-05-26 15:41:30,617 [DEBUG] 初始刷新好友和群组列表
+2025-05-26 15:41:30,617 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: None
+2025-05-26 15:41:30,676 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-26 15:41:30,677 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-26 15:41:50,918 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-26 15:41:56,851 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why|[EMOJI]image_emoticon19.png|why|[VOICE]original|4075
+2025-05-26 15:41:56,944 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png|facepalm.png|main.py
+2025-05-26 15:42:04,414 [INFO] 服务器指示使用专用文件端口: 12347
+2025-05-26 15:42:20,863 [DEBUG] 处理收到的消息: EMOJI|why_1|smirk.png
+2025-05-26 15:42:39,574 [DEBUG] 处理收到的消息: VOICE_MSG_SENT|why_1
+2025-05-26 15:42:39,575 [DEBUG] 语音消息发送成功: 发送给 why_1
+2025-05-26 15:42:39,575 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,578 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,580 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,582 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,584 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,585 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,587 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,589 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,590 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,592 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,594 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,596 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,598 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,600 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,602 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,604 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,606 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,607 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,609 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,611 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,612 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,615 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,616 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,619 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,621 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,622 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,624 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,626 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,628 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,630 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,632 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,633 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,635 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,638 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,640 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,642 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,644 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,646 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,648 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,650 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:39,652 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:42:43,184 [DEBUG] 初始化音频播放器: output_device_index=None
+2025-05-26 15:42:43,473 [DEBUG] 使用默认输出设备: 4
+2025-05-26 15:42:43,473 [DEBUG] 使用输出设备: 鑰虫満 (Realtek(R) Audio)
+2025-05-26 15:42:43,473 [DEBUG] 设备信息: {'index': 4, 'structVersion': 2, 'name': '鑰虫満 (Realtek(R) Audio)', 'hostApi': 0, 'maxInputChannels': 0, 'maxOutputChannels': 2, 'defaultLowInputLatency': 0.09, 'defaultLowOutputLatency': 0.09, 'defaultHighInputLatency': 0.18, 'defaultHighOutputLatency': 0.18, 'defaultSampleRate': 44100.0}
+2025-05-26 15:42:43,494 [DEBUG] 开始音频播放...

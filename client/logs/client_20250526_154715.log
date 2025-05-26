@@ -1,0 +1,60 @@
+2025-05-26 15:47:15,499 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:47:15,511 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:47:15,511 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:47:15,521 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:47:21,110 [DEBUG] 初始化主窗口: 用户=why
+2025-05-26 15:47:21,110 [DEBUG] 创建客户端线程
+2025-05-26 15:47:21,111 [DEBUG] 客户端线程初始化
+2025-05-26 15:47:21,111 [DEBUG] 客户端线程开始运行
+2025-05-26 15:47:21,130 [DEBUG] 初始化UI
+2025-05-26 15:47:21,134 [DEBUG] 初始刷新好友和群组列表
+2025-05-26 15:47:21,135 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: None
+2025-05-26 15:47:21,181 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-26 15:47:21,181 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-26 15:47:39,201 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-26 15:47:40,755 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why|[EMOJI]image_emoticon19.png|why|[VOICE]original|4075|why_1|[EMOJI]smirk.png|why|[VOICE:female:4.0:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPz/4v/h/+D/4f/h/+H/4P/g/+D/4f/h/+H/4P/h/+H/4f/g/+D/4f/h/+D/4P/h/+D/4P/h/+D/4P/h/+D/4P/g/+H/4f/h/+H/4f/h/+H/4f/h/+D/4P/g/+D/4P/g/+D/4P/h/+D/4P/g/+D/4f/h/+H/4P/h/+H/4P/h/9//4f/h/+H/4f/h/+D/4f/h/+H/4f/h/+D/4P/h/+H/4f/g/+H/4f/h/+H/4f/h/+D/4P/g/+H/4f/h/9//4f/h/+D/4P/h/+H/4f/h/+H/3//g/+D/4f/g/+D/4f/h/+H/4f/h/+H/4f/h/+D/4P/g/+D/4f/h/9//4P/g/+H/4P/g/+H/4P/h/+H/4P/g/+D/4P/h/+H/4f/g/+D/4f/g/+H/4f/g/+H/4f/h/+H/4f/h/+D/4f/h/+H/4P/g/+D/4f/b/9H/0f/R/9H/0f/Q/9D/0f/R/9D/0P/R/8T/wf/B/8D/wf/B/8H/wv/B/8H/wf/B/8H/wf/B/8D/wf/B/8H/wP/B/8L/wf/B/8H/wf/B/8D/wf/B/8H/wf/B/8H/wf/B/8H/wP/B/8H/wP/A/8H/wf/B/8H/wf/B/8H/wP/C/8H/wP/B/8H/wf/B/8H/wf/B/8H/wf/B/8H/wP+6/7X/uv+0/7L/sv+y/7H/sf+x/7H/sf+x/7H/sf+x/7H/sv+x/7H/sf+y/7H/sf+w/6//ov+i/6H/of+i/6H/of+h/6H/of+h/6H/of+h/6L/of+h/6L/oP+h/6H/ov+h/6L/ov+i/6L/of+h/6L/ov+h/6H/ov+i/6H/of+h/6H/of+i/6L/ov+a/5L/kv+S/5L/kv+R/5H/kv+S/5L/kv+R/5L/kv+R/5L/kf+R/5L/kf+S/5H/kv+S/5H/kv+S/5H/kf+S/5L/kf+S/5L/kP+R/4b/g/+C/4L/gv+C/4L/gv+B/4L/gv+C/4L/gv+B/4L/gv+C/4L/gv+C/4L/gv+C/37/cP92/3L/cv9x/3L/c/9y/3L/cv9y/3L/cv9x/3L/cv9y/3L/cv9y/3L/cf9x/3L/cv9y/3L/cv9y/3L/cf9y/3L/cf9y/3L/c/9y/3L/cf9y/3L/c/9y/3L/cv9y/3L/cP9i/2j/av9y/3L/cv9x/2//aP9i/2L/Y/9i/2L/Yv9i/13/W/9X/1j/Yf9j/1//V/9R/1L/Uv9S/1L/Uv9T/1L/Uv9S/1L/Uv9S/1L/Uv9S/1L/Uv9S/1L/Uv9S/1L/Uv9S/1L/Uv9S/1L/Uv9R/1L/Uv9T/1L/Uv9S/1L/U/9T/1P/Uv9S/1L/Uv9T/1P/Uv9S/1L/U/9S/1L/U/9T/1L/Uv9S/1L/Uv9S/1P/U/9T/0f/Qv9B/zr/O/81/z//Qv9B/zz/M/8z/zL/M/8z/zL/M/8y/zL/M/8y/zP/M/8z/zP/Mv8z/zP/M/8z/zP/Mv8z/zP/M/8z/zP/M/8z/zP/M/8z/zP/Mv8y/zL/Mv8y/zP/M/8y/zL/M/8z/zP/M/8y/zP/NP80/zL/M/8z/zP/M/8z/zL/M/8z/zP/M/8z/zP/M/8z/zL/NP8q/yL/K/8p/y3/MP81/yj/I/8i/yP/J/8q/yz/MP80/y7/K/8k/yL/I/8j/yP/IP8j/yP/I/8j/yP/I/8j/yP/Fv8T/xP/E/8T/xP/E/8T/xP/E/8T/xP/E/8T/xP/E/8T/xP/E/8U/xT/E/8T/xP/E/8T/xP/Ev8T/xP/E/8T/xP/E/8T/xT/E/8T/xP/E/8T/xP/E/8T/xP/E/8T/xP/E/8T/xL/E/8T/xP/E/8T/xP/E/8T/xP/FP8P/wP/B/8J/wb/EP8S/xP/Ef8S/wT/A/8D/wP/A/8D/wP/A/8D/wP/A/8D/wP/BP8D/wP/A/8E/wT/A/8E/wT/A/8D/wP/A/8D/wP/A/8D/wP/Av8D/wP/A/8D/wP/A/8D/wP/A/8D/wP/BP8E//v+//4D/wP/A/8D/wP/A/8E/wL/Af8E/wP/A/8D/wT/BP8D//j++f79/vn+9v77/v7+Av8D/wD/A/8E/wX//v4B//v+/P76/gP/BP8D/wT/Af/9/v/+A/8E/wL/Af8D/wP/A/8D/wL/BP8D/wP/A/8D/wP/A/8D/wP/Bf8A/wP///4D/wP/Bf/+/v/+BP8B/wH/A/8E/wT/A/8D/wP/BP8C//f+8/70/vT+9P76/vz++f4C/wT/BP8D/wP/A/8D/wP/A/8E/wT/AP8D/wP/BP8C//z+//4D/wP/A/8D/wP/A/8D/wP/A/8D/wP/BP///v7++/76/gL/BP8D/wT/BP8E/wP/A/8D/wP/BP8C//n+Av8A/wP/Af8D/wT/BP8E/wP/BP8D/wP/A/8E//n+8v4A/wT/Af/+/v/+Bf///gP/BP8E/wP/A/8E/wP/Af/1/vf+Av8C///+Av8B/wT/A/8D/wP/A/8D/wP/Av8D/wP/A/8D/wT/+/7y/vX+9v7y/vT+8/7z/vX+8/70/vP+8/7z/vT+8/70/vT+9P70/vP+8/7r/uf+6P7z/vL+6f7v/uT+5P7k/uP+5P7k/uX+4/7j/uP+5P7l/uT+4/7k/uT+5P7k/uT+5P7k/uP+4/7j/uT+5P7j/uP+4/7k/uT+5P7j/uT+5P7k/uT+5P7j/uT+5P7k/uP+5P7d/uH+5P7l/uH+1/7X/tP+1v7b/uL+5P7k/uT+4/7k/tn+0v7Q/sf+xf7D/sT+xf7E/sT+xP7E/sT+xP7H/sX+xP7E/sT+xP7E/sT+xP7E/sT+xP7E/sT+xP7E/sT+xP7E/sT+xP7E/sX+xP7E/sT+xP7E/sT+wv7C/rr+wv7E/sT+w/7D/sL+vv63/rX+rf6p/qv+rv6y/qr+qP6n/qz+sv63/qn+q/6j/qv+pv6n/qf+pf6p/qv+o/6l/qX+pP6k/qT+pf6l/qX+pf6k/qX+pf6k/qT+pf6k/qT+pP6j/p3+l/6V/pr+nf6g/qX+pf6k/qn+tf6r/qj+pf6k/qT+pP6e/pX+lP6V/pv+pP6l/qb+s/60/rX+sf6j/qX+pP6d/pf+lP6V/pT+kv6U/pX+lf6U/pj+nP6W/qD+mf6W/pb+mv6e/pX+h/6F/oL+f/58/pD+lf6U/pr+mv6X/o/+if6F/oX+hf6E/on+h/6F/oX+hv6H/on+kv6T/pP+kP6Q/oX+hP54/nj+eP51/nb+df52/oP+iv6X/pT+lf6K/n3+eP52/nX+df51/nX+df51/nX+dv51/nX+hP6K/n/+df51/nX+df52/n/+kP6H/oT+e/50/nL+bf5k/m3+av5t/nX+dP51/nX+cf5b/lf+Vf5W/lX+U/5W/lr+aP5w/nb+df50/m/+Zv5m/ln+W/5v/nX+df51/nX+df50/nH+bf5d/lT+X/5o/mT+af5n/mT+Vv5d/l/+Zf5l/mb+Z/5f/lX+Vf5W/lb+Uf5P/lT+Vf5W/k3+VP5W/lD+RP5G/kz+Tf4+/jb+Nf41/in+Nv41/jX+Nf47/kL+Qv5G/kb+Qv5E/jr+Nv42/jb+Ov4+/jT+Nv4+/j/+Nv41/jX+Of48/jj+M/4x/if+Mf43/kP+Rf5G/kX+Rf5G/kX+Rv5F/kX+Ov41/ib+Jv4m/ib+Jv4l/if+MP4n/ir+KP4m/iX+J/4r/jr+P/5H/kb+NP4p/ib+KP4Z/hT+Fv4l/ib+Jv4m/ib+Jf4e/hz+Iv4f/ir+MP42/jz+O/4n/ib+Jv4m/iX+Jv4l/ib+Jv4n/ij+Jv4l/i/+M/43/jf+RP5C/kL+NP42/jH+Nf42/jr+Nv4y/jb+N/5A/kb+Rv5F/j/+P/4//kb+Q/49/jr+OP5D/kD+Rf5B/jz+Nf47/kj+Tf5J/k/+Rv5F/kb+R/5O/lD+V/5Y/k3+Rf5G/j7+OP4//lb+YP5m/mX+YP5L/lD+Vf5V/lv+XP5X/lX+Vf5W/mT+X/5s/nT+cv5n/l/+Wv5f/]
+2025-05-26 15:47:40,810 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png|facepalm.png|main.py
+2025-05-26 15:48:01,323 [DEBUG] 处理收到的消息: VOICE_MSG_SENT|why_1
+2025-05-26 15:48:01,323 [DEBUG] 语音消息发送成功: 发送给 why_1
+2025-05-26 15:48:01,323 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,325 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,326 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,327 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,327 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,328 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,329 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,329 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,330 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,331 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,332 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,332 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,333 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,333 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,334 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,335 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,335 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,336 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,337 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,337 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,338 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,339 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,340 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,340 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,341 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,341 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,342 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,343 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,343 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,344 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,345 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,346 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,346 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:01,347 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:48:05,380 [DEBUG] 初始化语音消息音频播放器
+2025-05-26 15:48:05,669 [DEBUG] 使用默认输出设备: 4
+2025-05-26 15:48:05,693 [DEBUG] 语音消息播放器开始运行...
+2025-05-26 15:48:09,215 [ERROR] 关闭语音消息播放流错误: 'NoneType' object has no attribute 'close'
+2025-05-26 15:48:21,467 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-26 15:48:22,284 [DEBUG] 停止客户端线程
+2025-05-26 15:48:22,284 [WARNING] 服务器连接断开
+2025-05-26 15:48:22,285 [DEBUG] 客户端线程结束

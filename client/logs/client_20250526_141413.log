@@ -1,0 +1,102 @@
+2025-05-26 14:14:13,261 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-26 14:14:13,577 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-26 14:14:13,577 [DEBUG] 服务器地址 54.252.240.58 解析成功
+2025-05-26 14:14:13,921 [DEBUG] 成功连接到服务器 54.252.240.58:12345
+2025-05-26 14:14:22,280 [DEBUG] 初始化主窗口: 用户=why
+2025-05-26 14:14:22,281 [DEBUG] 创建客户端线程
+2025-05-26 14:14:22,281 [DEBUG] 客户端线程初始化
+2025-05-26 14:14:22,281 [DEBUG] 开始初始化UDP音频服务
+2025-05-26 14:14:22,281 [DEBUG] 客户端线程开始运行
+2025-05-26 14:14:22,281 [DEBUG] 分配随机UDP端口: 63144
+2025-05-26 14:14:22,292 [DEBUG] 尝试绑定UDP端口: 63144
+2025-05-26 14:14:22,292 [DEBUG] UDP端口绑定成功: 63144
+2025-05-26 14:14:22,292 [DEBUG] 创建UDP音频线程，端口: 63144
+2025-05-26 14:14:22,293 [DEBUG] UDP音频线程绑定到端口: 63144
+2025-05-26 14:14:22,293 [DEBUG] UDP音频线程启动成功
+2025-05-26 14:14:22,293 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|63144
+2025-05-26 14:14:22,293 [DEBUG] UDP音频服务初始化完成，端口: 63144
+2025-05-26 14:14:22,310 [DEBUG] 初始化UI
+2025-05-26 14:14:22,314 [DEBUG] 初始刷新好友和群组列表
+2025-05-26 14:14:22,314 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 63144
+2025-05-26 14:14:22,997 [DEBUG] 处理收到的消息: FRIEND_LIST|
+2025-05-26 14:14:23,936 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:online|gty:offline
+2025-05-26 14:14:24,788 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why|[EMOJI]image_emoticon19.png
+2025-05-26 14:14:25,096 [DEBUG] 处理收到的消息: FILE_LIST|main.py|client_20250516_225953.log|facepalm.png|cxk.png
+2025-05-26 14:14:37,225 [DEBUG] 用户重新选择的音频设备: {'input': 2, 'output': 3}
+2025-05-26 14:14:40,444 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-26 14:14:40,445 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-26 14:14:40,445 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-26 14:14:40,446 [DEBUG] 来电者: why_1 (旧格式)
+2025-05-26 14:14:40,446 [DEBUG] 当前用户: why
+2025-05-26 14:14:40,446 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-26 14:14:40,448 [DEBUG] 当前窗口状态: visible=True, active=True
+2025-05-26 14:14:40,448 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-26 14:14:40,449 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-26 14:14:40,449 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-26 14:14:40,548 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-26 14:14:40,576 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-26 14:14:40,946 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-26 14:14:40,947 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-26 14:14:40,947 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-26 14:14:40,947 [DEBUG] 来电者: why_1 (旧格式)
+2025-05-26 14:14:40,948 [DEBUG] 当前用户: why
+2025-05-26 14:14:40,948 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-26 14:14:40,948 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-26 14:14:40,948 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-26 14:14:40,948 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-26 14:14:40,949 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-26 14:14:41,048 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-26 14:14:41,062 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-26 14:14:41,456 [DEBUG] 处理收到的消息: CALL_INCOMING|why_1
+2025-05-26 14:14:41,456 [DEBUG] ======= CALL_INCOMING详细调试信息 =======
+2025-05-26 14:14:41,456 [DEBUG] 收到CALL_INCOMING消息: CALL_INCOMING|why_1
+2025-05-26 14:14:41,456 [DEBUG] 来电者: why_1 (旧格式)
+2025-05-26 14:14:41,457 [DEBUG] 当前用户: why
+2025-05-26 14:14:41,457 [DEBUG] 当前通话状态: in_call=False, call_target=None
+2025-05-26 14:14:41,457 [DEBUG] 当前窗口状态: visible=True, active=False
+2025-05-26 14:14:41,457 [DEBUG] 添加来电到待处理队列: why_1
+2025-05-26 14:14:41,457 [DEBUG] CALL_INCOMING已添加到待处理队列
+2025-05-26 14:14:41,457 [DEBUG] ======= CALL_INCOMING详细调试信息结束 =======
+2025-05-26 14:14:41,558 [DEBUG] 从待处理队列中处理来电: why_1
+2025-05-26 14:14:41,578 [DEBUG] 已显示通知窗口并从队列中移除: why_1
+2025-05-26 14:14:41,922 [DEBUG] 接受来电：why_1
+2025-05-26 14:14:41,922 [DEBUG] 准备发送CALL_ACCEPT: b'CALL_ACCEPT|why|why_1|63144'
+2025-05-26 14:14:41,923 [DEBUG] 已发送CALL_ACCEPT消息，本地UDP端口: 63144
+2025-05-26 14:14:41,923 [DEBUG] 使用传入的音频设备: {'input': 2, 'output': 3}
+2025-05-26 14:14:41,938 [DEBUG] 已创建通话对话框(被叫方)，目标地址: None
+2025-05-26 14:14:42,229 [DEBUG] 处理收到的消息: CALL_CONNECT_INFO|why_1|210.30.192.180|50949
+2025-05-26 14:14:42,229 [DEBUG] 收到CALL_CONNECT_INFO: caller=why_1, ip=210.30.192.180, port=50949
+2025-05-26 14:14:42,229 [DEBUG] 接收方获得发起方UDP地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:42,229 [DEBUG] 更新现有通话对话框的目标地址
+2025-05-26 14:14:42,229 [DEBUG] 更新目标地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:42,229 [DEBUG] 开始通话: is_caller=False, target_addr=('210.30.192.180', 50949)
+2025-05-26 14:14:42,230 [DEBUG] 开始NAT穿透，目标地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:42,231 [DEBUG] 发送NAT穿透包 1/5 到 ('210.30.192.180', 50949)
+2025-05-26 14:14:42,331 [DEBUG] 发送NAT穿透包 2/5 到 ('210.30.192.180', 50949)
+2025-05-26 14:14:42,432 [DEBUG] 发送NAT穿透包 3/5 到 ('210.30.192.180', 50949)
+2025-05-26 14:14:42,533 [DEBUG] 发送NAT穿透包 4/5 到 ('210.30.192.180', 50949)
+2025-05-26 14:14:42,635 [DEBUG] 发送NAT穿透包 5/5 到 ('210.30.192.180', 50949)
+2025-05-26 14:14:42,737 [DEBUG] NAT穿透完成
+2025-05-26 14:14:42,738 [DEBUG] 初始化音频播放器: output_device_index=3
+2025-05-26 14:14:42,738 [DEBUG] 音频播放器已启动
+2025-05-26 14:14:42,739 [DEBUG] 初始化音频录制器: input_device_index=2
+2025-05-26 14:14:42,739 [DEBUG] 使用输出设备: Microsoft 声音映射器 - Output
+2025-05-26 14:14:42,740 [DEBUG] 使用输入设备: 外部麦克风 (Realtek(R) Audio)
+2025-05-26 14:14:42,740 [DEBUG] 音频录制器已启动
+2025-05-26 14:14:42,741 [DEBUG] 设备信息: {'index': 3, 'structVersion': 2, 'name': 'Microsoft 声音映射器 - Output', 'hostApi': 0, 'maxInputChannels': 0, 'maxOutputChannels': 2, 'defaultLowInputLatency': 0.09, 'defaultLowOutputLatency': 0.09, 'defaultHighInputLatency': 0.18, 'defaultHighOutputLatency': 0.18, 'defaultSampleRate': 44100.0}
+2025-05-26 14:14:42,741 [DEBUG] 设备信息: {'index': 2, 'structVersion': 2, 'name': '外部麦克风 (Realtek(R) Audio)', 'hostApi': 0, 'maxInputChannels': 4, 'maxOutputChannels': 0, 'defaultLowInputLatency': 0.09, 'defaultLowOutputLatency': 0.09, 'defaultHighInputLatency': 0.18, 'defaultHighOutputLatency': 0.18, 'defaultSampleRate': 44100.0}
+2025-05-26 14:14:42,762 [DEBUG] 开始音频播放...
+2025-05-26 14:14:42,828 [DEBUG] 开始录音...
+2025-05-26 14:14:46,043 [DEBUG] 发送UDP音频数据: 包 #50, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:49,244 [DEBUG] 录制到音频数据: 包 #100, 2048 字节
+2025-05-26 14:14:49,245 [DEBUG] 发送UDP音频数据: 包 #100, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:52,445 [DEBUG] 发送UDP音频数据: 包 #150, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:55,645 [DEBUG] 录制到音频数据: 包 #200, 2048 字节
+2025-05-26 14:14:55,646 [DEBUG] 发送UDP音频数据: 包 #200, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:14:58,844 [DEBUG] 发送UDP音频数据: 包 #250, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:15:02,044 [DEBUG] 录制到音频数据: 包 #300, 2048 字节
+2025-05-26 14:15:02,045 [DEBUG] 发送UDP音频数据: 包 #300, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:15:04,800 [DEBUG] 处理收到的消息: CALL_ENDED|why_1
+2025-05-26 14:15:05,190 [DEBUG] 处理收到的消息: FRIEND_OFFLINE|why_1
+2025-05-26 14:15:05,243 [DEBUG] 发送UDP音频数据: 包 #350, 2048 字节，到外网地址: ('210.30.192.180', 50949)
+2025-05-26 14:15:05,786 [DEBUG] 结束通话

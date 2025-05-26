@@ -1,0 +1,51 @@
+2025-05-26 15:09:40,486 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:09:40,486 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:09:40,486 [DEBUG] 服务器地址 127.0.0.1 解析成功
+2025-05-26 15:09:40,496 [DEBUG] 成功连接到服务器 127.0.0.1:12345
+2025-05-26 15:09:53,590 [DEBUG] 初始化主窗口: 用户=why
+2025-05-26 15:09:53,590 [DEBUG] 创建客户端线程
+2025-05-26 15:09:53,591 [DEBUG] 客户端线程初始化
+2025-05-26 15:09:53,591 [DEBUG] 开始初始化UDP音频服务
+2025-05-26 15:09:53,591 [DEBUG] 分配随机UDP端口: 46774
+2025-05-26 15:09:53,591 [DEBUG] 客户端线程开始运行
+2025-05-26 15:09:53,591 [DEBUG] 尝试绑定UDP端口: 46774
+2025-05-26 15:09:53,601 [DEBUG] UDP端口绑定成功: 46774
+2025-05-26 15:09:53,602 [DEBUG] 创建UDP音频线程，端口: 46774
+2025-05-26 15:09:53,602 [DEBUG] UDP音频线程绑定到端口: 46774
+2025-05-26 15:09:53,602 [DEBUG] UDP音频线程启动成功
+2025-05-26 15:09:53,602 [DEBUG] 发送UDP端口更新消息: UDP_PORT_UPDATE|why|46774
+2025-05-26 15:09:53,602 [DEBUG] UDP音频服务初始化完成，端口: 46774
+2025-05-26 15:09:53,621 [DEBUG] 初始化UI
+2025-05-26 15:09:53,625 [DEBUG] 初始刷新好友和群组列表
+2025-05-26 15:09:53,625 [DEBUG] 主窗口初始化完成，用户: why, UDP端口: 46774
+2025-05-26 15:09:53,677 [DEBUG] 处理收到的消息: FRIEND_LIST|why_1:offline|gty:offline
+2025-05-26 15:09:53,678 [DEBUG] 处理收到的消息: GROUP_LIST|1:first_grop|2:second_grop|3:third_grop|4:4|5:5
+2025-05-26 15:09:54,431 [DEBUG] 处理收到的消息: PRIVATE_HISTORY|why_1|1|why_1|[EMOJI]smart.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]smart.png|why_1|[EMOJI]facepalm.png|why_1|[EMOJI]gif4.gif|why|1|why_1|[EMOJI]smirk.png|why|1|why_1|2|why_1|[EMOJI]smirk.png|why_1|[EMOJI]gif4.gif|why_1|[EMOJI]gif4.gif|why|[EMOJI]smart.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]image_emoticon6.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon19.png|why|[EMOJI]gif4.gif|why_1|[EMOJI]image_emoticon31.png|why_1|诶呀|why_1|弄得差不多了|why|但是文件还不能下载，语音也打不通|why_1|[EMOJI]image_emoticon19.png|why_1|1|why|[EMOJI]gif2.gif|why|1|why|2|why|[EMOJI]image_emoticon19.png|why|[EMOJI]image_emoticon19.png
+2025-05-26 15:09:54,520 [DEBUG] 处理收到的消息: FILE_LIST|client_20250516_225953.log|cxk.png|facepalm.png|main.py
+2025-05-26 15:10:19,577 [DEBUG] 处理收到的消息: FRIEND_ONLINE|why_1
+2025-05-26 15:10:36,879 [DEBUG] 选择的输入设备: 2
+2025-05-26 15:10:47,197 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,200 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,202 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,203 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,205 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,207 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,209 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,210 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,212 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,214 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,215 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,217 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,219 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,220 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,222 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,224 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,226 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,227 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,230 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,231 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,233 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,235 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,237 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:47,239 [DEBUG] 处理收到的消息: ERROR|Unknown command.
+2025-05-26 15:10:52,174 [DEBUG] 使用默认输出设备: 4
