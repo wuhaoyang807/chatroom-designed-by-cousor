@@ -23,19 +23,20 @@ import os
 import hashlib
 import audioop  # 添加音频操作模块
 
-# 配置日志
-log_dir = os.path.join(os.path.dirname(__file__), 'logs')
-os.makedirs(log_dir, exist_ok=True)
-log_file = os.path.join(log_dir, f'client_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+# 配置日志 - 在导入配置后进行
+def setup_logging():
+    log_file = os.path.join(LOG_DIR, f'client_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler()
+        ]
+    )
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
-)
+# 在导入配置后设置日志
+setup_logging()
 
 # 音频压缩工具类
 class AudioCompressor:
@@ -125,25 +126,29 @@ class AudioCompressor:
             logging.error(f"回声抑制失败: {e}")
             return audio_data
 
-# 服务器配置
-SERVER_HOST = '127.0.0.1'  # 默认本地地址why
-SERVER_PORT = 12345
-UDP_PORT_BASE = 40000  # 本地UDP端口基址
-
-EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
-# 在EMOJI_DIR定义附近添加背景图片文件夹
-BG_DIR = os.path.join(os.path.dirname(__file__), 'backgrounds')
-os.makedirs(BG_DIR, exist_ok=True)
-
-# 添加文件存储目录
-FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
-os.makedirs(FILES_DIR, exist_ok=True)
-
-# 音频配置
-CHUNK = 1024
-FORMAT = pyaudio.paInt16
-CHANNELS = 1
-RATE = 16000
+# 导入配置
+try:
+    from config import *
+    FORMAT = pyaudio.paInt16  # 转换配置文件中的格式
+except ImportError:
+    # 如果没有配置文件，使用默认配置
+    SERVER_HOST = '54.252.240.58'
+    SERVER_PORT = 12345
+    UDP_PORT_BASE = 40000
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 16000
+    
+    # 文件路径配置
+    EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
+    BG_DIR = os.path.join(os.path.dirname(__file__), 'backgrounds')
+    FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
+    LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
+    
+    # 确保目录存在
+    for dir_path in [EMOJI_DIR, BG_DIR, FILES_DIR, LOG_DIR]:
+        os.makedirs(dir_path, exist_ok=True)
 
 
 # 添加一个全局函数来确保窗口显示在屏幕中央
@@ -310,7 +315,7 @@ class UDPAudioThread(QThread):
             # 创建完整的数据包：头部长度(1字节) + 头部 + 音频数据
             packet = bytearray([header_len]) + header_bytes + audio_data
 
-            # 直接发送到目标外网地址，不通过服务器中继
+            # 发送到服务器进行中继转发
             max_retries = 3
             for attempt in range(max_retries):
                 try:
@@ -322,7 +327,7 @@ class UDPAudioThread(QThread):
                         self.send_count = 1
                     
                     if self.send_count % 50 == 0:
-                        logging.debug(f"发送UDP音频数据: 包 #{self.send_count}, {len(audio_data)} 字节，到外网地址: {target_addr}")
+                        logging.debug(f"发送UDP音频数据到服务器中继: 包 #{self.send_count}, {len(audio_data)} 字节，服务器地址: {target_addr}")
                     break  # 发送成功，退出重试循环
                 except Exception as send_error:
                     if attempt < max_retries - 1:
@@ -770,8 +775,8 @@ class CallDialog(QDialog):
         if is_caller:
             self.status_label.setText(f"正在等待 {friend_name} 接听...")
         else:
-            self.status_label.setText(f"与 {friend_name} 通话中...")
-            # 接收方需要等待目标地址，不立即开始通话
+            self.status_label.setText(f"正在连接到 {friend_name}...")
+            # 接收方需要等待服务器发送目标地址，不立即开始通话
             if self.target_addr:
                 self.start_call()
 
@@ -930,23 +935,23 @@ class CallDialog(QDialog):
             QMessageBox.critical(self, "通话错误", f"启动通话失败: {e}")
 
     def perform_nat_traversal(self):
-        """执行NAT穿透，发送一些UDP包来打开NAT端口"""
+        """连接到服务器进行音频中继，不需要NAT穿透"""
         try:
-            logging.debug(f"开始NAT穿透，目标地址: {self.target_addr}")
-            # 发送几个小的UDP包来打开NAT端口
-            for i in range(5):
+            logging.debug(f"连接到服务器进行音频中继，服务器地址: {self.target_addr}")
+            # 发送几个测试包到服务器确保连接正常
+            for i in range(3):
                 try:
                     # 创建一个小的测试包
-                    test_packet = f"NAT_TEST|{self.username}|{i}".encode('utf-8')
+                    test_packet = f"RELAY_TEST|{self.username}|{i}".encode('utf-8')
                     self.udp_thread.udp_socket.sendto(test_packet, self.target_addr)
-                    logging.debug(f"发送NAT穿透包 {i+1}/5 到 {self.target_addr}")
+                    logging.debug(f"发送服务器连接测试包 {i+1}/3 到 {self.target_addr}")
                     time.sleep(0.1)  # 短暂延迟
                 except Exception as e:
-                    logging.warning(f"NAT穿透包 {i+1} 发送失败: {e}")
-            logging.debug("NAT穿透完成")
+                    logging.warning(f"服务器连接测试包 {i+1} 发送失败: {e}")
+            logging.debug("服务器连接测试完成")
         except Exception as e:
-            logging.error(f"NAT穿透失败: {e}")
-            # NAT穿透失败不应该阻止通话继续
+            logging.error(f"服务器连接测试失败: {e}")
+            # 连接测试失败不应该阻止通话继续
 
     def update_duration(self):
         """更新通话时长显示"""
@@ -1996,16 +2001,16 @@ class MainWindow(QWidget):
                         return
 
                     from_user = parts[1]
-                    caller_ip = parts[2]
-                    caller_port = parts[3]
+                    server_ip = parts[2]
+                    server_port = parts[3]
 
-                    logging.debug(f"收到CALL_ACCEPTED: from={from_user}, ip={caller_ip}, port={caller_port}")
+                    logging.debug(f"收到CALL_ACCEPTED: from={from_user}, server_ip={server_ip}, server_port={server_port}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
 
                     if self.in_call and self.call_target == from_user:
-                        # 更新通话对话框状态
-                        target_addr = (caller_ip, int(caller_port))
-                        logging.debug(f"收到对方UDP地址: {target_addr}")
+                        # 使用服务器地址进行音频中继
+                        target_addr = (server_ip, int(server_port))
+                        logging.debug(f"使用服务器中继地址: {target_addr}")
 
                         if self.call_dialog:
                             # 如果已经创建了通话对话框（作为主叫方），则更新地址并开始通话
@@ -2016,7 +2021,7 @@ class MainWindow(QWidget):
                         else:
                             # 如果还没有创建通话对话框（可能是作为被叫方），则创建
                             logging.debug("为被叫方创建通话对话框")
-                            self.create_call_dialog_as_receiver(from_user, caller_ip, caller_port)
+                            self.create_call_dialog_as_receiver(from_user, server_ip, server_port)
                     else:
                         logging.warning(f"收到CALL_ACCEPTED但不匹配当前通话状态: {from_user}")
                 except Exception as e:
@@ -2024,21 +2029,21 @@ class MainWindow(QWidget):
                     QMessageBox.warning(self, "通话错误", f"处理通话接受消息失败: {e}")
                 return
             elif cmd == 'CALL_CONNECT_INFO':
-                # 接收方收到发起方的连接信息
+                # 接收方收到服务器连接信息
                 try:
                     if len(parts) < 4:
                         logging.error(f"CALL_CONNECT_INFO消息格式错误: {data}")
                         return
 
                     caller = parts[1]
-                    caller_ip = parts[2]
-                    caller_port = parts[3]
+                    server_ip = parts[2]
+                    server_port = parts[3]
 
-                    logging.debug(f"收到CALL_CONNECT_INFO: caller={caller}, ip={caller_ip}, port={caller_port}")
+                    logging.debug(f"收到CALL_CONNECT_INFO: caller={caller}, server_ip={server_ip}, server_port={server_port}")
 
                     if self.in_call and self.call_target == caller:
-                        target_addr = (caller_ip, int(caller_port))
-                        logging.debug(f"接收方获得发起方UDP地址: {target_addr}")
+                        target_addr = (server_ip, int(server_port))
+                        logging.debug(f"接收方使用服务器中继地址: {target_addr}")
 
                         if self.call_dialog and self.call_dialog.isVisible():
                             # 更新现有对话框的目标地址并开始通话
@@ -2555,26 +2560,25 @@ class MainWindow(QWidget):
                 self.call_dialog.status_label.setText(f"正在连接到 {caller}...")
                 return
 
-            # 如果有发起者的外网地址，直接使用；否则等待CALL_CONNECT_INFO
-            target_addr = getattr(self, 'caller_external_addr', None)
-            
-            # 创建通话对话框，使用预设的音频设备避免重复选择
-            if not hasattr(self, 'cached_audio_devices'):
+            # 确保有缓存的音频设备，避免重复选择
+            if not hasattr(self, 'cached_audio_devices') or not self.cached_audio_devices:
                 # 第一次通话时选择设备并缓存
                 self.cached_audio_devices = self.get_audio_devices_for_call()
+                logging.debug(f"缓存音频设备: {self.cached_audio_devices}")
             
+            # 创建通话对话框，等待服务器发送连接信息
             self.call_dialog = CallDialog(
                 self,
                 caller,
                 is_caller=False,  # 作为接收方
                 udp_thread=self.udp_thread,
-                target_addr=target_addr,
+                target_addr=None,  # 等待服务器发送地址
                 username=self.username,
                 audio_devices=self.cached_audio_devices  # 使用缓存的设备
             )
             self.call_dialog.call_ended.connect(self.on_call_ended)
             self.call_dialog.show()
-            logging.debug(f"已创建通话对话框(被叫方)，目标地址: {target_addr}")
+            logging.debug(f"已创建通话对话框(被叫方)，等待服务器连接信息")
 
         except Exception as e:
             self.in_call = False
