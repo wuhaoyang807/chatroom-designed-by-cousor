@@ -138,15 +138,32 @@ class VoiceChanger:
         """
         try:
             if not audio_data or len(audio_data) == 0:
+                logging.warning("变音处理: 音频数据为空")
+                return audio_data
+            
+            # 确保音频数据长度为偶数
+            if len(audio_data) % 2 != 0:
+                audio_data = audio_data[:-1]
+                logging.warning("变音处理: 调整音频数据长度为偶数")
+            
+            # 如果调整后数据为空，返回原始数据
+            if len(audio_data) == 0:
+                logging.warning("变音处理: 调整后音频数据为空")
                 return audio_data
             
             # 将字节数据转换为样本数组
-            samples = struct.unpack('<' + 'h' * (len(audio_data) // 2), audio_data)
+            num_samples = len(audio_data) // 2
+            if num_samples == 0:
+                logging.warning("变音处理: 样本数为0")
+                return audio_data
+                
+            samples = struct.unpack('<' + 'h' * num_samples, audio_data)
+            logging.debug(f"变音处理: 原始样本数={num_samples}, pitch_factor={pitch_factor}")
             
             # 简单的音调变化：通过改变采样率来实现
-            if pitch_factor != 1.0:
+            if abs(pitch_factor - 1.0) > 0.01:  # 只有当变化明显时才处理
                 # 重新采样以改变音调
-                new_length = int(len(samples) / pitch_factor)
+                new_length = max(1, int(len(samples) / pitch_factor))  # 确保至少有1个样本
                 new_samples = []
                 
                 for i in range(new_length):
@@ -159,24 +176,54 @@ class VoiceChanger:
                         # 线性插值计算新样本值
                         fraction = old_index - index1
                         sample = samples[index1] * (1 - fraction) + samples[index2] * fraction
-                        new_samples.append(int(sample))
+                        # 确保样本值在有效范围内
+                        sample = max(-32768, min(32767, int(sample)))
+                        new_samples.append(sample)
+                
+                # 确保有足够的样本
+                if len(new_samples) == 0:
+                    logging.warning("变音处理: 新样本数为0，返回原始数据")
+                    return audio_data
                 
                 # 如果新长度小于原长度，需要填充或截断到原长度
                 if len(new_samples) < len(samples):
                     # 重复最后的样本来填充
+                    last_sample = new_samples[-1] if new_samples else 0
                     while len(new_samples) < len(samples):
-                        new_samples.append(new_samples[-1] if new_samples else 0)
+                        new_samples.append(last_sample)
                 else:
                     # 截断到原长度
                     new_samples = new_samples[:len(samples)]
                 
+                logging.debug(f"变音处理: 新样本数={len(new_samples)}")
+                
+                # 验证样本数据
+                if len(new_samples) == 0:
+                    logging.warning("变音处理: 最终样本数为0，返回原始数据")
+                    return audio_data
+                
                 # 转换回字节数据
-                return struct.pack('<' + 'h' * len(new_samples), *new_samples)
+                try:
+                    result = struct.pack('<' + 'h' * len(new_samples), *new_samples)
+                    logging.debug(f"变音处理: 输出数据长度={len(result)}")
+                    
+                    # 验证输出数据
+                    if len(result) == 0:
+                        logging.warning("变音处理: 输出数据长度为0，返回原始数据")
+                        return audio_data
+                    
+                    return result
+                except struct.error as pack_error:
+                    logging.error(f"变音处理: 数据打包失败: {pack_error}")
+                    return audio_data
             else:
+                logging.debug("变音处理: pitch_factor接近1.0，返回原始数据")
                 return audio_data
                 
         except Exception as e:
             logging.error(f"变音处理失败: {e}")
+            import traceback
+            traceback.print_exc()
             return audio_data
     
     @staticmethod
@@ -184,7 +231,13 @@ class VoiceChanger:
         """
         应用女声效果（提高音调）
         """
-        return VoiceChanger.change_pitch(audio_data, 1.3)  # 提高30%的音调
+        try:
+            result = VoiceChanger.change_pitch(audio_data, 1.3)  # 提高30%的音调
+            logging.debug(f"女声变音处理: 输入长度={len(audio_data)}, 输出长度={len(result)}")
+            return result
+        except Exception as e:
+            logging.error(f"女声变音处理失败: {e}")
+            return audio_data  # 如果变音失败，返回原始音频
     
     @staticmethod
     def apply_original_voice(audio_data):
@@ -723,18 +776,35 @@ class VoiceMessageDialog(QDialog):
         try:
             # 合并音频数据
             audio_bytes = b''.join(self.audio_data)
+            logging.debug(f"合并音频数据: 原始长度={len(audio_bytes)}")
+            
+            # 验证音频数据
+            if len(audio_bytes) == 0:
+                QMessageBox.warning(self, "错误", "录制的音频数据为空")
+                return
             
             # 应用变音效果
             if self.voice_type == "female":
+                logging.debug("应用女声变音效果")
                 audio_bytes = VoiceChanger.apply_female_voice(audio_bytes)
+                logging.debug(f"女声变音后长度: {len(audio_bytes)}")
             else:
+                logging.debug("使用原声")
                 audio_bytes = VoiceChanger.apply_original_voice(audio_bytes)
+            
+            # 最终验证
+            if len(audio_bytes) == 0:
+                QMessageBox.warning(self, "错误", "变音处理后音频数据为空")
+                return
             
             # 发送信号
             self.voice_message_ready.emit(audio_bytes, self.voice_type)
             self.accept()
             
         except Exception as e:
+            logging.error(f"处理语音消息失败: {e}")
+            import traceback
+            traceback.print_exc()
             QMessageBox.warning(self, "发送失败", f"处理语音消息失败: {e}")
 
     def closeEvent(self, event):
@@ -1285,7 +1355,11 @@ class LoginWindow(QWidget):
         if not username or not password:
             QMessageBox.warning(self, '提示', '请输入用户名和密码')
             return
-        self.sock.send(f'LOGIN|{username}|{password}'.encode('utf-8'))
+        
+        # 确保消息以换行符结尾
+        login_msg = f'LOGIN|{username}|{password}\n'
+        self.sock.send(login_msg.encode('utf-8'))
+        
         try:
             resp = self.sock.recv(16384).decode('utf-8')
         except Exception as e:
@@ -1304,7 +1378,11 @@ class LoginWindow(QWidget):
         if not username or not password:
             QMessageBox.warning(self, '提示', '请输入用户名和密码')
             return
-        self.sock.send(f'REGISTER|{username}|{password}'.encode('utf-8'))
+        
+        # 确保消息以换行符结尾
+        register_msg = f'REGISTER|{username}|{password}\n'
+        self.sock.send(register_msg.encode('utf-8'))
+        
         resp = self.sock.recv(16384).decode('utf-8')
         parts = resp.split('|', 2)
         if parts[0] == 'REGISTER_RESULT' and parts[1] == 'OK':
@@ -1319,7 +1397,10 @@ class LoginWindow(QWidget):
             QMessageBox.warning(self, '提示', '请输入用户名和密码')
             return
         try:
-            self.sock.send(f'DELETE_USER|{username}|{password}'.encode('utf-8'))
+            # 确保消息以换行符结尾
+            delete_msg = f'DELETE_USER|{username}|{password}\n'
+            self.sock.send(delete_msg.encode('utf-8'))
+            
             resp = self.sock.recv(16384).decode('utf-8')
             parts = resp.split('|', 2)
             if parts[0] == 'DELETE_USER_RESULT' and parts[1] == 'OK':
@@ -1618,6 +1699,20 @@ class MainWindow(QWidget):
         self.current_bg_index = 0
         self.private_files = []  # 当前私聊文件列表
 
+    def send_message_to_server(self, message):
+        """统一的消息发送方法，确保格式正确"""
+        try:
+            if not message.endswith('\n'):
+                message += '\n'
+            
+            encoded_msg = message.encode('utf-8')
+            logging.debug(f"发送消息: {message.strip()}, 长度: {len(encoded_msg)} 字节")
+            self.sock.send(encoded_msg)
+            return True
+        except Exception as e:
+            logging.error(f"发送消息失败: {e}")
+            return False
+
     def init_udp_audio(self):
         """初始化UDP音频通信"""
         logging.debug("开始初始化UDP音频服务")
@@ -1660,7 +1755,7 @@ class MainWindow(QWidget):
         try:
             update_msg = f'UDP_PORT_UPDATE|{self.username}|{self.udp_local_port}'
             logging.debug(f"发送UDP端口更新消息: {update_msg}")
-            self.sock.send(update_msg.encode('utf-8'))
+            self.send_message_to_server(update_msg)
         except Exception as e:
             logging.error(f"发送UDP端口更新消息失败: {e}")
 
@@ -1670,26 +1765,48 @@ class MainWindow(QWidget):
         """预加载所有表情到缓存"""
         try:
             if not os.path.exists(EMOJI_DIR):
-                print("表情目录不存在")
+                logging.debug("表情目录不存在，跳过预加载")
                 return
 
-            print("开始预加载表情...")
+            logging.debug("开始预加载表情...")
+            emoji_count = 0
             for fname in os.listdir(EMOJI_DIR):
-                if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    path = os.path.join(EMOJI_DIR, fname)
-                    if fname.lower().endswith('.gif'):
-                        # 加载GIF - 保存路径而不是QMovie实例
-                        movie = QMovie(path)
-                        movie.setCacheMode(QMovie.CacheAll)
-                        self.emoji_cache[fname] = {'type': 'gif', 'movie': movie, 'path': path}
-                    else:
-                        # 加载静态图片
-                        pix = QPixmap(path)
-                        scaled_pix = pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                        self.emoji_cache[fname] = {'type': 'image', 'pixmap': scaled_pix}
-            print(f"预加载完成，共 {len(self.emoji_cache)} 个表情")
+                try:
+                    if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                        path = os.path.join(EMOJI_DIR, fname)
+                        if not os.path.exists(path):
+                            logging.warning(f"表情文件不存在: {path}")
+                            continue
+                            
+                        if fname.lower().endswith('.gif'):
+                            # 加载GIF - 保存路径而不是QMovie实例
+                            try:
+                                movie = QMovie(path)
+                                movie.setCacheMode(QMovie.CacheAll)
+                                self.emoji_cache[fname] = {'type': 'gif', 'movie': movie, 'path': path}
+                                emoji_count += 1
+                            except Exception as gif_error:
+                                logging.warning(f"加载GIF表情失败: {fname}, 错误: {gif_error}")
+                        else:
+                            # 加载静态图片
+                            try:
+                                pix = QPixmap(path)
+                                if not pix.isNull():
+                                    scaled_pix = pix.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                                    self.emoji_cache[fname] = {'type': 'image', 'pixmap': scaled_pix}
+                                    emoji_count += 1
+                                else:
+                                    logging.warning(f"无法加载图片表情: {fname}")
+                            except Exception as img_error:
+                                logging.warning(f"加载图片表情失败: {fname}, 错误: {img_error}")
+                except Exception as file_error:
+                    logging.warning(f"处理表情文件失败: {fname}, 错误: {file_error}")
+                    continue
+                    
+            logging.debug(f"预加载完成，共 {emoji_count} 个表情")
         except Exception as e:
-            print(f"预加载表情出错: {e}")
+            logging.error(f"预加载表情出错: {e}")
+            # 即使预加载失败也不应该阻塞程序启动
 
     def get_emoji_from_cache(self, emoji_id, label):
         """从缓存获取表情并设置到标签"""
@@ -1819,14 +1936,14 @@ class MainWindow(QWidget):
 
     def get_friends(self):
         try:
-            self.sock.send(f'GET_FRIENDS|{self.username}'.encode('utf-8'))
+            self.send_message_to_server(f'GET_FRIENDS|{self.username}')
         except Exception as e:
             print(f"获取好友列表出错: {e}")
             QMessageBox.warning(self, '网络错误', '获取好友列表失败，请检查网络连接')
 
     def get_groups(self):
         try:
-            self.sock.send(f'GET_GROUPS|{self.username}'.encode('utf-8'))
+            self.send_message_to_server(f'GET_GROUPS|{self.username}')
             # 清空未读标记
             self.unread_groups = set()
         except Exception as e:
@@ -1884,7 +2001,7 @@ class MainWindow(QWidget):
         if not self.current_friend:
             return
         try:
-            self.sock.send(f'GET_PRIVATE_HISTORY|{self.username}|{self.current_friend}'.encode('utf-8'))
+            self.send_message_to_server(f'GET_PRIVATE_HISTORY|{self.username}|{self.current_friend}')
         except Exception as e:
             print(f"获取私聊历史记录出错: {e}")
             self.append_text_message('[系统]', '获取聊天记录失败，请检查网络连接')
@@ -1892,13 +2009,13 @@ class MainWindow(QWidget):
     def add_friend(self):
         friend, ok = QInputDialog.getText(self, '添加好友', '输入好友用户名:')
         if ok and friend:
-            self.sock.send(f'ADD_FRIEND|{self.username}|{friend}'.encode('utf-8'))
+            self.send_message_to_server(f'ADD_FRIEND|{self.username}|{friend}')
 
     def del_friend(self):
         if not self.current_friend:
             QMessageBox.warning(self, '提示', '请先选择要删除的好友')
             return
-        self.sock.send(f'DEL_FRIEND|{self.username}|{self.current_friend}'.encode('utf-8'))
+        self.send_message_to_server(f'DEL_FRIEND|{self.username}|{self.current_friend}')
 
     def append_text_message(self, sender, text, is_self=False):
         label = QLabel()
@@ -1960,7 +2077,7 @@ class MainWindow(QWidget):
         msg = self.input_edit.text().strip()
         if not msg or not self.current_friend:
             return
-        self.sock.send(f'MSG|{self.current_friend}|{msg}'.encode('utf-8'))
+        self.send_message_to_server(f'MSG|{self.current_friend}|{msg}')
         self.input_edit.clear()
         self.append_text_message('我', msg, is_self=True)
 
@@ -1979,7 +2096,7 @@ class MainWindow(QWidget):
     def send_emoji(self, emoji_id):
         if not self.current_friend:
             return
-        self.sock.send(f'EMOJI|{self.current_friend}|{emoji_id}'.encode('utf-8'))
+        self.send_message_to_server(f'EMOJI|{self.current_friend}|{emoji_id}')
         self.append_emoji_message('我', emoji_id)
 
     def send_voice_message(self):
@@ -2009,7 +2126,14 @@ class MainWindow(QWidget):
             import base64
             try:
                 audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+                # 移除所有换行符和空白字符，这很重要！
+                audio_base64 = audio_base64.replace('\n', '').replace('\r', '').replace(' ', '').replace('\t', '')
                 logging.debug(f"音频数据编码成功，base64长度: {len(audio_base64)}")
+                
+                # 验证base64数据不包含特殊字符
+                if '|' in audio_base64 or '\n' in audio_base64:
+                    raise Exception("Base64数据包含特殊字符，可能导致传输错误")
+                    
             except Exception as encode_error:
                 logging.error(f"音频数据编码失败: {encode_error}")
                 QMessageBox.warning(self, '发送失败', f'音频数据编码失败: {encode_error}')
@@ -2032,9 +2156,19 @@ class MainWindow(QWidget):
                 voice_msg = f'VOICE_MSG|{self.current_friend}|{voice_type}|{duration:.1f}|{audio_base64}'
                 logging.debug(f"发送语音消息: 目标={self.current_friend}, 消息长度={len(voice_msg)}")
                 
-                # 使用UTF-8编码发送
-                self.sock.send(voice_msg.encode('utf-8'))
-                logging.debug("语音消息发送成功")
+                # 确保消息以换行符结尾，这很重要！
+                if not voice_msg.endswith('\n'):
+                    voice_msg += '\n'
+                
+                # 验证消息格式
+                if voice_msg.count('|') < 4:
+                    raise Exception(f"语音消息格式错误，分隔符数量不足: {voice_msg.count('|')}")
+                
+                # 使用统一的发送方法
+                if self.send_message_to_server(voice_msg):
+                    logging.debug("语音消息发送成功")
+                else:
+                    raise Exception("发送语音消息到服务器失败")
                 
                 # 在本地显示发送的语音消息
                 self.append_voice_message('我', audio_data, voice_type, duration, is_self=True)
@@ -2157,20 +2291,20 @@ class MainWindow(QWidget):
             self.anon_nick = None
             self.group_members_list.clear()
             # 先获取群聊成员，再获取历史记录
-            self.sock.send(f'GET_GROUP_MEMBERS|{self.current_group}'.encode('utf-8'))
-            self.sock.send(f'GET_GROUP_HISTORY|{self.current_group}'.encode('utf-8'))
+            self.send_message_to_server(f'GET_GROUP_MEMBERS|{self.current_group}')
+            self.send_message_to_server(f'GET_GROUP_HISTORY|{self.current_group}')
         finally:
             self.selecting_group = False
 
     def create_group(self):
         group_name, ok = QInputDialog.getText(self, '创建群聊', '输入群聊名称:')
         if ok and group_name:
-            self.sock.send(f'CREATE_GROUP|{self.username}|{group_name}'.encode('utf-8'))
+            self.send_message_to_server(f'CREATE_GROUP|{self.username}|{group_name}')
 
     def join_group(self):
         group_id, ok = QInputDialog.getText(self, '加入群聊', '输入群聊ID:')
         if ok and group_id:
-            self.sock.send(f'JOIN_GROUP|{self.username}|{group_id}'.encode('utf-8'))
+            self.send_message_to_server(f'JOIN_GROUP|{self.username}|{group_id}')
 
     def send_group_message(self):
         msg = self.group_input_edit.text().strip()
@@ -2182,10 +2316,10 @@ class MainWindow(QWidget):
                 if not ok or not anon_nick:
                     return
                 self.anon_nick = anon_nick
-            self.sock.send(f'GROUP_MSG_ANON|{self.current_group}|{self.anon_nick}|{msg}'.encode('utf-8'))
+            self.send_message_to_server(f'GROUP_MSG_ANON|{self.current_group}|{self.anon_nick}|{msg}')
             self.append_group_anon_message(self.anon_nick, msg, is_self=True)
         else:
-            self.sock.send(f'GROUP_MSG|{self.current_group}|{self.username}|{msg}'.encode('utf-8'))
+            self.send_message_to_server(f'GROUP_MSG|{self.current_group}|{self.username}|{msg}')
             self.append_group_message(self.username, msg, is_self=True)
         self.group_input_edit.clear()
 
@@ -2236,10 +2370,10 @@ class MainWindow(QWidget):
                 if not ok or not anon_nick:
                     return
                 self.anon_nick = anon_nick
-            self.sock.send(f'GROUP_MSG_ANON|{self.current_group}|{self.anon_nick}|[EMOJI]{emoji_id}'.encode('utf-8'))
+            self.send_message_to_server(f'GROUP_MSG_ANON|{self.current_group}|{self.anon_nick}|[EMOJI]{emoji_id}')
             self.append_group_anon_emoji(self.anon_nick, emoji_id, is_self=True)
         else:
-            self.sock.send(f'GROUP_MSG|{self.current_group}|{self.username}|[EMOJI]{emoji_id}'.encode('utf-8'))
+            self.send_message_to_server(f'GROUP_MSG|{self.current_group}|{self.username}|[EMOJI]{emoji_id}')
             self.append_group_emoji(self.username, emoji_id, is_self=True)
 
     def append_group_emoji(self, sender, emoji_id, is_self=False):
@@ -2777,7 +2911,7 @@ class MainWindow(QWidget):
 
             # 尝试发送登出消息，但不等待响应
             try:
-                self.sock.send('LOGOUT|'.encode('utf-8'))
+                self.send_message_to_server('LOGOUT|')
             except:
                 pass
 
@@ -2807,10 +2941,20 @@ class MainWindow(QWidget):
     def initial_refresh(self):
         """登录后初始化刷新好友和群聊列表"""
         try:
+            # 使用定时器延迟执行，避免阻塞主窗口初始化
+            QTimer.singleShot(100, self.delayed_refresh)
+        except Exception as e:
+            logging.error(f"初始化刷新出错: {e}")
+    
+    def delayed_refresh(self):
+        """延迟执行的刷新操作"""
+        try:
+            logging.debug("开始延迟刷新好友和群组列表")
             self.get_friends()
             self.get_groups()
+            logging.debug("延迟刷新完成")
         except Exception as e:
-            print(f"初始化刷新出错: {e}")
+            logging.error(f"延迟刷新出错: {e}")
 
     # 移除所有语音通话相关的方法
 
@@ -3056,9 +3200,8 @@ class MainWindow(QWidget):
             progress.show()
 
             # 准备上传请求
-            self.sock.send(
-                f'FILE_UPLOAD_START|{self.username}|{self.current_friend}|{os.path.basename(file_path)}|{os.path.getsize(file_path)}|1'.encode(
-                    'utf-8'))
+            self.send_message_to_server(
+                f'FILE_UPLOAD_START|{self.username}|{self.current_friend}|{os.path.basename(file_path)}|{os.path.getsize(file_path)}|1')
 
             # 等待服务器响应 - 应该是重定向到文件传输端口
             response = self.sock.recv(1024).decode('utf-8')
@@ -3137,7 +3280,7 @@ class MainWindow(QWidget):
             progress.show()
 
             # 请求下载文件
-            self.sock.send(f'FILE_DOWNLOAD_START|{self.username}|{self.current_friend}|{fname}'.encode('utf-8'))
+            self.send_message_to_server(f'FILE_DOWNLOAD_START|{self.username}|{self.current_friend}|{fname}')
 
             # 等待服务器响应
             response = self.sock.recv(1024).decode('utf-8')
@@ -3185,7 +3328,7 @@ class MainWindow(QWidget):
         if not self.current_friend:
             return
         try:
-            self.sock.send(f'FILE_LIST|{self.username}|{self.current_friend}'.encode('utf-8'))
+            self.send_message_to_server(f'FILE_LIST|{self.username}|{self.current_friend}')
         except Exception as e:
             QMessageBox.warning(self, '网络错误', f'获取文件列表失败: {e}')
 
