@@ -258,6 +258,11 @@ class UDPAudioThread(QThread):
                 data, addr = self.udp_socket.recvfrom(65536)
                 if data and len(data) > 1:
                     try:
+                        # 检查是否是NAT测试包
+                        if data.startswith(b'NAT_TEST'):
+                            logging.debug(f"收到NAT测试包来自: {addr}")
+                            continue
+                        
                         # 解析头部
                         header_len = data[0]
                         if len(data) > header_len + 1:
@@ -305,7 +310,7 @@ class UDPAudioThread(QThread):
             # 创建完整的数据包：头部长度(1字节) + 头部 + 音频数据
             packet = bytearray([header_len]) + header_bytes + audio_data
 
-            # 发送数据，增加重试机制
+            # 直接发送到目标外网地址，不通过服务器中继
             max_retries = 3
             for attempt in range(max_retries):
                 try:
@@ -317,7 +322,7 @@ class UDPAudioThread(QThread):
                         self.send_count = 1
                     
                     if self.send_count % 50 == 0:
-                        logging.debug(f"发送UDP音频数据: 包 #{self.send_count}, {len(audio_data)} 字节，到: {target_addr}")
+                        logging.debug(f"发送UDP音频数据: 包 #{self.send_count}, {len(audio_data)} 字节，到外网地址: {target_addr}")
                     break  # 发送成功，退出重试循环
                 except Exception as send_error:
                     if attempt < max_retries - 1:
@@ -741,7 +746,7 @@ class CallDialog(QDialog):
     call_ended = pyqtSignal()
 
     def __init__(self, parent=None, friend_name=None, is_caller=False, udp_thread=None, target_addr=None,
-                 username=None):
+                 username=None, audio_devices=None):
         super().__init__(parent)
         self.friend_name = friend_name
         self.is_caller = is_caller
@@ -753,8 +758,12 @@ class CallDialog(QDialog):
         self.call_active = False
         self.error_occurred = False
 
-        # 获取音频设备
-        self.audio_devices = self.get_audio_devices()
+        # 获取音频设备 - 优先使用传入的设备
+        if audio_devices:
+            self.audio_devices = audio_devices
+            logging.debug(f"使用传入的音频设备: {audio_devices}")
+        else:
+            self.audio_devices = self.get_audio_devices()
 
         self.init_ui()
 
@@ -829,6 +838,32 @@ class CallDialog(QDialog):
             logging.error(f"获取音频设备失败: {e}")
             return self.get_default_devices()
 
+    def get_audio_devices_for_call(self):
+        """为通话获取音频设备，支持缓存"""
+        if hasattr(self, 'cached_audio_devices') and self.cached_audio_devices:
+            logging.debug("使用缓存的音频设备")
+            return self.cached_audio_devices
+        
+        try:
+            dialog = AudioDeviceSelector(self)
+            if dialog.exec_() == QDialog.Accepted:
+                devices = dialog.get_selected_devices()
+                logging.debug(f"用户选择的音频设备: {devices}")
+                # 缓存设备选择
+                self.cached_audio_devices = devices
+                return devices
+            else:
+                # 用户取消选择，使用默认设备
+                logging.debug("用户取消音频设备选择，使用默认设备")
+                devices = self.get_default_devices()
+                self.cached_audio_devices = devices
+                return devices
+        except Exception as e:
+            logging.error(f"获取音频设备失败: {e}")
+            devices = self.get_default_devices()
+            self.cached_audio_devices = devices
+            return devices
+
     def get_default_devices(self):
         """获取默认音频设备"""
         try:
@@ -863,6 +898,9 @@ class CallDialog(QDialog):
             if not self.target_addr or len(self.target_addr) != 2:
                 raise ValueError(f"无效的目标地址: {self.target_addr}")
 
+            # NAT穿透：发送一些UDP包来打开NAT端口
+            self.perform_nat_traversal()
+
             # 启动音频播放器
             self.audio_player = AudioPlayer(self.audio_devices['output'])
             self.udp_thread.audio_received.connect(self.on_audio_received)
@@ -890,6 +928,25 @@ class CallDialog(QDialog):
             self.connection_label.setText(f"连接失败: {e}")
             self.connection_label.setStyleSheet("color: red;")
             QMessageBox.critical(self, "通话错误", f"启动通话失败: {e}")
+
+    def perform_nat_traversal(self):
+        """执行NAT穿透，发送一些UDP包来打开NAT端口"""
+        try:
+            logging.debug(f"开始NAT穿透，目标地址: {self.target_addr}")
+            # 发送几个小的UDP包来打开NAT端口
+            for i in range(5):
+                try:
+                    # 创建一个小的测试包
+                    test_packet = f"NAT_TEST|{self.username}|{i}".encode('utf-8')
+                    self.udp_thread.udp_socket.sendto(test_packet, self.target_addr)
+                    logging.debug(f"发送NAT穿透包 {i+1}/5 到 {self.target_addr}")
+                    time.sleep(0.1)  # 短暂延迟
+                except Exception as e:
+                    logging.warning(f"NAT穿透包 {i+1} 发送失败: {e}")
+            logging.debug("NAT穿透完成")
+        except Exception as e:
+            logging.error(f"NAT穿透失败: {e}")
+            # NAT穿透失败不应该阻止通话继续
 
     def update_duration(self):
         """更新通话时长显示"""
@@ -1298,6 +1355,8 @@ class MainWindow(QWidget):
         # 在MainWindow.__init__中添加self.current_bg_index = 0
         self.current_bg_index = 0
         self.private_files = []  # 当前私聊文件列表
+        self.cached_audio_devices = None  # 缓存音频设备选择
+        self.caller_external_addr = None  # 来电者的外网地址
 
     def init_udp_audio(self):
         """初始化UDP音频通信"""
@@ -1491,8 +1550,15 @@ class MainWindow(QWidget):
         self.resolution_btn = QPushButton('调整分辨率')
         self.resolution_btn.setToolTip('调整界面分辨率')
         self.resolution_btn.clicked.connect(self.change_resolution)
+        
+        # 添加音频设备设置按钮
+        self.audio_settings_btn = QPushButton('音频设备设置')
+        self.audio_settings_btn.setToolTip('重新选择音频设备')
+        self.audio_settings_btn.clicked.connect(self.configure_audio_devices)
+        
         right_layout.addWidget(self.bg_btn)
         right_layout.addWidget(self.resolution_btn)
+        right_layout.addWidget(self.audio_settings_btn)
 
     def get_friends(self):
         try:
@@ -1844,8 +1910,21 @@ class MainWindow(QWidget):
                 try:
                     logging.debug("======= CALL_INCOMING详细调试信息 =======")
                     logging.debug(f"收到CALL_INCOMING消息: {data}")
-                    caller = parts[1]
-                    logging.debug(f"来电者: {caller}")
+                    
+                    # 新格式：CALL_INCOMING|caller|caller_ip|caller_port
+                    if len(parts) >= 4:
+                        caller = parts[1]
+                        caller_ip = parts[2]
+                        caller_port = int(parts[3])
+                        # 保存发起者的外网地址信息
+                        self.caller_external_addr = (caller_ip, caller_port)
+                        logging.debug(f"来电者: {caller}, 外网地址: {caller_ip}:{caller_port}")
+                    else:
+                        # 兼容旧格式
+                        caller = parts[1]
+                        self.caller_external_addr = None
+                        logging.debug(f"来电者: {caller} (旧格式)")
+                    
                     logging.debug(f"当前用户: {self.username}")
                     logging.debug(f"当前通话状态: in_call={self.in_call}, call_target={self.call_target}")
                     logging.debug(f"当前窗口状态: visible={self.isVisible()}, active={self.isActiveWindow()}")
@@ -2349,13 +2428,19 @@ class MainWindow(QWidget):
             self.in_call = True
             self.call_target = self.current_friend
 
+            # 获取或使用缓存的音频设备
+            if not hasattr(self, 'cached_audio_devices'):
+                # 第一次通话时选择设备并缓存
+                self.cached_audio_devices = self.get_audio_devices_for_call()
+
             # 创建通话对话框
             self.call_dialog = CallDialog(
                 self,
                 self.current_friend,
                 is_caller=True,
                 udp_thread=self.udp_thread,
-                username=self.username
+                username=self.username,
+                audio_devices=self.cached_audio_devices  # 使用缓存的设备
             )
             self.call_dialog.call_ended.connect(self.on_call_ended)
             self.call_dialog.show()
@@ -2470,18 +2555,26 @@ class MainWindow(QWidget):
                 self.call_dialog.status_label.setText(f"正在连接到 {caller}...")
                 return
 
-            # 创建通话对话框，但不立即开始通话（等待CALL_CONNECT_INFO）
+            # 如果有发起者的外网地址，直接使用；否则等待CALL_CONNECT_INFO
+            target_addr = getattr(self, 'caller_external_addr', None)
+            
+            # 创建通话对话框，使用预设的音频设备避免重复选择
+            if not hasattr(self, 'cached_audio_devices'):
+                # 第一次通话时选择设备并缓存
+                self.cached_audio_devices = self.get_audio_devices_for_call()
+            
             self.call_dialog = CallDialog(
                 self,
                 caller,
                 is_caller=False,  # 作为接收方
                 udp_thread=self.udp_thread,
-                target_addr=None,  # 暂时没有目标地址
-                username=self.username
+                target_addr=target_addr,
+                username=self.username,
+                audio_devices=self.cached_audio_devices  # 使用缓存的设备
             )
             self.call_dialog.call_ended.connect(self.on_call_ended)
             self.call_dialog.show()
-            logging.debug(f"已创建通话对话框(被叫方)，等待连接信息...")
+            logging.debug(f"已创建通话对话框(被叫方)，目标地址: {target_addr}")
 
         except Exception as e:
             self.in_call = False
@@ -2554,6 +2647,21 @@ class MainWindow(QWidget):
             w, h = map(int, res.split('x'))
             self.resize(w, h)
             center_window(self)
+
+    def configure_audio_devices(self):
+        """配置音频设备"""
+        try:
+            dialog = AudioDeviceSelector(self)
+            if dialog.exec_() == QDialog.Accepted:
+                devices = dialog.get_selected_devices()
+                self.cached_audio_devices = devices
+                logging.debug(f"用户重新选择的音频设备: {devices}")
+                QMessageBox.information(self, '设置成功', '音频设备已更新，下次通话时生效')
+            else:
+                logging.debug("用户取消音频设备重新选择")
+        except Exception as e:
+            logging.error(f"配置音频设备失败: {e}")
+            QMessageBox.warning(self, '错误', f'配置音频设备失败: {e}')
 
     class FileTransfer:
         """简化的文件传输类，使用专用socket连接"""

@@ -182,43 +182,20 @@ def notify_friends_status(username, online):
                     pass
 
 
-# 处理UDP音频数据中继
+# UDP音频服务已移除，现在使用P2P直连通信
+# 保留UDP socket用于兼容性，但不再处理音频中继
 def handle_udp_audio():
-    print(f"UDP音频服务开始监听 {HOST}:{UDP_PORT}")
+    print(f"UDP服务开始监听 {HOST}:{UDP_PORT} (仅用于兼容性)")
     while True:
         try:
-            data, addr = udp_socket.recvfrom(65536)  # 更大的缓冲区用于音频
-            # 解析头部以确定目标用户
-            if len(data) < 2:  # 确保数据至少包含2字节头部
-                continue
-
-            header_len = data[0]  # 第一个字节表示头部长度
-            if len(data) < header_len + 1:
-                continue
-
-            header = data[1:header_len + 1].decode('utf-8')
-            # 头部格式：发送者|接收者
-            try:
-                sender, receiver = header.split('|')
-
-                # 检查接收者是否在线和是否处于通话中
-                with lock:
-                    if receiver in active_calls and active_calls[receiver][0] == sender and receiver in udp_addresses:
-                        # 转发音频数据到接收者
-                        target_addr = udp_addresses[receiver]
-                        udp_socket.sendto(data, target_addr)
-                        # 每100个包记录一次转发日志
-                        if hasattr(handle_udp_audio, 'forward_count'):
-                            handle_udp_audio.forward_count += 1
-                        else:
-                            handle_udp_audio.forward_count = 1
-                        
-                        if handle_udp_audio.forward_count % 100 == 0:
-                            print(f"已转发 {handle_udp_audio.forward_count} 个音频包: {sender} -> {receiver}")
-            except Exception as e:
-                print(f"处理UDP音频数据出错: {e}")
+            # 简单的UDP监听，不处理音频数据
+            data, addr = udp_socket.recvfrom(1024)
+            # 记录收到的数据但不处理
+            if len(data) > 0:
+                print(f"收到UDP数据来自 {addr}，长度: {len(data)} (已忽略)")
         except Exception as e:
-            print(f"UDP音频处理异常: {e}")
+            print(f"UDP监听异常: {e}")
+            time.sleep(1)
 
 
 def send_msg(conn, msg):
@@ -414,7 +391,7 @@ def handle_client(conn, addr):
                         client_udp_port = int(udp_port)
                         print(f"收到语音通话请求: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
 
-                        # 保存发起者的UDP地址
+                        # 保存发起者的UDP地址（使用客户端的真实外网IP）
                         with lock:
                             udp_addresses[from_user] = (client_ip, client_udp_port)
 
@@ -434,30 +411,21 @@ def handle_client(conn, addr):
                                             print(f"  目标用户 {to_user} 已在通话中")
                                         send_msg(conn, f'CALL_RESPONSE|BUSY|{to_user}')
                                     else:
-                                        # 将通话请求转发给对方
+                                        # 将通话请求转发给对方，包含发起者的外网IP
                                         try:
                                             if DEBUG_CALL:
                                                 print(f"  发送CALL_INCOMING到 {to_user}")
                                                 print(f"  clients[{to_user}] 是否有效: {clients[to_user] is not None}")
 
-                                            # 使用多次发送和确认，增加可靠性
-                                            for i in range(3):  # 发送3次确保收到
-                                                # 发送通话请求消息
-                                                send_msg(to_user_conn, f'CALL_INCOMING|{from_user}')
-
-                                                if DEBUG_CALL:
-                                                    print(
-                                                        f"  第{i + 1}次发送CALL_INCOMING，长度: {len(f'CALL_INCOMING|{from_user}')}，实际发送: {len(f'CALL_INCOMING|{from_user}')}字节")
-
-                                                # 短暂延迟确保接收方有时间处理
-                                                time.sleep(0.5)
+                                            # 发送通话请求消息，包含发起者的外网IP和端口
+                                            send_msg(to_user_conn, f'CALL_INCOMING|{from_user}|{client_ip}|{client_udp_port}')
 
                                             # 发送确认到发起方
                                             send_msg(conn, f'CALL_RESPONSE|SENDING|{to_user}')
 
                                             # 通知发起方对方已经收到通话请求
                                             if DEBUG_CALL:
-                                                print(f"  CALL_INCOMING已多次发送，对方应该收到请求")
+                                                print(f"  CALL_INCOMING已发送，对方应该收到请求")
                                         except Exception as e:
                                             if DEBUG_CALL:
                                                 print(f"  发送CALL_INCOMING失败: {e}")
@@ -496,7 +464,7 @@ def handle_client(conn, addr):
                         print(f"接受语音通话: {from_user} -> {to_user}, UDP: {client_ip}:{client_udp_port}")
 
                         with lock:
-                            # 保存接受者的UDP地址
+                            # 保存接受者的UDP地址（使用客户端的真实外网IP）
                             udp_addresses[from_user] = (client_ip, client_udp_port)
 
                             # 记录通话状态 - 修复：确保双方都有正确的对方地址
@@ -509,7 +477,7 @@ def handle_client(conn, addr):
                                 # 向双方发送连接信息
                                 if to_user in clients:
                                     try:
-                                        # 向发起方发送接受者的地址信息
+                                        # 向发起方发送接受者的外网地址信息
                                         accept_msg = f'CALL_ACCEPTED|{from_user}|{client_ip}|{client_udp_port}'
                                         send_msg(clients[to_user], accept_msg)
                                         if DEBUG_CALL:
@@ -519,7 +487,7 @@ def handle_client(conn, addr):
                                             print(f"  发送CALL_ACCEPTED失败: {e}")
                                         del clients[to_user]  # 清理无效连接
                                 
-                                # 向接受方发送发起方的地址信息
+                                # 向接受方发送发起方的外网地址信息
                                 if from_user in clients:
                                     try:
                                         caller_ip, caller_port = caller_addr
