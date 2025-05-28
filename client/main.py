@@ -23,8 +23,31 @@ import os
 import hashlib
 import audioop  # 添加音频操作模块
 
+def resource_path(relative_path):
+    """获取资源文件的绝对路径，兼容开发环境和PyInstaller打包后的环境"""
+    try:
+        # PyInstaller创建临时文件夹，并将路径存储在_MEIPASS中
+        base_path = sys._MEIPASS
+    except Exception:
+        # 开发环境中使用当前文件的目录
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
+def get_user_data_path(relative_path):
+    """获取用户数据目录的路径，用于存储用户生成的数据（如聊天记录、语音消息等）"""
+    # 在用户的文档目录下创建应用程序数据文件夹
+    if os.name == 'nt':  # Windows
+        user_data_dir = os.path.join(os.path.expanduser('~'), 'Documents', 'ChatClient')
+    else:  # Linux/Mac
+        user_data_dir = os.path.join(os.path.expanduser('~'), '.chatclient')
+    
+    os.makedirs(user_data_dir, exist_ok=True)
+    full_path = os.path.join(user_data_dir, relative_path)
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    return full_path
+
 # 配置日志
-log_dir = os.path.join(os.path.dirname(__file__), 'logs')
+log_dir = get_user_data_path('logs')
 os.makedirs(log_dir, exist_ok=True)
 log_file = os.path.join(log_dir, f'client_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
 
@@ -247,18 +270,19 @@ class VoiceChanger:
         return audio_data
 
 # 服务器配置
-SERVER_HOST = '127.0.0.1'  # 默认本地地址why
+SERVER_HOST = '54.252.240.58'  # 默认本地地址why
 SERVER_PORT = 12345
 UDP_PORT_BASE = 40000  # 本地UDP端口基址
 
-EMOJI_DIR = os.path.join(os.path.dirname(__file__), 'resources')
-# 在EMOJI_DIR定义附近添加背景图片文件夹
-BG_DIR = os.path.join(os.path.dirname(__file__), 'backgrounds')
-os.makedirs(BG_DIR, exist_ok=True)
+# 资源文件路径（打包后从临时目录读取）
+EMOJI_DIR = resource_path('resources')
+BG_DIR = resource_path('backgrounds')
 
-# 添加文件存储目录
-FILES_DIR = os.path.join(os.path.dirname(__file__), 'files')
+# 用户数据目录（用于存储用户生成的数据）
+FILES_DIR = get_user_data_path('files')
+VOICE_MESSAGES_DIR = get_user_data_path('voice_messages')
 os.makedirs(FILES_DIR, exist_ok=True)
+os.makedirs(VOICE_MESSAGES_DIR, exist_ok=True)
 
 # 音频配置
 CHUNK = 1024
@@ -2216,9 +2240,8 @@ class MainWindow(QWidget):
     def save_voice_message_history(self, from_user, voice_type, duration, audio_base64):
         """保存语音消息到本地历史记录"""
         try:
-            # 创建语音消息存储目录
-            voice_dir = os.path.join(os.path.dirname(__file__), 'voice_messages')
-            os.makedirs(voice_dir, exist_ok=True)
+            # 使用用户数据目录存储语音消息
+            voice_dir = VOICE_MESSAGES_DIR
             
             # 使用字典序排序确保两个用户之间的消息保存在同一个文件中
             users = sorted([self.username, from_user])
@@ -2253,7 +2276,7 @@ class MainWindow(QWidget):
     def load_voice_message_history(self, friend_name):
         """加载语音消息历史记录"""
         try:
-            voice_dir = os.path.join(os.path.dirname(__file__), 'voice_messages')
+            voice_dir = VOICE_MESSAGES_DIR
             users = sorted([self.username, friend_name])
             voice_file = os.path.join(voice_dir, f'voice_{users[0]}_{users[1]}.json')
             
